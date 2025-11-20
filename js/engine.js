@@ -2,6 +2,7 @@ import { STAGES } from './data.js';
 import { loadAssets } from './assets.js';
 import { Player, Enemy, FloatText, Chest } from './entities.js';
 import { generateStagePattern } from './map.js';
+import { WeatherSystem } from './weather.js';
 
 export class GameEngine {
     constructor() {
@@ -21,6 +22,7 @@ export class GameEngine {
         this.bgPattern = null;
         this.shake = 0; 
         this.keys = {};
+        this.weather = new WeatherSystem();
         
         window.addEventListener('resize', () => this.resize());
         window.addEventListener('keydown', e => this.keys[e.code] = true);
@@ -100,6 +102,8 @@ export class GameEngine {
         this.texts = this.texts.filter(t => !t.dead);
         this.chests = this.chests.filter(c => !c.dead);
         
+        this.weather.update(dt, this.stageIdx, this.camera);
+
         document.getElementById('timer').innerText = this.formatTime(this.playTime);
     }
     
@@ -144,6 +148,7 @@ export class GameEngine {
         this.particles.forEach(p => p.draw(ctx));
         ctx.globalCompositeOperation = 'source-over';
         
+        this.weather.draw(ctx, this.camera);
         this.texts.forEach(t => t.draw(ctx));
         ctx.restore();
 
