@@ -57,9 +57,7 @@ export class GameEngine {
         document.getElementById('gameover-menu').classList.add('hidden');
         this.updateUI();
         
-        // Initialize Map Objects
-        if (this.stageIdx === 0) this.initForest();
-        else if (this.stageIdx === 4) this.initFairyland();
+        this.initStageMap();
         
         this.bgPattern = this.ctx.createPattern(generateStagePattern(this.stageIdx), 'repeat');
         this.showStageTitle(STAGES[this.stageIdx].name);
@@ -84,9 +82,7 @@ export class GameEngine {
             this.showStageTitle(STAGES[this.stageIdx].name);
             this.bgPattern = this.ctx.createPattern(generateStagePattern(this.stageIdx), 'repeat');
             
-            this.staticObjects = []; // Clear old objects
-            if(this.stageIdx === 0) this.initForest();
-            if(this.stageIdx === 4) this.initFairyland();
+            this.initStageMap();
 
             // 进阶回血
             this.player.hp = Math.min(this.player.hp + 20, this.player.maxHp);
@@ -105,20 +101,18 @@ export class GameEngine {
         
         this.player.update(dt);
         
-        // Boundary for Island Stages (0 & 4)
-        if (this.stageIdx === 4 || this.stageIdx === 0) {
-             const R = 600;
-             const d = Math.hypot(this.player.x, this.player.y);
-             if(d > R) {
-                 const a = Math.atan2(this.player.y, this.player.x);
-                 this.player.x = Math.cos(a)*R;
-                 this.player.y = Math.sin(a)*R;
-             }
+        // Boundary (All Stages are Islands now)
+        const R = 600;
+        const d = Math.hypot(this.player.x, this.player.y);
+        if(d > R) {
+            const a = Math.atan2(this.player.y, this.player.x);
+            this.player.x = Math.cos(a)*R;
+            this.player.y = Math.sin(a)*R;
         }
         
-        // 相机跟随 + 震动
+        // 相机跟随 + 震动 (调整：人物位于屏幕下方，显示更多上方视野)
         let tx = this.player.x - this.width/2;
-        let ty = this.player.y - this.height/2;
+        let ty = this.player.y - this.height * 1.2; 
         this.camera.x += (tx - this.camera.x) * 5 * dt;
         this.camera.y += (ty - this.camera.y) * 5 * dt;
         
@@ -141,14 +135,79 @@ export class GameEngine {
 
         document.getElementById('timer').innerText = this.formatTime(this.playTime);
     }
+
+    initStageMap() {
+        this.staticObjects = [];
+        switch(this.stageIdx) {
+            case 0: this.initForest(); break;
+            case 1: this.initBone(); break;
+            case 2: this.initMagma(); break;
+            case 3: this.initIce(); break;
+            case 4: this.initFairyland(); break;
+        }
+    }
+    
+    initForest() {
+        for(let i=0; i<40; i++) {
+             const a = Math.random() * Math.PI * 2;
+             const r = 450 + Math.random() * 150; 
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'tree_forest'));
+        }
+        for(let i=0; i<30; i++) {
+             const a = Math.random() * Math.PI * 2;
+             const r = Math.random() * 500;
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, Math.random()>0.5?'bush':'stone_s'));
+        }
+    }
+
+    initBone() {
+        // Edge: Dense Tombstones
+        for(let i=0; i<30; i++) {
+             const a = Math.random() * Math.PI * 2;
+             const r = 500 + Math.random() * 100; 
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'tombstone'));
+        }
+        // Interior: Bones & Tombstones
+        for(let i=0; i<30; i++) {
+             const a = Math.random() * Math.PI * 2;
+             const r = Math.random() * 500;
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, Math.random()>0.7?'tombstone':'bone'));
+        }
+    }
+
+    initMagma() {
+        // Edge: Magma Rocks
+        for(let i=0; i<30; i++) {
+             const a = Math.random() * Math.PI * 2;
+             const r = 500 + Math.random() * 100; 
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'magma_rock'));
+        }
+        // Interior: Rocks
+        for(let i=0; i<20; i++) {
+             const a = Math.random() * Math.PI * 2;
+             const r = Math.random() * 500;
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, Math.random()>0.5?'magma_rock':'stone_s'));
+        }
+    }
+
+    initIce() {
+        // Edge: Crystals
+        for(let i=0; i<40; i++) {
+             const a = Math.random() * Math.PI * 2;
+             const r = 450 + Math.random() * 150; 
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'crystal'));
+        }
+        // Interior: Crystals & Rocks
+        for(let i=0; i<20; i++) {
+             const a = Math.random() * Math.PI * 2;
+             const r = Math.random() * 500;
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, Math.random()>0.6?'crystal':'stone_s'));
+        }
+    }
     
     initFairyland() {
-        this.staticObjects = [];
-        // Center Pavilion
         this.staticObjects.push(new StaticObject(0, -100, 'pavilion'));
-        // Gate
         this.staticObjects.push(new StaticObject(0, 250, 'gate'));
-        // Trees and Rocks
         for(let i=0; i<20; i++) {
             const a = Math.random()*Math.PI*2;
             const r = 150 + Math.random()*350;
@@ -156,207 +215,243 @@ export class GameEngine {
         }
     }
 
-    initForest() {
-        this.staticObjects = [];
-        // Dense trees at edge (Forest Wall)
-        for(let i=0; i<40; i++) {
-             const a = Math.random() * Math.PI * 2;
-             const r = 450 + Math.random() * 150; // 450-600
-             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'tree_forest'));
-        }
-        // Scattered bushes and stones inside
-        for(let i=0; i<30; i++) {
-             const a = Math.random() * Math.PI * 2;
-             const r = Math.random() * 500;
-             const type = Math.random() > 0.5 ? 'bush' : 'stone_s';
-             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, type));
-        }
-    }
-
     draw() {
         const ctx = this.ctx;
-        const stage = STAGES[this.stageIdx];
-
+        
         ctx.save();
 
-        const is3D = (this.stageIdx === 0 || this.stageIdx === 4);
+        let skyTop, skyBot, groundBase, groundSurf, drawFar, patternColor;
+        const tilt = 0.5;
+        const zoom = 0.7;
+        const R = 600;
 
-        if (is3D) {
-             // --- 2.5D Island Scenes (Forest & Fairyland) ---
-             
-             let skyTop, skyBot, groundBase, groundSurf, drawFar;
-             const tilt = 0.5;
-             const zoom = 0.75;
-             const R = 600;
-
-             if (this.stageIdx === 4) {
-                 // Fairyland Config
-                 skyTop='#000000'; skyBot='#2c3e50';
-                 groundBase='#37474f'; groundSurf='#ecf0f1';
-                 drawFar = (w, h) => {
-                    // Sun
-                    ctx.fillStyle = '#e74c3c'; ctx.shadowColor = '#c0392b'; ctx.shadowBlur = 30;
-                    ctx.beginPath(); ctx.arc(w/2, h*0.15, 60, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
-                    // Cone Islands
-                    const drawCone = (cx, cy, cw, ch) => {
-                        ctx.fillStyle = '#37474f'; ctx.beginPath(); ctx.moveTo(cx-cw/2, cy); ctx.bezierCurveTo(cx-cw/4, cy+ch, cx+cw/4, cy+ch, cx+cw/2, cy); ctx.fill();
-                        ctx.fillStyle = '#cfd8dc'; ctx.beginPath(); ctx.ellipse(cx, cy, cw/2, ch/5, 0, 0, Math.PI*2); ctx.fill();
-                    };
-                    drawCone(w*0.2, h*0.3, 120, 90); drawCone(w*0.8, h*0.25, 280, 180);
-                 };
-             } else {
-                 // Forest Config
-                 skyTop='#000500'; skyBot='#0f1519';
-                 groundBase='#0b1013'; groundSurf='#1b5e20';
-                 drawFar = (w, h) => {
-                     // Moon maybe?
-                     ctx.fillStyle = '#f1f8e9'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 20;
-                     ctx.beginPath(); ctx.arc(w*0.8, h*0.15, 40, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
-                 };
-             }
-             
-             // 1. Sky (Screen Space)
-             const grad = ctx.createLinearGradient(0, 0, 0, this.height);
-             grad.addColorStop(0, skyTop); grad.addColorStop(1, skyBot);
-             ctx.fillStyle = grad; ctx.fillRect(0, 0, this.width, this.height);
-
-             // 2. Far Objects (Screen Space)
-             if(drawFar) drawFar(this.width, this.height);
-
-             // 3. Ground Layer (Squashed)
-             ctx.save();
-             ctx.translate(this.width/2, this.height/2);
-             ctx.scale(zoom, zoom * tilt); 
-             ctx.translate(-this.width/2, -this.height/2);
-
-             // Camera Shake
-             let sx = (Math.random() - 0.5) * this.shake * 10;
-             let sy = (Math.random() - 0.5) * this.shake * 10;
-             ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
-             
-             // Island Base
-             ctx.fillStyle = groundBase; 
-             ctx.beginPath();
-             ctx.moveTo(-R, 0);
-             ctx.bezierCurveTo(-R*0.4, R*2.5, R*0.4, R*2.5, R, 0);
-             ctx.fill();
-             
-             // Base Texture
-             ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 30;
-             ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, R*2); ctx.stroke();
-             
-             // Island Surface
-             ctx.fillStyle = groundSurf; 
-             ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI*2); ctx.fill();
-
-             // Pattern Clip
-             ctx.save(); ctx.clip();
-             if(this.bgPattern && this.stageIdx === 4) { 
-                 ctx.globalAlpha = 0.5; ctx.fillStyle = this.bgPattern; ctx.fillRect(-R, -R, R*2, R*2); ctx.globalAlpha = 1.0;
-             }
-             // Simple Noise for Forest
-             if(this.stageIdx === 0) {
-                 ctx.globalAlpha = 0.1; ctx.fillStyle = '#000'; 
-                 for(let i=0;i<20;i++) { ctx.beginPath(); ctx.arc((Math.random()-0.5)*R*2, (Math.random()-0.5)*R*2, 50, 0, Math.PI*2); ctx.fill(); }
-                 ctx.globalAlpha = 1.0;
-             }
-             
-             ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 10;
-             ctx.beginPath(); ctx.arc(0, 0, R-5, 0, Math.PI*2); ctx.stroke();
-             ctx.restore(); // End Clip
-             ctx.restore(); // End Ground Transform
-             
-             // 4. Entity Layer (Standing Up)
-             ctx.save();
-             ctx.translate(this.width/2, this.height/2);
-             ctx.scale(zoom, zoom); 
-             ctx.translate(-this.width/2, -this.height/2 * tilt); 
-             
-             ctx.translate(-this.camera.x + sx, (-this.camera.y + sy) * tilt);
-             
-             const drawBillboard = (list) => {
-                 list.forEach(e => {
-                     const oy = e.y;
-                     e.y = e.y * tilt; // Project Y
-                     e.draw(ctx);
-                     e.y = oy; // Restore
-                 });
-             };
-             
-             // Sort by Y for depth (approximated by draw order of arrays usually, but better to sort static objects)
-             this.staticObjects.sort((a,b) => a.y - b.y);
-
-             drawBillboard(this.staticObjects);
-             drawBillboard(this.orbs);
-             drawBillboard(this.chests);
-             drawBillboard(this.enemies);
-             
-             const py = this.player.y;
-             this.player.y *= tilt;
-             this.player.draw(ctx);
-             this.player.y = py;
-             
-             ctx.globalCompositeOperation = 'lighter';
-             drawBillboard(this.bullets);
-             drawBillboard(this.particles); 
-             ctx.globalCompositeOperation = 'source-over';
-             
-             // Weather (Needs to be billboarded or just drawn on top? Weather is screen-space-ish usually but follows camera)
-             // The current context is Tilted. Weather particles x/y are world coordinates.
-             // If we draw them here, they will be tilted.
-             // Standard 2D draw uses ctx.translate(-camera).
-             // Here we have ctx.translate(-camera * tilt).
-             // We should probably draw weather logic as billboards if we want them "standing up" or flat?
-             // Snow/Spores are volume.
-             // Let's just draw them normally in this context. They will be squashed if we don't billboard.
-             // Actually, WeatherSystem.draw uses ctx.fillRect or arc.
-             // Let's just call it, and maybe it looks fine being squashed (perspective).
-             this.weather.draw(ctx, this.camera);
-
-             drawBillboard(this.texts);
-             
-             ctx.restore(); // End Entity Transform
-
-        } else {
-            // Standard 2D Render (Stages 1, 2, 3)
-            let sx = (Math.random() - 0.5) * this.shake * 10;
-            let sy = (Math.random() - 0.5) * this.shake * 10;
-            ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
-
-            if (this.bgPattern) {
-                ctx.fillStyle = this.bgPattern;
-                ctx.fillRect(this.camera.x, this.camera.y, this.width, this.height);
-            } else {
-                ctx.fillStyle = stage.bg;
-                ctx.fillRect(this.camera.x, this.camera.y, this.width, this.height);
-            }
-            
-            ctx.strokeStyle = stage.grid; ctx.lineWidth = 2; ctx.globalAlpha = 0.3;
-            const G = 100;
-            const sx_grid = Math.floor(this.camera.x/G)*G;
-            const sy_grid = Math.floor(this.camera.y/G)*G;
+        // Helper: Draw Distant Floating Island
+        const drawDistantIsland = (cx, cy, w, h, baseColor, topColor, decoType) => {
+            // Cone Base
+            ctx.fillStyle = baseColor;
             ctx.beginPath();
-            for(let x=sx_grid; x<this.camera.x+this.width; x+=G) { ctx.moveTo(x, this.camera.y); ctx.lineTo(x, this.camera.y+this.height); }
-            for(let y=sy_grid; y<this.camera.y+this.height; y+=G) { ctx.moveTo(this.camera.x, y); ctx.lineTo(this.camera.x+this.width, y); }
-            ctx.stroke();
-            ctx.globalAlpha = 1.0;
+            ctx.moveTo(cx - w/2, cy);
+            ctx.bezierCurveTo(cx - w/4, cy + h, cx + w/4, cy + h, cx + w/2, cy);
+            ctx.fill();
             
-            this.staticObjects.forEach(o => o.draw(ctx));
-            this.orbs.forEach(o => o.draw(ctx));
-            this.chests.forEach(c => c.draw(ctx));
-            this.enemies.forEach(e => e.draw(ctx));
-            this.player.draw(ctx);
+            // Ellipse Top
+            ctx.fillStyle = topColor;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, w/2, h/6, 0, 0, Math.PI*2);
+            ctx.fill();
+
+            // Decorations (Deterministic)
+            ctx.fillStyle = baseColor; 
             
-            ctx.globalCompositeOperation = 'lighter';
-            this.bullets.forEach(b => b.draw(ctx));
-            this.particles.forEach(p => p.draw(ctx));
-            ctx.globalCompositeOperation = 'source-over';
+            // Simple Pseudo-Random
+            const getRand = (s) => { let t = Math.sin(s)*10000; return t - Math.floor(t); };
             
-            this.weather.draw(ctx, this.camera);
-            this.texts.forEach(t => t.draw(ctx));
-            ctx.restore();
+            const count = 3 + Math.floor(w / 50);
+            for(let i=0; i<count; i++) {
+                // Deterministic Seed based on Island Pos and Index
+                const seed = cx * 1.1 + cy * 2.2 + i * 13.5;
+                const r1 = getRand(seed);
+                const r2 = getRand(seed + 100);
+
+                const dx = cx - w/3 + r1 * w/1.5;
+                const dy = cy + (r2-0.5) * h/10;
+                
+                if (decoType === 'tree') {
+                     ctx.fillRect(dx-1, dy-10, 2, 10);
+                     ctx.beginPath(); ctx.arc(dx, dy-12, 5, 0, Math.PI*2); ctx.fill();
+                } else if (decoType === 'cross') {
+                     ctx.fillRect(dx-1, dy-10, 2, 10);
+                     ctx.fillRect(dx-4, dy-8, 8, 2);
+                } else if (decoType === 'spike') {
+                     ctx.beginPath(); ctx.moveTo(dx-3, dy); ctx.lineTo(dx, dy-15); ctx.lineTo(dx+3, dy); ctx.fill();
+                } else if (decoType === 'crystal') {
+                     ctx.beginPath(); ctx.moveTo(dx, dy); ctx.lineTo(dx-4, dy-12); ctx.lineTo(dx, dy-20); ctx.lineTo(dx+4, dy-12); ctx.fill();
+                } else if (decoType === 'pavilion') {
+                     ctx.fillRect(dx-4, dy-8, 8, 8);
+                     ctx.beginPath(); ctx.moveTo(dx-6, dy-8); ctx.lineTo(dx, dy-14); ctx.lineTo(dx+6, dy-8); ctx.fill();
+                } else if (decoType === 'pine') {
+                    ctx.beginPath(); ctx.moveTo(dx-5, dy); ctx.lineTo(dx, dy-15); ctx.lineTo(dx+5, dy); ctx.fill();
+                }
+            }
+        };
+
+        switch(this.stageIdx) {
+            case 0: // Forest
+                skyTop='#000500'; skyBot='#0f1519';
+                groundBase='#0b1013'; groundSurf='#1b5e20';
+                patternColor='#000';
+                drawFar = (w, h) => {
+                    const pX = this.camera.x * 0.1; const pY = this.camera.y * 0.1;
+                    const sX = this.camera.x * 0.02; const sY = this.camera.y * 0.02;
+                    
+                    drawDistantIsland(w*0.2 - pX, h*0.2 - pY, 120, 90, '#0b1013', '#1b5e20', 'tree');
+                    drawDistantIsland(w*0.8 - pX, h*0.15 - pY, 180, 120, '#0b1013', '#1b5e20', 'tree');
+                    // Moon
+                    ctx.fillStyle = '#f1f8e9'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 10;
+                    ctx.beginPath(); ctx.arc(w*0.85 - sX, h*0.15 - sY, 30, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+                };
+                break;
+            case 1: // Bone
+                skyTop='#1a1a1a'; skyBot='#2c3e50';
+                groundBase='#212121'; groundSurf='#424242';
+                patternColor='#000';
+                drawFar = (w, h) => {
+                    const pX = this.camera.x * 0.1; const pY = this.camera.y * 0.1;
+                    const sX = this.camera.x * 0.02; const sY = this.camera.y * 0.02;
+
+                    drawDistantIsland(w*0.15 - pX, h*0.25 - pY, 100, 80, '#212121', '#424242', 'cross');
+                    drawDistantIsland(w*0.75 - pX, h*0.15 - pY, 200, 150, '#212121', '#424242', 'cross');
+                    // Moon
+                    ctx.fillStyle = '#cfd8dc'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 15;
+                    ctx.beginPath(); ctx.arc(w*0.8 - sX, h*0.15 - sY, 50, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+                };
+                break;
+            case 2: // Magma
+                skyTop='#210000'; skyBot='#3e2723';
+                groundBase='#210000'; groundSurf='#3e2723';
+                patternColor='#ff5722';
+                drawFar = (w, h) => {
+                    const pX = this.camera.x * 0.1; const pY = this.camera.y * 0.1;
+                    
+                    drawDistantIsland(w*0.2 - pX, h*0.15 - pY, 150, 100, '#210000', '#3e2723', 'spike');
+                    drawDistantIsland(w*0.85 - pX, h*0.2 - pY, 120, 140, '#210000', '#3e2723', 'spike');
+                    // Smoke
+                    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                    ctx.beginPath(); ctx.arc(w/2 - this.camera.x*0.05, h - this.camera.y*0.05, w/2, 0, Math.PI*2); ctx.fill();
+                };
+                break;
+            case 3: // Ice
+                skyTop='#0d47a1'; skyBot='#1976d2';
+                groundBase='#0d47a1'; groundSurf='#64b5f6';
+                patternColor='#e1f5fe';
+                drawFar = (w, h) => {
+                     const pX = this.camera.x * 0.1; const pY = this.camera.y * 0.1;
+                     drawDistantIsland(w*0.25 - pX, h*0.1 - pY, 140, 110, '#0d47a1', '#64b5f6', 'crystal');
+                     drawDistantIsland(w*0.8 - pX, h*0.2 - pY, 160, 100, '#0d47a1', '#64b5f6', 'crystal');
+                };
+                break;
+            case 4: // Fairyland
+                skyTop='#000000'; skyBot='#2c3e50';
+                groundBase='#37474f'; groundSurf='#ecf0f1';
+                patternColor=null; 
+                drawFar = (w, h) => {
+                   const pX = this.camera.x * 0.1; const pY = this.camera.y * 0.1;
+                   const sX = this.camera.x * 0.02; const sY = this.camera.y * 0.02;
+                   
+                   ctx.fillStyle = '#e74c3c'; ctx.shadowColor = '#c0392b'; ctx.shadowBlur = 30;
+                   ctx.beginPath(); ctx.arc(w/2 - sX, h*0.15 - sY, 60, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+                   
+                   drawDistantIsland(w*0.2 - pX, h*0.2 - pY, 120, 90, '#37474f', '#cfd8dc', 'pavilion');
+                   drawDistantIsland(w*0.8 - pX, h*0.15 - pY, 280, 180, '#37474f', '#cfd8dc', 'pine');
+                };
+                break;
         }
         
+        // 1. Sky (Screen Space)
+        const grad = ctx.createLinearGradient(0, 0, 0, this.height);
+        grad.addColorStop(0, skyTop); grad.addColorStop(1, skyBot);
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, this.width, this.height);
+
+        // 2. Far Objects (Screen Space)
+        if(drawFar) drawFar(this.width, this.height);
+
+        // 3. Ground Layer (Squashed)
+        ctx.save();
+        ctx.translate(this.width/2, this.height/2);
+        ctx.scale(zoom, zoom * tilt); 
+        ctx.translate(-this.width/2, -this.height/2);
+
+        // Camera Shake
+        let sx = (Math.random() - 0.5) * this.shake * 10;
+        let sy = (Math.random() - 0.5) * this.shake * 10;
+        ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
+        
+        // Island Base
+        ctx.fillStyle = groundBase; 
+        ctx.beginPath();
+        ctx.moveTo(-R, 0);
+        ctx.bezierCurveTo(-R*0.4, R*2.5, R*0.4, R*2.5, R, 0);
+        ctx.fill();
+        
+        // Base Texture
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 30;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, R*2); ctx.stroke();
+        
+        // Island Surface
+        ctx.fillStyle = groundSurf; 
+        ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI*2); ctx.fill();
+
+        // Pattern Clip
+        ctx.save(); ctx.clip();
+        
+        // Use bgPattern if available (generated textures)
+        if(this.bgPattern) {
+             ctx.globalAlpha = 0.3; ctx.fillStyle = this.bgPattern; ctx.fillRect(-R, -R, R*2, R*2); ctx.globalAlpha = 1.0;
+        }
+        
+        // Overlay Noise/Texture based on config
+        if(patternColor) {
+             ctx.globalAlpha = 0.15; ctx.fillStyle = patternColor; 
+             for(let i=0;i<20;i++) { ctx.beginPath(); ctx.arc((Math.random()-0.5)*R*2, (Math.random()-0.5)*R*2, 50, 0, Math.PI*2); ctx.fill(); }
+             ctx.globalAlpha = 1.0;
+        }
+        // Magma specific cracks
+        if(this.stageIdx === 2) {
+            ctx.strokeStyle = '#ff5722'; ctx.lineWidth = 3; ctx.globalAlpha = 0.5;
+            for(let i=0; i<10; i++) {
+                ctx.beginPath(); ctx.moveTo((Math.random()-0.5)*R*2, (Math.random()-0.5)*R*2); 
+                ctx.lineTo((Math.random()-0.5)*R*2, (Math.random()-0.5)*R*2); ctx.stroke();
+            }
+            ctx.globalAlpha = 1.0;
+        }
+        
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 10;
+        ctx.beginPath(); ctx.arc(0, 0, R-5, 0, Math.PI*2); ctx.stroke();
+        ctx.restore(); // End Clip
+        ctx.restore(); // End Ground Transform
+        
+        // 4. Entity Layer (Standing Up)
+        ctx.save();
+        ctx.translate(this.width/2, this.height/2);
+        ctx.scale(zoom, zoom); 
+        ctx.translate(-this.width/2, -this.height/2 * tilt); 
+        
+        ctx.translate(-this.camera.x + sx, (-this.camera.y + sy) * tilt);
+        
+        const drawBillboard = (list) => {
+            list.forEach(e => {
+                const oy = e.y;
+                e.y = e.y * tilt; // Project Y
+                e.draw(ctx);
+                e.y = oy; // Restore
+            });
+        };
+        
+        // Sort by Y for depth
+        this.staticObjects.sort((a,b) => a.y - b.y);
+
+        drawBillboard(this.staticObjects);
+        drawBillboard(this.orbs);
+        drawBillboard(this.chests);
+        drawBillboard(this.enemies);
+        
+        const py = this.player.y;
+        this.player.y *= tilt;
+        this.player.draw(ctx);
+        this.player.y = py;
+        
+        ctx.globalCompositeOperation = 'lighter';
+        drawBillboard(this.bullets);
+        drawBillboard(this.particles); 
+        ctx.globalCompositeOperation = 'source-over';
+        
+        // Weather drawn within tilted context (affects position relative to camera)
+        this.weather.draw(ctx, this.camera);
+
+        drawBillboard(this.texts);
+        
+        ctx.restore(); // End Entity Transform
+
         // Low HP Vignette
         if (this.player.hp / this.player.maxHp < 0.3) {
             const ratio = this.player.hp / this.player.maxHp;
@@ -374,22 +469,15 @@ export class GameEngine {
     
     spawnEnemy(diff) {
         let x, y;
-        // Island Stages (0:Forest, 4:Fairyland) - Spawn on Edge
-        if (this.stageIdx === 4 || this.stageIdx === 0) {
-            const a = Math.random() * Math.PI * 2;
-            const r = 580; 
-            x = Math.cos(a) * r;
-            y = Math.sin(a) * r;
-            // Spawn FX
-            const color = (this.stageIdx === 0) ? '#1b5e20' : '#2c3e50';
-            for(let i=0; i<5; i++) this.particles.push(new Particle(x, y, color, 0.5, 4));
-        } else {
-            // Standard: Off-screen
-            const a = Math.random() * Math.PI * 2;
-            const r = Math.max(this.width, this.height)/2 + 100;
-            x = this.player.x + Math.cos(a)*r;
-            y = this.player.y + Math.sin(a)*r;
-        }
+        // All Stages are Islands (Spawn on Edge)
+        const a = Math.random() * Math.PI * 2;
+        const r = 580; 
+        x = Math.cos(a) * r;
+        y = Math.sin(a) * r;
+        
+        // Spawn FX Color
+        const colors = ['#1b5e20', '#7f8c8d', '#ff5722', '#4fc3f7', '#2c3e50'];
+        for(let i=0; i<5; i++) this.particles.push(new Particle(x, y, colors[this.stageIdx]||'#000', 0.5, 4));
         
         const stage = STAGES[this.stageIdx];
         const type = stage.mobs[Math.floor(Math.random() * stage.mobs.length)];
@@ -398,18 +486,10 @@ export class GameEngine {
     }
 
     spawnElite(diff) {
-        let x, y;
-        if (this.stageIdx === 4 || this.stageIdx === 0) {
-            const a = Math.random() * Math.PI * 2;
-            const r = 550;
-            x = Math.cos(a) * r;
-            y = Math.sin(a) * r;
-        } else {
-            const a = Math.random() * Math.PI * 2;
-            const r = Math.max(this.width, this.height)/2 + 100;
-            x = this.player.x + Math.cos(a)*r;
-            y = this.player.y + Math.sin(a)*r;
-        }
+        const a = Math.random() * Math.PI * 2;
+        const r = 550;
+        const x = Math.cos(a) * r;
+        const y = Math.sin(a) * r;
 
         const stage = STAGES[this.stageIdx];
         const type = stage.mobs[Math.floor(Math.random() * stage.mobs.length)];
