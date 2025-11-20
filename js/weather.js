@@ -43,13 +43,12 @@ export class WeatherSystem {
         let rotSpeed = 0;
 
         switch (stageIdx % 5) {
-            case 0: // Forest - Leaves
-                type = 'leaf';
-                color = Math.random() > 0.5 ? '#27ae60' : '#f39c12';
-                size = 6 + Math.random() * 4;
-                vx = 50 + Math.random() * 50; // Wind blowing right
-                vy = 20 + Math.random() * 20; // Falling
-                rotSpeed = (Math.random()-0.5)*5;
+            case 0: // Forest - Spores & Fireflies
+                type = 'spore';
+                color = Math.random() > 0.7 ? '#cddc39' : '#4caf50'; // Lime or Green
+                size = 2 + Math.random() * 4;
+                vx = (Math.random() - 0.5) * 15; 
+                vy = -5 - Math.random() * 15; // Slowly float up
                 break;
             case 1: // Bone - Dust/Fog
                 type = 'dust';
