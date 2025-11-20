@@ -25,14 +25,33 @@ export function generateStagePattern(stageIdx) {
         case 3: // Ice
             drawIce(ctx, size);
             break;
-        case 4: // Void
-            drawVoid(ctx, size);
+        case 4: // Fairyland
+            drawFairyland(ctx, size);
             break;
         default:
             drawForest(ctx, size);
     }
 
     return canvas;
+}
+
+function drawFairyland(ctx, size) {
+    // Snow Drifts (Texture)
+    ctx.fillStyle = 'rgba(189, 195, 199, 0.3)'; 
+    for(let i=0; i<30; i++) {
+         const x = Math.random() * size;
+         const y = Math.random() * size;
+         const w = 30 + Math.random() * 50;
+         const h = 15 + Math.random() * 20;
+         ctx.beginPath(); ctx.ellipse(x, y, w, h, 0, 0, Math.PI*2); ctx.fill();
+    }
+    // Ice/Crystal details
+    ctx.fillStyle = '#a29bfe'; 
+    for(let i=0; i<10; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
+    }
 }
 
 function drawForest(ctx, size) {

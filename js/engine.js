@@ -1,6 +1,6 @@
 import { STAGES } from './data.js';
 import { loadAssets } from './assets.js';
-import { Player, Enemy, FloatText, Chest } from './entities.js';
+import { Player, Enemy, FloatText, Chest, StaticObject } from './entities.js';
 import { generateStagePattern } from './map.js';
 import { WeatherSystem } from './weather.js';
 
@@ -17,7 +17,7 @@ export class GameEngine {
         this.stageIdx = 0;
         this.eliteTimer = 0; 
         this.player = null;
-        this.enemies = []; this.bullets = []; this.particles = []; this.orbs = []; this.texts = []; this.chests = [];
+        this.enemies = []; this.bullets = []; this.particles = []; this.orbs = []; this.texts = []; this.chests = []; this.staticObjects = [];
         this.camera = { x: 0, y: 0 };
         this.bgPattern = null;
         this.shake = 0; 
@@ -34,16 +34,32 @@ export class GameEngine {
     
     resize() { this.width=this.canvas.width=window.innerWidth; this.height=this.canvas.height=window.innerHeight; }
     
-    start() {
+    start(stageIdx = 0) {
         this.player = new Player();
-        this.enemies=[]; this.bullets=[]; this.particles=[]; this.orbs=[]; this.texts=[]; this.chests=[];
-        this.score=0; this.playTime=0; this.stageIdx=0; this.eliteTimer=0; this.state='PLAY';
+        this.enemies=[]; this.bullets=[]; this.particles=[]; this.orbs=[]; this.texts=[]; this.chests=[]; this.staticObjects=[];
+        
+        this.stageIdx = stageIdx;
+        this.playTime = STAGES[stageIdx].time;
+        this.score = 0; 
+        this.eliteTimer = 0; 
+        this.state='PLAY';
+        
+        // Compensate stats if skipping
+        if (stageIdx > 0) {
+             this.player.lvl = stageIdx * 3 + 1;
+             this.player.stats.dmg += stageIdx * 15;
+             this.player.hp = 100 + stageIdx * 20;
+             this.player.maxHp = 100 + stageIdx * 20;
+        }
+        
         document.getElementById('overlay').classList.add('hidden');
         document.getElementById('start-menu').classList.add('hidden');
         document.getElementById('gameover-menu').classList.add('hidden');
         this.updateUI();
-        this.bgPattern = this.ctx.createPattern(generateStagePattern(0), 'repeat');
-        this.showStageTitle(STAGES[0].name);
+        
+        if (this.stageIdx === 4) this.initFairyland();
+        this.bgPattern = this.ctx.createPattern(generateStagePattern(this.stageIdx), 'repeat');
+        this.showStageTitle(STAGES[this.stageIdx].name);
     }
     
     loop(now) {
@@ -64,6 +80,9 @@ export class GameEngine {
             this.stageIdx++;
             this.showStageTitle(STAGES[this.stageIdx].name);
             this.bgPattern = this.ctx.createPattern(generateStagePattern(this.stageIdx), 'repeat');
+            
+            if(this.stageIdx === 4) this.initFairyland();
+
             // 进阶回血
             this.player.hp = Math.min(this.player.hp + 20, this.player.maxHp);
             this.updateUI();
@@ -80,6 +99,17 @@ export class GameEngine {
         }
         
         this.player.update(dt);
+        
+        // Boundary for Fairyland
+        if (this.stageIdx === 4) {
+             const R = 1200;
+             const d = Math.hypot(this.player.x, this.player.y);
+             if(d > R) {
+                 const a = Math.atan2(this.player.y, this.player.x);
+                 this.player.x = Math.cos(a)*R;
+                 this.player.y = Math.sin(a)*R;
+             }
+        }
         
         // 相机跟随 + 震动
         let tx = this.player.x - this.width/2;
@@ -107,36 +137,96 @@ export class GameEngine {
         document.getElementById('timer').innerText = this.formatTime(this.playTime);
     }
     
+    initFairyland() {
+        this.staticObjects = [];
+        // Center Pavilion
+        this.staticObjects.push(new StaticObject(0, -200, 'pavilion'));
+        // Gate
+        this.staticObjects.push(new StaticObject(0, 500, 'gate'));
+        // Trees and Rocks
+        for(let i=0; i<30; i++) {
+            const a = Math.random()*Math.PI*2;
+            const r = 300 + Math.random()*800;
+            this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, Math.random()>0.6 ? 'pine' : 'stone_s'));
+        }
+    }
+
     draw() {
         const ctx = this.ctx;
         const stage = STAGES[this.stageIdx];
 
         ctx.save();
-        // 应用相机震动
-        let sx = (Math.random() - 0.5) * this.shake * 10;
-        let sy = (Math.random() - 0.5) * this.shake * 10;
-        ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
 
-        // Background Pattern
-        if (this.bgPattern) {
-            ctx.fillStyle = this.bgPattern;
-            ctx.fillRect(this.camera.x, this.camera.y, this.width, this.height);
+        if (this.stageIdx === 4) {
+             // Fairyland Special Render
+             // 1. Sky Gradient
+             const grad = ctx.createLinearGradient(0, 0, 0, this.height);
+             grad.addColorStop(0, '#2c3e50'); grad.addColorStop(1, '#4ca1af');
+             ctx.fillStyle = grad; ctx.fillRect(0, 0, this.width, this.height);
+             
+             // 2. Parallax Background (Distant Islands)
+             ctx.save();
+             const px = this.camera.x * 0.05; const py = this.camera.y * 0.05;
+             ctx.translate(-px, -py);
+             ctx.fillStyle = 'rgba(236, 240, 241, 0.2)';
+             ctx.beginPath(); ctx.ellipse(this.width*0.2, this.height*0.3, 100, 40, 0, 0, Math.PI*2); ctx.fill();
+             ctx.beginPath(); ctx.ellipse(this.width*0.8, this.height*0.6, 150, 60, 0, 0, Math.PI*2); ctx.fill();
+             // Setting Sun
+             ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(this.width*0.9, this.height*0.2, 60, 0, Math.PI*2); ctx.fill();
+             ctx.restore();
+             
+             // Camera Apply
+             let sx = (Math.random() - 0.5) * this.shake * 10;
+             let sy = (Math.random() - 0.5) * this.shake * 10;
+             ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
+             
+             // 3. The Floating Island
+             const R = 1250;
+             ctx.save();
+             ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 100;
+             ctx.fillStyle = '#bdc3c7'; // Base color
+             ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI*2); ctx.fill();
+             ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+             
+             // Clip for texture
+             ctx.clip();
+             if(this.bgPattern) { ctx.fillStyle = this.bgPattern; ctx.fillRect(-R, -R, R*2, R*2); }
+             
+             // Grid
+             ctx.strokeStyle = stage.grid; ctx.lineWidth = 2; ctx.globalAlpha = 0.3;
+             const G = 100;
+             for(let x=-R; x<R; x+=G) { ctx.beginPath(); ctx.moveTo(x, -Math.sqrt(R*R-x*x)); ctx.lineTo(x, Math.sqrt(R*R-x*x)); ctx.stroke(); }
+             for(let y=-R; y<R; y+=G) { ctx.beginPath(); ctx.moveTo(-Math.sqrt(R*R-y*y), y); ctx.lineTo(Math.sqrt(R*R-y*y), y); ctx.stroke(); }
+             ctx.restore();
+
         } else {
-            ctx.fillStyle = stage.bg;
-            ctx.fillRect(this.camera.x, this.camera.y, this.width, this.height);
+            // Standard Render
+            let sx = (Math.random() - 0.5) * this.shake * 10;
+            let sy = (Math.random() - 0.5) * this.shake * 10;
+            ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
+
+            // Background Pattern
+            if (this.bgPattern) {
+                ctx.fillStyle = this.bgPattern;
+                ctx.fillRect(this.camera.x, this.camera.y, this.width, this.height);
+            } else {
+                ctx.fillStyle = stage.bg;
+                ctx.fillRect(this.camera.x, this.camera.y, this.width, this.height);
+            }
+            
+            // Grid overlay
+            ctx.strokeStyle = stage.grid; ctx.lineWidth = 2; ctx.globalAlpha = 0.3;
+            const G = 100;
+            const sx_grid = Math.floor(this.camera.x/G)*G;
+            const sy_grid = Math.floor(this.camera.y/G)*G;
+            ctx.beginPath();
+            for(let x=sx_grid; x<this.camera.x+this.width; x+=G) { ctx.moveTo(x, this.camera.y); ctx.lineTo(x, this.camera.y+this.height); }
+            for(let y=sy_grid; y<this.camera.y+this.height; y+=G) { ctx.moveTo(this.camera.x, y); ctx.lineTo(this.camera.x+this.width, y); }
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
         }
         
-        // Grid overlay
-        ctx.strokeStyle = stage.grid; ctx.lineWidth = 2; ctx.globalAlpha = 0.3;
-        const G = 100;
-        const sx_grid = Math.floor(this.camera.x/G)*G;
-        const sy_grid = Math.floor(this.camera.y/G)*G;
-        ctx.beginPath();
-        for(let x=sx_grid; x<this.camera.x+this.width; x+=G) { ctx.moveTo(x, this.camera.y); ctx.lineTo(x, this.camera.y+this.height); }
-        for(let y=sy_grid; y<this.camera.y+this.height; y+=G) { ctx.moveTo(this.camera.x, y); ctx.lineTo(this.camera.x+this.width, y); }
-        ctx.stroke();
-        ctx.globalAlpha = 1.0;
-        
+        this.staticObjects.forEach(o => o.draw(ctx));
         this.orbs.forEach(o => o.draw(ctx));
         this.chests.forEach(c => c.draw(ctx));
         this.enemies.forEach(e => e.draw(ctx));

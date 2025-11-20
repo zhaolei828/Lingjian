@@ -17,7 +17,12 @@ export const SVG_LIB = {
     ghost: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="30" r="20" fill="#009688" opacity="0.6"/><path d="M12 30 Q32 60 52 30" fill="none" stroke="#004d40" stroke-width="2"/><circle cx="25" cy="25" r="3" fill="#000"/><circle cx="39" cy="25" r="3" fill="#000"/></svg>`,
     ghost_ice: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="30" r="20" fill="#03a9f4" opacity="0.6"/><path d="M12 30 Q32 60 52 30" fill="none" stroke="#0277bd" stroke-width="2"/><circle cx="25" cy="25" r="3" fill="#000"/><circle cx="39" cy="25" r="3" fill="#000"/></svg>`,
     rock: `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M20 60 L10 40 L30 10 L60 15 L70 50 L50 70 Z" fill="#5d4037"/><rect x="25" y="35" width="10" height="10" fill="#ff5722"/></svg>`,
-    chest: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="24" width="40" height="28" rx="4" fill="#f39c12" stroke="#e67e22" stroke-width="2"/><path d="M12 24 L20 12 L44 12 L52 24" fill="#f1c40f" stroke="#f39c12" stroke-width="2"/><rect x="28" y="32" width="8" height="10" fill="#e74c3c" rx="1"/><circle cx="32" cy="37" r="2" fill="#f1c40f"/></svg>`
+    chest: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="24" width="40" height="28" rx="4" fill="#f39c12" stroke="#e67e22" stroke-width="2"/><path d="M12 24 L20 12 L44 12 L52 24" fill="#f1c40f" stroke="#f39c12" stroke-width="2"/><rect x="28" y="32" width="8" height="10" fill="#e74c3c" rx="1"/><circle cx="32" cy="37" r="2" fill="#f1c40f"/></svg>`,
+    
+    pavilion: `<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M60 10 L10 40 L20 40 L15 55 L105 55 L100 40 L110 40 Z" fill="#c0392b" stroke="#a93226" stroke-width="2"/><rect x="25" y="55" width="10" height="45" fill="#8e44ad"/><rect x="85" y="55" width="10" height="45" fill="#8e44ad"/><rect x="35" y="90" width="50" height="10" fill="#d35400"/><path d="M10 100 L110 100 L100 110 L20 110 Z" fill="#bdc3c7"/></svg>`,
+    gate: `<svg width="100" height="120" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="10" height="100" fill="#95a5a6"/><rect x="80" y="20" width="10" height="100" fill="#95a5a6"/><rect x="5" y="30" width="90" height="10" fill="#bdc3c7"/><path d="M0 20 L50 5 L100 20 L100 30 L0 30 Z" fill="#34495e" stroke="#2c3e50"/><rect x="30" y="40" width="40" height="10" fill="#f1c40f"/></svg>`,
+    pine: `<svg width="80" height="120" viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg"><path d="M40 10 L10 50 L70 50 Z" fill="#2ecc71" stroke="#27ae60"/><path d="M40 40 L5 80 L75 80 Z" fill="#27ae60" stroke="#2ecc71"/><path d="M40 70 L0 110 L80 110 Z" fill="#1e8449" stroke="#27ae60"/><rect x="35" y="110" width="10" height="10" fill="#795548"/><path d="M10 50 L20 50 L15 60 L25 60" stroke="white" fill="none" stroke-width="2" opacity="0.7"/></svg>`,
+    stone_s: `<svg width="60" height="50" viewBox="0 0 60 50" xmlns="http://www.w3.org/2000/svg"><path d="M10 50 L0 30 L20 10 L40 5 L60 30 L50 50 Z" fill="#7f8c8d"/><path d="M20 10 L40 5 L50 20 L10 20 Z" fill="#fff" opacity="0.9"/></svg>`
 };
 
 export const STAGES = [
@@ -25,7 +30,7 @@ export const STAGES = [
     { name: '埋骨之地', time: 60, bg: '#202020', grid: '#333333', mobs: ['bat', 'ghost'] },
     { name: '熔岩炼狱', time: 120, bg: '#1a0505', grid: '#3d0e0e', mobs: ['bat_fire', 'rock'] },
     { name: '极寒冰原', time: 180, bg: '#050a1a', grid: '#0e1e3d', mobs: ['ghost_ice', 'rock'] },
-    { name: '天外虚空', time: 300, bg: '#000000', grid: '#222', mobs: ['bat_fire', 'ghost_ice', 'rock'] }
+    { name: '昆仑仙境', time: 300, bg: '#2c3e50', grid: '#34495e', mobs: ['bat_fire', 'ghost_ice', 'rock'] }
 ];
 
 export const SKILLS = [
@@ -38,4 +43,3 @@ export const SKILLS = [
     { id:'water', name:'玄冥寒冰', desc:'<b>[水系]</b> 攻击造成大幅减速', icon:'❄️', rare:'water', effect:s=>{s.element='water'; s.dmg*=0.9;} },
     { id:'earth', name:'厚土泰山', desc:'<b>[土系]</b> 攻击附带巨额击退', icon:'⛰️', rare:'earth', effect:s=>{s.element='earth'; s.dmg*=1.5; s.spd*=0.6;} }
 ];
-

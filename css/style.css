@@ -83,4 +83,34 @@ canvas { display: block; }
 }
 .btn:hover { transform: scale(1.1); filter: brightness(1.2); }
 
+.stage-select {
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    margin: 10px 0;
+    border: 1px solid #333;
+}
+
+.btn-mini {
+    padding: 8px 15px;
+    font-size: 16px;
+    color: #bbb;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    min-width: 60px;
+}
+
+.btn-mini:hover {
+    background: #555;
+    color: white;
+    border-color: #888;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }

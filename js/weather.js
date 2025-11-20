@@ -74,13 +74,13 @@ export class WeatherSystem {
                 vy = 80 + Math.random() * 80; // Falling fast
                 size = 2 + Math.random() * 2;
                 break;
-            case 4: // Void - Debris
-                type = 'debris';
-                color = Math.random()>0.5 ? 'rgba(155, 89, 182, 0.6)' : 'rgba(52, 152, 219, 0.6)';
-                size = 3 + Math.random() * 5;
-                vx = (Math.random()-0.5)*40;
-                vy = (Math.random()-0.5)*40;
-                rotSpeed = (Math.random()-0.5)*2;
+            case 4: // Fairyland - Gentle Snow
+                type = 'snow';
+                color = 'rgba(255, 255, 255, 0.8)';
+                vx = -20 - Math.random() * 20; // Gentle wind
+                vy = 30 + Math.random() * 30; // Gentle fall
+                size = 3 + Math.random() * 2;
+                if(Math.random()<0.2) color = '#a29bfe'; // Magic sparkle
                 break;
         }
 

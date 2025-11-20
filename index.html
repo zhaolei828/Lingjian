@@ -31,7 +31,19 @@
         <div class="game-title">灵剑 • 绝世仙缘</div>
         <p style="color: #aaa; margin-bottom: 40px;">万法归一 • 特效升级版</p>
         <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
-            <button class="btn" onclick="Game.start()">开宗立派</button>
+            <button class="btn" onclick="Game.start(0)">开宗立派</button>
+            
+            <div class="stage-select">
+                <div style="color:#aaa; font-size:12px; margin-bottom:8px; letter-spacing:1px;">--- 或 选择试炼之地 ---</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                     <button class="btn-mini" onclick="Game.start(0)">密林</button>
+                     <button class="btn-mini" onclick="Game.start(1)">埋骨</button>
+                     <button class="btn-mini" onclick="Game.start(2)">炼狱</button>
+                     <button class="btn-mini" onclick="Game.start(3)">冰原</button>
+                     <button class="btn-mini" onclick="Game.start(4)" style="color:#f1c40f; border-color:#f1c40f;">仙境</button>
+                </div>
+            </div>
+
             <button class="btn secondary" onclick="showManual()" style="font-size: 18px; padding: 10px 30px; background: rgba(0,0,0,0.5); border: 1px solid #666;">万法天书</button>
         </div>
     </div>

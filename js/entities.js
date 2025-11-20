@@ -392,3 +392,25 @@ export class FloatText extends Entity {
     draw(ctx) { ctx.globalAlpha=this.life; ctx.fillStyle=this.c; ctx.font="bold 24px Arial"; ctx.fillText(this.txt,this.x,this.y); ctx.globalAlpha=1; }
 }
 
+export class StaticObject extends Entity {
+    constructor(x, y, type) {
+        super(x, y);
+        this.type = type;
+        this.img = type;
+    }
+    update(dt, p) {
+        // Static visual only
+    }
+    draw(ctx) {
+        const img = Assets[this.img];
+        if (img) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            // Simple shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath(); ctx.ellipse(0, img.height/2 - 5, img.width/3, img.height/8, 0, 0, Math.PI*2); ctx.fill();
+            ctx.drawImage(img, -img.width/2, -img.height/2);
+            ctx.restore();
+        }
+    }
+}
