@@ -13,16 +13,38 @@ export class Player extends Entity {
         // stats包含 element: 'sword'|'fire'|'thunder'|'wood'|'water'|'earth'
         this.stats = { dmg:20, area:150, count:1, cd:0.8, spd:500, element:'sword', pierce:0 }; 
         this.cdTimer=0; this.facing=1; this.lvlUpFx=0;
+        
+        // Dash stats
+        this.dashCd = 0;
+        this.dashMaxCd = 2.0;
+        this.dashTime = 0;
     }
     update(dt) {
+        this.dashCd -= dt;
+        this.dashTime -= dt;
+
         let dx=0, dy=0;
         if(window.Game.keys['KeyW']||window.Game.keys['ArrowUp']) dy=-1;
         if(window.Game.keys['KeyS']||window.Game.keys['ArrowDown']) dy=1;
         if(window.Game.keys['KeyA']||window.Game.keys['ArrowLeft']) dx=-1;
         if(window.Game.keys['KeyD']||window.Game.keys['ArrowRight']) dx=1;
+        
+        // Dash Activation
+        if (window.Game.keys['Space'] && this.dashCd <= 0 && (dx!==0 || dy!==0)) {
+            this.dashCd = this.dashMaxCd;
+            this.dashTime = 0.25; // 冲刺持续时间
+            // 冲刺特效文字
+            window.Game.texts.push(new FloatText(this.x, this.y - 40, "神行!", "#3498db"));
+            // 冲刺无敌或特效粒子
+            for(let i=0; i<5; i++) window.Game.particles.push(new Particle(this.x, this.y, '#fff', 0.5, 3));
+        }
+
         if(dx||dy) {
             const l = Math.hypot(dx,dy);
-            this.x += (dx/l)*this.speed*dt; this.y += (dy/l)*this.speed*dt;
+            let moveSpeed = this.speed;
+            if (this.dashTime > 0) moveSpeed *= 3.0; // 3倍速度
+
+            this.x += (dx/l)*moveSpeed*dt; this.y += (dy/l)*moveSpeed*dt;
             if(dx) this.facing = dx;
         }
         this.cdTimer-=dt;
@@ -53,6 +75,16 @@ export class Player extends Entity {
     }
     draw(ctx) {
         const t = window.Game.playTime;
+        
+        // Dash Trail
+        if (this.dashTime > 0) {
+            ctx.save(); ctx.translate(this.x, this.y);
+            ctx.globalAlpha = 0.5;
+            ctx.scale(this.facing, 1);
+            ctx.drawImage(Assets['player'], -32 - (Math.random()-0.5)*10, -32, 64, 64);
+            ctx.restore();
+        }
+
         ctx.save(); ctx.translate(this.x, this.y);
         let auraColor = '#f1c40f';
         if(this.stats.element === 'fire') auraColor = '#e74c3c';
@@ -71,6 +103,14 @@ export class Player extends Entity {
         ctx.drawImage(Assets['player'], -32, -32, 64, 64);
         ctx.restore();
         
+        // Dash Cooldown Bar
+        if (this.dashCd > 0) {
+            ctx.fillStyle = '#555';
+            ctx.fillRect(this.x - 20, this.y + 40, 40, 4);
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(this.x - 20, this.y + 40, 40 * (1 - this.dashCd/this.dashMaxCd), 4);
+        }
+
         if(this.lvlUpFx>0) {
             this.lvlUpFx-=0.05;
             ctx.beginPath(); ctx.arc(this.x,this.y, 40+(1-this.lvlUpFx)*150, 0, Math.PI*2);
@@ -307,6 +347,15 @@ export class Orb extends Entity {
     constructor(x,y,v) { super(x,y); this.val=v; }
     update(dt,p) {
         const d=this.dist(p);
+        
+        // Magnetism (Drift)
+        if(d < 200) {
+            const a=Math.atan2(p.y-this.y, p.x-this.x);
+            this.x+=Math.cos(a)*150*dt; 
+            this.y+=Math.sin(a)*150*dt;
+        }
+
+        // Pickup (Snap)
         if(d<p.stats.area) {
             const s=400+(500/(d+1)); const a=Math.atan2(p.y-this.y, p.x-this.x);
             this.x+=Math.cos(a)*s*dt; this.y+=Math.sin(a)*s*dt;

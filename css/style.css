@@ -13,7 +13,7 @@ canvas { display: block; }
 }
 
 /* 顶部HUD */
-.hud-top { padding: 20px; display: flex; align-items: flex-start; gap: 20px; }
+.hud-top { padding: 20px; display: flex; align-items: flex-start; gap: 20px; z-index: 5; }
 .avatar-frame {
     width: 80px; height: 80px; border-radius: 50%;
     border: 3px solid #f1c40f; box-shadow: 0 0 15px #f1c40f;
@@ -75,7 +75,12 @@ canvas { display: block; }
     border: none; border-radius: 50px; cursor: pointer;
     box-shadow: 0 5px 15px rgba(192, 57, 43, 0.4); font-family: inherit;
 }
+.btn.secondary {
+    background: linear-gradient(45deg, #34495e, #2c3e50);
+    box-shadow: 0 5px 15px rgba(44, 62, 80, 0.4);
+    border: 1px solid #7f8c8d;
+    color: #bdc3c7;
+}
 .btn:hover { transform: scale(1.1); filter: brightness(1.2); }
 
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-

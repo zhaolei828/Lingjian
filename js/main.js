@@ -28,8 +28,17 @@ window.showUpgradeMenu = function() {
     }); 
 };
 
+window.showManual = function() {
+    document.getElementById('start-menu').classList.add('hidden');
+    document.getElementById('manual-menu').classList.remove('hidden');
+};
+
+window.hideManual = function() {
+    document.getElementById('manual-menu').classList.add('hidden');
+    document.getElementById('start-menu').classList.remove('hidden');
+};
+
 // Initialize Avatar with a slight delay to ensure Assets are ready
 setTimeout(() => {
     initAvatar();
 }, 100);
-

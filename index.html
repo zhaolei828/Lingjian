@@ -30,7 +30,40 @@
     <div id="start-menu" class="menu-box">
         <div class="game-title">灵剑 • 绝世仙缘</div>
         <p style="color: #aaa; margin-bottom: 40px;">万法归一 • 特效升级版</p>
-        <button class="btn" onclick="Game.start()">开宗立派</button>
+        <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
+            <button class="btn" onclick="Game.start()">开宗立派</button>
+            <button class="btn secondary" onclick="showManual()" style="font-size: 18px; padding: 10px 30px; background: rgba(0,0,0,0.5); border: 1px solid #666;">万法天书</button>
+        </div>
+    </div>
+    <div id="manual-menu" class="menu-box hidden" style="max-width: 800px; width: 90%; background: rgba(20, 20, 20, 0.95); border: 2px solid #d4af37; padding: 40px; border-radius: 10px; max-height: 80vh; overflow-y: auto; z-index: 101;">
+        <h2 style="color:#f1c40f; font-size:40px; margin-bottom:20px; border-bottom: 1px solid #555; padding-bottom: 10px;">万法天书 • 修行指南</h2>
+        
+        <div style="text-align: left; line-height: 1.8; font-size: 18px; color: #ccc;">
+            <h3 style="color: #e74c3c;">【入门心法】</h3>
+            <p>• <b>身法</b>：使用 <kbd style="background:#333; padding:2px 5px; border-radius:4px;">W</kbd><kbd style="background:#333; padding:2px 5px; border-radius:4px;">A</kbd><kbd style="background:#333; padding:2px 5px; border-radius:4px;">S</kbd><kbd style="background:#333; padding:2px 5px; border-radius:4px;">D</kbd> 或 <kbd style="background:#333; padding:2px 5px; border-radius:4px;">方向键</kbd> 移动。</p>
+            <p>• <b>御剑</b>：角色会自动攻击最近的敌人，无需手动操作。</p>
+            <p>• <b>修行</b>：击杀妖兽掉落灵气（绿色光球），拾取可提升修为，突破境界。</p>
+    
+            <h3 style="color: #3498db;">【五行生克】</h3>
+            <p>每次突破境界，可顿悟新的神通：</p>
+            <ul style="list-style: none; padding-left: 10px;">
+                <li>⚔️ <b>金 (万剑)</b>：基础剑气，攻速极快，万剑归宗。</li>
+                <li>🍃 <b>木 (青帝)</b>：发射穿透叶刃，擅长清理密集怪群。</li>
+                <li>❄️ <b>水 (玄冥)</b>：释放寒冰气息，大幅减缓敌人移动。</li>
+                <li>🔥 <b>火 (红莲)</b>：召唤爆裂火球，造成大范围爆炸伤害。</li>
+                <li>⛰️ <b>土 (厚土)</b>：投掷巨石，伤害极高并击退敌人，保命首选。</li>
+                <li>⚡ <b>雷 (九天)</b>：稀有神通，瞬间命中的连锁闪电，爆发极强。</li>
+            </ul>
+    
+            <h3 style="color: #f1c40f;">【天道机缘】</h3>
+            <p>• <b>精英妖兽</b>：每隔 <span style="color:#e74c3c">45秒</span>，会有身带金光的强大妖兽降临。</p>
+            <p>• <b>机缘宝箱</b>：击杀精英必掉落宝箱，拾取可获 <span style="color:#f1c40f">顿悟飞升</span>、<span style="color:#e74c3c">全屏秒杀</span> 或 <span style="color:#2ecc71">气血全满</span>。</p>
+            
+            <h3 style="color: #9b59b6;">【历练秘境】</h3>
+            <p>随着存活时间增加，周围环境会发生异变，妖兽也会愈发凶残。坚持下去，以此证道！</p>
+        </div>
+        
+        <button class="btn" style="margin-top: 30px; padding: 10px 30px; font-size: 20px;" onclick="hideManual()">合上天书</button>
     </div>
     <div id="levelup-menu" class="menu-box hidden">
         <h2 style="color:#f1c40f; font-size:40px; margin-bottom:30px; text-shadow:0 0 20px #f1c40f;">顿悟机缘</h2>

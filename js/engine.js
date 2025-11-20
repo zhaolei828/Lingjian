@@ -135,6 +135,26 @@ export class GameEngine {
         ctx.globalCompositeOperation = 'source-over';
         
         this.texts.forEach(t => t.draw(ctx));
+        
+        // Low HP Vignette (Canvas based)
+        if (this.player.hp / this.player.maxHp < 0.3) {
+            const ratio = this.player.hp / this.player.maxHp;
+            const opacity = ((1 - ratio/0.3) * 0.5) + (Math.sin(this.playTime * 10) + 1) * 0.1;
+            
+            ctx.save();
+            ctx.translate(-sx, -sy); // Cancel out camera shake/translation for screen-space effect
+            ctx.translate(this.camera.x, this.camera.y); // Wait, context is currently translated by (-camera.x+sx, -camera.y+sy)
+            // To draw screen space, we need to invert transform or just reset transform?
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to screen space
+            
+            const grad = ctx.createRadialGradient(this.width/2, this.height/2, this.height/3, this.width/2, this.height/2, this.height);
+            grad.addColorStop(0, 'transparent');
+            grad.addColorStop(1, `rgba(255, 0, 0, ${opacity})`);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, this.width, this.height);
+            ctx.restore();
+        }
+
         ctx.restore();
     }
     
