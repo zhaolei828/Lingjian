@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>灵剑 • 绝世仙缘 (V5.0 万法归一特效版)</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="ui-layer">
+    <div class="hud-top">
+        <div class="avatar-frame" id="avatar-container"></div>
+        <div class="bars">
+            <div style="font-size: 20px; color: #f1c40f; text-shadow: 0 0 5px #000;">
+                <span id="rank-name">练气期</span> <span id="rank-lvl">1层</span>
+            </div>
+            <div class="bar-wrap"><div id="hp-bar" class="bar-fill"></div><div class="bar-text">气血</div></div>
+            <div class="bar-wrap"><div id="exp-bar" class="bar-fill"></div><div class="bar-text">修为</div></div>
+        </div>
+        <div class="score-board">
+            <div class="big-text" id="timer">00:00</div>
+            <div style="color:#aaa;">斩妖: <span id="kills">0</span></div>
+        </div>
+    </div>
+</div>
+
+<div id="overlay">
+    <div id="start-menu" class="menu-box">
+        <div class="game-title">灵剑 • 绝世仙缘</div>
+        <p style="color: #aaa; margin-bottom: 40px;">万法归一 • 特效升级版</p>
+        <button class="btn" onclick="Game.start()">开宗立派</button>
+    </div>
+    <div id="levelup-menu" class="menu-box hidden">
+        <h2 style="color:#f1c40f; font-size:40px; margin-bottom:30px; text-shadow:0 0 20px #f1c40f;">顿悟机缘</h2>
+        <div class="card-container" id="card-container"></div>
+    </div>
+    <div id="gameover-menu" class="menu-box hidden">
+        <h1 style="color:#c0392b; font-size:60px;">道消身殒</h1>
+        <p id="final-score" style="font-size:24px; color:#eee; margin-bottom:30px;"></p>
+        <button class="btn" onclick="location.reload()">重入轮回</button>
+    </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
