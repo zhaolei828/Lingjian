@@ -1,6 +1,7 @@
 import { STAGES } from './data.js';
 import { loadAssets } from './assets.js';
 import { Player, Enemy, FloatText, Chest } from './entities.js';
+import { generateStagePattern } from './map.js';
 
 export class GameEngine {
     constructor() {
@@ -17,6 +18,7 @@ export class GameEngine {
         this.player = null;
         this.enemies = []; this.bullets = []; this.particles = []; this.orbs = []; this.texts = []; this.chests = [];
         this.camera = { x: 0, y: 0 };
+        this.bgPattern = null;
         this.shake = 0; 
         this.keys = {};
         
@@ -38,6 +40,7 @@ export class GameEngine {
         document.getElementById('start-menu').classList.add('hidden');
         document.getElementById('gameover-menu').classList.add('hidden');
         this.updateUI();
+        this.bgPattern = this.ctx.createPattern(generateStagePattern(0), 'repeat');
         this.showStageTitle(STAGES[0].name);
     }
     
@@ -58,6 +61,7 @@ export class GameEngine {
         if (nextStage && this.playTime >= nextStage.time) {
             this.stageIdx++;
             this.showStageTitle(STAGES[this.stageIdx].name);
+            this.bgPattern = this.ctx.createPattern(generateStagePattern(this.stageIdx), 'repeat');
             // 进阶回血
             this.player.hp = Math.min(this.player.hp + 20, this.player.maxHp);
             this.updateUI();
@@ -103,18 +107,23 @@ export class GameEngine {
         const ctx = this.ctx;
         const stage = STAGES[this.stageIdx];
 
-        // 背景
-        ctx.fillStyle = stage.bg;
-        ctx.fillRect(0, 0, this.width, this.height);
-        
         ctx.save();
         // 应用相机震动
         let sx = (Math.random() - 0.5) * this.shake * 10;
         let sy = (Math.random() - 0.5) * this.shake * 10;
         ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
+
+        // Background Pattern
+        if (this.bgPattern) {
+            ctx.fillStyle = this.bgPattern;
+            ctx.fillRect(this.camera.x, this.camera.y, this.width, this.height);
+        } else {
+            ctx.fillStyle = stage.bg;
+            ctx.fillRect(this.camera.x, this.camera.y, this.width, this.height);
+        }
         
-        // 网格
-        ctx.strokeStyle = stage.grid; ctx.lineWidth = 2;
+        // Grid overlay
+        ctx.strokeStyle = stage.grid; ctx.lineWidth = 2; ctx.globalAlpha = 0.3;
         const G = 100;
         const sx_grid = Math.floor(this.camera.x/G)*G;
         const sy_grid = Math.floor(this.camera.y/G)*G;
@@ -122,6 +131,7 @@ export class GameEngine {
         for(let x=sx_grid; x<this.camera.x+this.width; x+=G) { ctx.moveTo(x, this.camera.y); ctx.lineTo(x, this.camera.y+this.height); }
         for(let y=sy_grid; y<this.camera.y+this.height; y+=G) { ctx.moveTo(this.camera.x, y); ctx.lineTo(this.camera.x+this.width, y); }
         ctx.stroke();
+        ctx.globalAlpha = 1.0;
         
         this.orbs.forEach(o => o.draw(ctx));
         this.chests.forEach(c => c.draw(ctx));
@@ -135,18 +145,14 @@ export class GameEngine {
         ctx.globalCompositeOperation = 'source-over';
         
         this.texts.forEach(t => t.draw(ctx));
-        
-        // Low HP Vignette (Canvas based)
+        ctx.restore();
+
+        // Low HP Vignette (Screen Space)
         if (this.player.hp / this.player.maxHp < 0.3) {
             const ratio = this.player.hp / this.player.maxHp;
             const opacity = ((1 - ratio/0.3) * 0.5) + (Math.sin(this.playTime * 10) + 1) * 0.1;
             
             ctx.save();
-            ctx.translate(-sx, -sy); // Cancel out camera shake/translation for screen-space effect
-            ctx.translate(this.camera.x, this.camera.y); // Wait, context is currently translated by (-camera.x+sx, -camera.y+sy)
-            // To draw screen space, we need to invert transform or just reset transform?
-            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to screen space
-            
             const grad = ctx.createRadialGradient(this.width/2, this.height/2, this.height/3, this.width/2, this.height/2, this.height);
             grad.addColorStop(0, 'transparent');
             grad.addColorStop(1, `rgba(255, 0, 0, ${opacity})`);
@@ -154,8 +160,6 @@ export class GameEngine {
             ctx.fillRect(0, 0, this.width, this.height);
             ctx.restore();
         }
-
-        ctx.restore();
     }
     
     spawnEnemy(diff) {
@@ -226,4 +230,3 @@ export class GameEngine {
     
     screenShake(amount) { this.shake = amount; }
 }
-
