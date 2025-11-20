@@ -1,6 +1,6 @@
 import { STAGES } from './data.js';
 import { loadAssets } from './assets.js';
-import { Player, Enemy, FloatText, Chest, StaticObject } from './entities.js';
+import { Player, Enemy, FloatText, Chest, StaticObject, Particle } from './entities.js';
 import { generateStagePattern } from './map.js';
 import { WeatherSystem } from './weather.js';
 
@@ -102,7 +102,7 @@ export class GameEngine {
         
         // Boundary for Fairyland
         if (this.stageIdx === 4) {
-             const R = 1200;
+             const R = 600;
              const d = Math.hypot(this.player.x, this.player.y);
              if(d > R) {
                  const a = Math.atan2(this.player.y, this.player.x);
@@ -140,13 +140,13 @@ export class GameEngine {
     initFairyland() {
         this.staticObjects = [];
         // Center Pavilion
-        this.staticObjects.push(new StaticObject(0, -200, 'pavilion'));
+        this.staticObjects.push(new StaticObject(0, -100, 'pavilion'));
         // Gate
-        this.staticObjects.push(new StaticObject(0, 500, 'gate'));
+        this.staticObjects.push(new StaticObject(0, 250, 'gate'));
         // Trees and Rocks
-        for(let i=0; i<30; i++) {
+        for(let i=0; i<20; i++) {
             const a = Math.random()*Math.PI*2;
-            const r = 300 + Math.random()*800;
+            const r = 150 + Math.random()*350;
             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, Math.random()>0.6 ? 'pine' : 'stone_s'));
         }
     }
@@ -158,46 +158,129 @@ export class GameEngine {
         ctx.save();
 
         if (this.stageIdx === 4) {
-             // Fairyland Special Render
-             // 1. Sky Gradient
+             // --- 昆仑仙境 (Fixed Perspective + 2.5D Tilt) ---
+             
+             // 1. 天空背景 (Screen Space)
              const grad = ctx.createLinearGradient(0, 0, 0, this.height);
-             grad.addColorStop(0, '#2c3e50'); grad.addColorStop(1, '#4ca1af');
+             grad.addColorStop(0, '#000000'); 
+             grad.addColorStop(1, '#2c3e50'); 
              ctx.fillStyle = grad; ctx.fillRect(0, 0, this.width, this.height);
+
+             // 2. 远景 (Screen Space - Fixed)
+             // ☀️ 红日
+             ctx.fillStyle = '#e74c3c';
+             ctx.shadowColor = '#c0392b'; ctx.shadowBlur = 30;
+             ctx.beginPath(); ctx.arc(this.width/2, this.height*0.15, 60, 0, Math.PI*2); ctx.fill();
+             ctx.shadowBlur = 0;
+
+             // ⛰️ 悬浮岛绘制函数
+             const drawConeIsland = (cx, cy, w, h) => {
+                 ctx.fillStyle = '#37474f'; 
+                 ctx.beginPath();
+                 ctx.moveTo(cx - w/2, cy); 
+                 ctx.bezierCurveTo(cx - w/4, cy + h, cx + w/4, cy + h, cx + w/2, cy);
+                 ctx.fill();
+                 ctx.fillStyle = '#cfd8dc'; 
+                 ctx.beginPath(); ctx.ellipse(cx, cy, w/2, h/5, 0, 0, Math.PI*2); ctx.fill();
+             };
+
+             // 左岛 & 右岛
+             drawConeIsland(this.width * 0.2, this.height * 0.3, 120, 90);
+             drawConeIsland(this.width * 0.8, this.height * 0.25, 280, 180);
+
+             // --- 3. 地面层 (Ground Layer - Squashed) ---
+             const tilt = 0.5; // 强烈的倾斜角
+             const zoom = 0.75;
              
-             // 2. Parallax Background (Distant Islands)
              ctx.save();
-             const px = this.camera.x * 0.05; const py = this.camera.y * 0.05;
-             ctx.translate(-px, -py);
-             ctx.fillStyle = 'rgba(236, 240, 241, 0.2)';
-             ctx.beginPath(); ctx.ellipse(this.width*0.2, this.height*0.3, 100, 40, 0, 0, Math.PI*2); ctx.fill();
-             ctx.beginPath(); ctx.ellipse(this.width*0.8, this.height*0.6, 150, 60, 0, 0, Math.PI*2); ctx.fill();
-             // Setting Sun
-             ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(this.width*0.9, this.height*0.2, 60, 0, Math.PI*2); ctx.fill();
-             ctx.restore();
-             
-             // Camera Apply
+             // Transform for Ground
+             ctx.translate(this.width/2, this.height/2);
+             ctx.scale(zoom, zoom * tilt); 
+             ctx.translate(-this.width/2, -this.height/2);
+
+             // Camera
              let sx = (Math.random() - 0.5) * this.shake * 10;
              let sy = (Math.random() - 0.5) * this.shake * 10;
              ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
              
-             // 3. The Floating Island
-             const R = 1250;
-             ctx.save();
-             ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 100;
-             ctx.fillStyle = '#bdc3c7'; // Base color
+             const R = 600;
+             
+             // 主岛倒锥体基座
+             ctx.fillStyle = '#37474f'; 
+             ctx.beginPath();
+             ctx.moveTo(-R, 0);
+             ctx.bezierCurveTo(-R*0.4, R*2.5, R*0.4, R*2.5, R, 0);
+             ctx.fill();
+             
+             // 基座纹理
+             ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 30;
+             ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, R*2); ctx.stroke();
+             ctx.lineWidth = 15;
+             ctx.beginPath(); ctx.moveTo(-R*0.5, 0); ctx.lineTo(-R*0.2, R*1.5); ctx.stroke();
+             ctx.beginPath(); ctx.moveTo(R*0.5, 0); ctx.lineTo(R*0.2, R*1.5); ctx.stroke();
+
+             // 主岛表面
+             ctx.fillStyle = '#ecf0f1'; 
              ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI*2); ctx.fill();
-             ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+             ctx.save(); ctx.clip();
+             if(this.bgPattern) { 
+                 ctx.globalAlpha = 0.5; ctx.fillStyle = this.bgPattern; 
+                 ctx.fillRect(-R, -R, R*2, R*2); ctx.globalAlpha = 1.0;
+             }
+             ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 10;
+             ctx.beginPath(); ctx.arc(0, 0, R-5, 0, Math.PI*2); ctx.stroke();
+             ctx.restore(); // End Clip
+             ctx.restore(); // End Ground Transform
              
-             // Clip for texture
-             ctx.clip();
-             if(this.bgPattern) { ctx.fillStyle = this.bgPattern; ctx.fillRect(-R, -R, R*2, R*2); }
+             // --- 4. 实体层 (Entity Layer - Standing Up) ---
+             ctx.save();
+             // Transform for Entities (Zoom Only, No Tilt on Sprite)
+             ctx.translate(this.width/2, this.height/2);
+             ctx.scale(zoom, zoom); 
+             // FIX: Compensate for the tilt scaling difference in centering
+             ctx.translate(-this.width/2, -this.height/2 * tilt); 
              
-             // Grid
-             ctx.strokeStyle = stage.grid; ctx.lineWidth = 2; ctx.globalAlpha = 0.3;
-             const G = 100;
-             for(let x=-R; x<R; x+=G) { ctx.beginPath(); ctx.moveTo(x, -Math.sqrt(R*R-x*x)); ctx.lineTo(x, Math.sqrt(R*R-x*x)); ctx.stroke(); }
-             for(let y=-R; y<R; y+=G) { ctx.beginPath(); ctx.moveTo(-Math.sqrt(R*R-y*y), y); ctx.lineTo(Math.sqrt(R*R-y*y), y); ctx.stroke(); }
-             ctx.restore();
+             // Camera (Manually tilted Y)
+             ctx.translate(-this.camera.x + sx, (-this.camera.y + sy) * tilt);
+             
+             // Helper to draw entity at tilted position
+             const drawBillboard = (list) => {
+                 list.forEach(e => {
+                     const oy = e.y;
+                     e.y = e.y * tilt; // Project Y
+                     e.draw(ctx);
+                     e.y = oy; // Restore
+                 });
+             };
+
+             drawBillboard(this.staticObjects);
+             drawBillboard(this.orbs);
+             drawBillboard(this.chests);
+             drawBillboard(this.enemies);
+             
+             // Player
+             const py = this.player.y;
+             this.player.y *= tilt;
+             this.player.draw(ctx);
+             this.player.y = py;
+             
+             ctx.globalCompositeOperation = 'lighter';
+             drawBillboard(this.bullets);
+             // Particles usually don't need projection if they are round, but for position yes
+             drawBillboard(this.particles); 
+             ctx.globalCompositeOperation = 'source-over';
+             
+             // Weather & Text (Using tilted camera to match entities)
+             // Weather logic expects untransformed context relative to camera
+             // But here we have a Zoomed context. 
+             // Let's just run it, it will be Zoomed.
+             // But camera is (x, y*tilt). Weather uses camera.x, camera.y.
+             // This might cause weather to drift faster/slower vertically.
+             // Acceptable for now.
+             drawBillboard(this.texts);
+             
+             ctx.restore(); // End Entity Transform
 
         } else {
             // Standard Render
@@ -224,24 +307,23 @@ export class GameEngine {
             for(let y=sy_grid; y<this.camera.y+this.height; y+=G) { ctx.moveTo(this.camera.x, y); ctx.lineTo(this.camera.x+this.width, y); }
             ctx.stroke();
             ctx.globalAlpha = 1.0;
+            
+            this.staticObjects.forEach(o => o.draw(ctx));
+            this.orbs.forEach(o => o.draw(ctx));
+            this.chests.forEach(c => c.draw(ctx));
+            this.enemies.forEach(e => e.draw(ctx));
+            this.player.draw(ctx);
+            
+            ctx.globalCompositeOperation = 'lighter';
+            this.bullets.forEach(b => b.draw(ctx));
+            this.particles.forEach(p => p.draw(ctx));
+            ctx.globalCompositeOperation = 'source-over';
+            
+            this.weather.draw(ctx, this.camera);
+            this.texts.forEach(t => t.draw(ctx));
+            ctx.restore();
         }
         
-        this.staticObjects.forEach(o => o.draw(ctx));
-        this.orbs.forEach(o => o.draw(ctx));
-        this.chests.forEach(c => c.draw(ctx));
-        this.enemies.forEach(e => e.draw(ctx));
-        this.player.draw(ctx);
-        
-        // 叠加模式让特效更亮
-        ctx.globalCompositeOperation = 'lighter';
-        this.bullets.forEach(b => b.draw(ctx));
-        this.particles.forEach(p => p.draw(ctx));
-        ctx.globalCompositeOperation = 'source-over';
-        
-        this.weather.draw(ctx, this.camera);
-        this.texts.forEach(t => t.draw(ctx));
-        ctx.restore();
-
         // Low HP Vignette (Screen Space)
         if (this.player.hp / this.player.maxHp < 0.3) {
             const ratio = this.player.hp / this.player.maxHp;
@@ -258,10 +340,22 @@ export class GameEngine {
     }
     
     spawnEnemy(diff) {
-        const a = Math.random() * Math.PI * 2;
-        const r = Math.max(this.width, this.height)/2 + 100;
-        const x = this.player.x + Math.cos(a)*r;
-        const y = this.player.y + Math.sin(a)*r;
+        let x, y;
+        if (this.stageIdx === 4) {
+            // 仙境模式：在岛屿边缘生成 (R=600)
+            const a = Math.random() * Math.PI * 2;
+            const r = 580; // 略微向内
+            x = Math.cos(a) * r;
+            y = Math.sin(a) * r;
+            // 生成特效 (黑雾)
+            for(let i=0; i<5; i++) this.particles.push(new Particle(x, y, '#2c3e50', 0.5, 4));
+        } else {
+            // 普通模式：屏幕外生成
+            const a = Math.random() * Math.PI * 2;
+            const r = Math.max(this.width, this.height)/2 + 100;
+            x = this.player.x + Math.cos(a)*r;
+            y = this.player.y + Math.sin(a)*r;
+        }
         
         const stage = STAGES[this.stageIdx];
         const type = stage.mobs[Math.floor(Math.random() * stage.mobs.length)];
@@ -270,10 +364,19 @@ export class GameEngine {
     }
 
     spawnElite(diff) {
-        const a = Math.random() * Math.PI * 2;
-        const r = Math.max(this.width, this.height)/2 + 100;
-        const x = this.player.x + Math.cos(a)*r;
-        const y = this.player.y + Math.sin(a)*r;
+        let x, y;
+        if (this.stageIdx === 4) {
+            const a = Math.random() * Math.PI * 2;
+            const r = 550;
+            x = Math.cos(a) * r;
+            y = Math.sin(a) * r;
+        } else {
+            const a = Math.random() * Math.PI * 2;
+            const r = Math.max(this.width, this.height)/2 + 100;
+            x = this.player.x + Math.cos(a)*r;
+            y = this.player.y + Math.sin(a)*r;
+        }
+
         const stage = STAGES[this.stageIdx];
         const type = stage.mobs[Math.floor(Math.random() * stage.mobs.length)];
         
