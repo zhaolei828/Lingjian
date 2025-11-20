@@ -151,9 +151,19 @@ const SVG_LIB = {
 
     // 怪物
     bat: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M32 40 Q60 10 60 30 L32 50 L4 30 Q4 10 32 40" fill="#c0392b"/><circle cx="25" cy="35" r="2" fill="#ffeb3b"/><circle cx="39" cy="35" r="2" fill="#ffeb3b"/></svg>`,
+    bat_fire: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M32 40 Q60 10 60 30 L32 50 L4 30 Q4 10 32 40" fill="#ff5722"/><circle cx="25" cy="35" r="2" fill="#ffeb3b"/><circle cx="39" cy="35" r="2" fill="#ffeb3b"/></svg>`,
     ghost: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="30" r="20" fill="#009688" opacity="0.6"/><path d="M12 30 Q32 60 52 30" fill="none" stroke="#004d40" stroke-width="2"/><circle cx="25" cy="25" r="3" fill="#000"/><circle cx="39" cy="25" r="3" fill="#000"/></svg>`,
+    ghost_ice: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="30" r="20" fill="#03a9f4" opacity="0.6"/><path d="M12 30 Q32 60 52 30" fill="none" stroke="#0277bd" stroke-width="2"/><circle cx="25" cy="25" r="3" fill="#000"/><circle cx="39" cy="25" r="3" fill="#000"/></svg>`,
     rock: `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M20 60 L10 40 L30 10 L60 15 L70 50 L50 70 Z" fill="#5d4037"/><rect x="25" y="35" width="10" height="10" fill="#ff5722"/></svg>`
 };
+
+const STAGES = [
+    { name: '幽暗密林', time: 0, bg: '#0f1519', grid: '#1c262b', mobs: ['bat'] },
+    { name: '埋骨之地', time: 60, bg: '#202020', grid: '#333333', mobs: ['bat', 'ghost'] },
+    { name: '熔岩炼狱', time: 120, bg: '#1a0505', grid: '#3d0e0e', mobs: ['bat_fire', 'rock'] },
+    { name: '极寒冰原', time: 180, bg: '#050a1a', grid: '#0e1e3d', mobs: ['ghost_ice', 'rock'] },
+    { name: '天外虚空', time: 300, bg: '#000000', grid: '#222', mobs: ['bat_fire', 'ghost_ice', 'rock'] }
+];
 
 const Assets = {};
 function loadAssets() {
@@ -177,6 +187,7 @@ class GameEngine {
         this.lastTime = 0;
         this.playTime = 0;
         this.score = 0;
+        this.stageIdx = 0;
         this.player = null;
         this.enemies = []; this.bullets = []; this.particles = []; this.orbs = []; this.texts = [];
         this.camera = { x: 0, y: 0 };
@@ -196,11 +207,12 @@ class GameEngine {
     start() {
         this.player = new Player();
         this.enemies=[]; this.bullets=[]; this.particles=[]; this.orbs=[]; this.texts=[];
-        this.score=0; this.playTime=0; this.state='PLAY';
+        this.score=0; this.playTime=0; this.stageIdx=0; this.state='PLAY';
         document.getElementById('overlay').classList.add('hidden');
         document.getElementById('start-menu').classList.add('hidden');
         document.getElementById('gameover-menu').classList.add('hidden');
         this.updateUI();
+        this.showStageTitle(STAGES[0].name);
     }
     
     loop(now) {
@@ -214,6 +226,16 @@ class GameEngine {
         this.playTime += dt;
         if(this.shake > 0) this.shake -= dt * 10;
         
+        // 关卡检测
+        const nextStage = STAGES[this.stageIdx + 1];
+        if (nextStage && this.playTime >= nextStage.time) {
+            this.stageIdx++;
+            this.showStageTitle(STAGES[this.stageIdx].name);
+            // 进阶回血
+            this.player.hp = Math.min(this.player.hp + 20, this.player.maxHp);
+            this.updateUI();
+        }
+
         // 刷怪
         const diff = 1 + this.playTime/60;
         if(Math.random() < dt / (1.5/diff)) this.spawnEnemy(diff);
@@ -244,8 +266,10 @@ class GameEngine {
     
     draw() {
         const ctx = this.ctx;
+        const stage = STAGES[this.stageIdx];
+
         // 背景
-        ctx.fillStyle = '#0f1519';
+        ctx.fillStyle = stage.bg;
         ctx.fillRect(0, 0, this.width, this.height);
         
         ctx.save();
@@ -255,7 +279,7 @@ class GameEngine {
         ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
         
         // 网格
-        ctx.strokeStyle = '#1c262b'; ctx.lineWidth = 2;
+        ctx.strokeStyle = stage.grid; ctx.lineWidth = 2;
         const G = 100;
         const sx_grid = Math.floor(this.camera.x/G)*G;
         const sy_grid = Math.floor(this.camera.y/G)*G;
@@ -283,14 +307,26 @@ class GameEngine {
         const r = Math.max(this.width, this.height)/2 + 100;
         const x = this.player.x + Math.cos(a)*r;
         const y = this.player.y + Math.sin(a)*r;
-        let type = 'bat';
-        if(this.playTime > 45 && Math.random()>0.6) type='ghost';
-        if(this.playTime > 90 && Math.random()>0.8) type='rock';
+        
+        const stage = STAGES[this.stageIdx];
+        const type = stage.mobs[Math.floor(Math.random() * stage.mobs.length)];
+        
         this.enemies.push(new Enemy(type, x, y, diff));
     }
     
     formatTime(s) { return `${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`; }
     
+    showStageTitle(text) {
+        // 简单实现：创建一个大的浮动文字或者使用DOM
+        const d = document.createElement('div');
+        d.style.position = 'absolute'; d.style.top='30%'; d.style.left='50%'; d.style.transform='translate(-50%, -50%)';
+        d.style.fontSize = '60px'; d.style.color = '#f1c40f'; d.style.textShadow = '0 0 20px black';
+        d.style.pointerEvents = 'none'; d.style.animation = 'float 3s ease-out';
+        d.innerText = `进入区域: ${text}`;
+        document.body.appendChild(d);
+        setTimeout(() => d.remove(), 3000);
+    }
+
     updateUI() {
         const p = this.player;
         document.getElementById('hp-bar').style.width = (p.hp/p.maxHp*100)+'%';
@@ -393,7 +429,9 @@ class Enemy extends Entity {
     constructor(type,x,y,diff) {
         super(x,y); this.type=type;
         if(type==='bat'){ this.hp=20*diff; this.speed=150; this.dmg=5; this.exp=5; this.img='bat'; }
+        else if(type==='bat_fire'){ this.hp=30*diff; this.speed=180; this.dmg=8; this.exp=8; this.img='bat_fire'; }
         else if(type==='ghost'){ this.hp=40*diff; this.speed=100; this.dmg=10; this.exp=10; this.img='ghost'; }
+        else if(type==='ghost_ice'){ this.hp=50*diff; this.speed=90; this.dmg=12; this.exp=15; this.img='ghost_ice'; }
         else { this.hp=100*diff; this.speed=60; this.dmg=20; this.exp=25; this.img='rock'; }
         this.maxHp=this.hp; this.pushX=0; this.pushY=0;
         this.slowTimer = 0;
