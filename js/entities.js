@@ -1,4 +1,5 @@
 import { Assets } from './assets.js';
+import { ROLES } from './data.js';
 
 export class Entity { 
     constructor(x,y) { this.x=x; this.y=y; this.dead=false; } 
@@ -6,12 +7,36 @@ export class Entity {
 }
 
 export class Player extends Entity {
-    constructor() {
+    constructor(roleId = 'sword') {
         super(0,0);
-        this.hp=100; this.maxHp=100; this.speed=250;
+        const role = ROLES.find(r => r.id === roleId) || ROLES[0];
+        this.role = role;
+        
+        this.hp = role.hp; 
+        this.maxHp = role.hp; 
+        this.speed = role.speed;
+        
         this.exp=0; this.maxExp=10; this.lvl=1;
         // stats包含 element: 'sword'|'fire'|'thunder'|'wood'|'water'|'earth'
-        this.stats = { dmg:20, area:150, count:1, cd:0.8, spd:500, element:'sword', pierce:0 }; 
+        this.stats = { 
+            dmg: role.dmg, 
+            area: 150, 
+            count: 1, 
+            cd: role.cd, 
+            spd: 500, 
+            element: 'sword', // Default start element
+            pierce: 0,
+            thunderProb: 0, // Mage special
+            knockback: 1.0, // Body special
+            bulletSpeed: 500, // Beast special
+            bulletLife: 2.0,  // Beast special
+            stun: false       // Bard special
+        }; 
+        
+        if (roleId === 'mage') this.stats.element = 'fire';
+        if (roleId === 'beast') { this.stats.element = 'beast'; this.stats.bulletSpeed = 300; this.stats.bulletLife = 3.0; }
+        if (roleId === 'bard') { this.stats.element = 'bard'; this.stats.pierce = 99; this.stats.area = 1.0; this.stats.spd = 300; }
+        
         this.cdTimer=0; this.facing=1; this.lvlUpFx=0;
         
         // Dash stats
@@ -59,8 +84,31 @@ export class Player extends Entity {
         return near;
     }
     fire(t) {
+        // Special attack for Body Cultivator (Shockwave / Melee)
+        if (this.role.id === 'body') {
+             // Shockwave effect around player
+             const range = this.stats.area; // Use stats.area
+             window.Game.particles.push(new Particle(this.x, this.y, '#795548', 0.5, range/2)); 
+             window.Game.screenShake(0.1);
+             
+             // Hit all enemies in range
+             for(let e of window.Game.enemies) {
+                 if(this.dist(e) < range) {
+                     const a = Math.atan2(e.y - this.y, e.x - this.x);
+                     e.takeDamage(this.stats.dmg, Math.cos(a), Math.sin(a), 'earth', this.stats.knockback);
+                 }
+             }
+             return;
+        }
+
         for(let i=0; i<this.stats.count; i++) {
             setTimeout(() => {
+                // Mage Special: Extra Thunder
+                if (this.stats.thunderProb > 0 && Math.random() < this.stats.thunderProb) {
+                     window.Game.particles.push(new Lightning(this.x, this.y, t.x, t.y));
+                     t.takeDamage(this.stats.dmg * 1.5, 0, 0, 'thunder'); // Thunder bonus dmg
+                }
+
                 if (this.stats.element === 'thunder') {
                     if (t.dead) return;
                     window.Game.particles.push(new Lightning(this.x, this.y, t.x, t.y));
@@ -81,7 +129,7 @@ export class Player extends Entity {
             ctx.save(); ctx.translate(this.x, this.y);
             ctx.globalAlpha = 0.5;
             ctx.scale(this.facing, 1);
-            ctx.drawImage(Assets['player'], -32 - (Math.random()-0.5)*10, -32, 64, 64);
+            ctx.drawImage(Assets[this.role.svg], -32 - (Math.random()-0.5)*10, -32, 64, 64);
             ctx.restore();
         }
 
@@ -92,6 +140,8 @@ export class Player extends Entity {
         if(this.stats.element === 'wood') auraColor = '#2ecc71';
         if(this.stats.element === 'water') auraColor = '#3498db';
         if(this.stats.element === 'earth') auraColor = '#e67e22';
+        if(this.stats.element === 'beast') auraColor = '#33691e';
+        if(this.stats.element === 'bard') auraColor = '#e91e63';
         
         ctx.rotate(t*0.5);
         ctx.beginPath(); ctx.arc(0,0,45,0,Math.PI*2);
@@ -100,7 +150,7 @@ export class Player extends Entity {
         
         ctx.save(); ctx.translate(this.x, this.y);
         ctx.scale(this.facing, 1);
-        ctx.drawImage(Assets['player'], -32, -32, 64, 64);
+        ctx.drawImage(Assets[this.role.svg], -32, -32, 64, 64);
         ctx.restore();
         
         // Dash Cooldown Bar
@@ -152,10 +202,13 @@ export class Enemy extends Entity {
         this.pushX*=0.9; this.pushY*=0.9;
         if(this.dist(p)<30*this.scale) p.hit(this.dmg*dt);
     }
-    takeDamage(v, kx, ky, type) {
+    takeDamage(v, kx, ky, type, knockbackMult = 1.0) {
         this.hp-=v; 
         let force = 120;
         if(type === 'earth') force = 300; // 土系强击退
+        
+        force *= knockbackMult; // Apply skill multiplier
+
         if(this.isElite) force *= 0.2; // 精英怪抗击退
         
         this.pushX=kx*force; this.pushY=ky*force;
@@ -166,6 +219,8 @@ export class Enemy extends Entity {
         if(type === 'wood') c = '#2ecc71';
         if(type === 'water') c = '#3498db';
         if(type === 'earth') c = '#e67e22';
+        if(type === 'beast') c = '#8d6e63';
+        if(type === 'bard') c = '#ec407a';
         window.Game.texts.push(new FloatText(this.x,this.y-20*this.scale,Math.floor(v), c));
         
         if(type === 'water') this.slowTimer = 2.0; // 冰冻减速
@@ -215,16 +270,80 @@ export class Bullet extends Entity {
         super(x, y);
         this.type = s.element; 
         const a = Math.atan2(t.y-y, t.x-x) + (Math.random()-0.5)*0.1;
-        this.vx = Math.cos(a)*s.spd; this.vy = Math.sin(a)*s.spd;
-        this.life = 2.0; this.dmg = s.dmg; this.angle = a;
+        
+        let spd = s.spd;
+        if(s.element === 'beast') spd = s.bulletSpeed;
+        
+        this.vx = Math.cos(a)*spd; this.vy = Math.sin(a)*spd;
+        this.life = 2.0; 
+        if(s.element === 'beast') this.life = s.bulletLife;
+        
+        this.dmg = s.dmg; this.angle = a;
         this.pierce = s.pierce || 0; // 穿透次数
         this.hitList = []; 
+        this.stun = s.stun || false; // Bard stun
+        this.target = t; // For beast homing
+        
+        // Bard specific: Sine wave init
+        this.bornTime = 0;
+        this.originVX = this.vx;
+        this.originVY = this.vy;
         
         if(this.type === 'earth') { this.life = 3.0; this.dmg *= 1.5; }
     }
     update(dt) {
         this.life-=dt; if(this.life<=0) this.dead=true;
-        this.x+=this.vx*dt; this.y+=this.vy*dt;
+        this.bornTime += dt;
+        
+        if (this.type === 'beast') {
+             // Beast Homing logic (Wolf runs towards enemy)
+             if (!this.target.dead) {
+                 const d = this.dist(this.target);
+                 if (d > 10) {
+                     const a = Math.atan2(this.target.y - this.y, this.target.x - this.x);
+                     // Smooth turn
+                     // Current angle
+                     let ca = Math.atan2(this.vy, this.vx);
+                     // Lerp angle? Simple way: just adjust velocity vector towards target
+                     const turnSpeed = 5.0 * dt;
+                     const speed = Math.hypot(this.vx, this.vy);
+                     this.vx += Math.cos(a) * speed * turnSpeed;
+                     this.vy += Math.sin(a) * speed * turnSpeed;
+                     // Normalize speed
+                     const newSpeed = Math.hypot(this.vx, this.vy);
+                     this.vx = (this.vx / newSpeed) * speed;
+                     this.vy = (this.vy / newSpeed) * speed;
+                     this.angle = Math.atan2(this.vy, this.vx);
+                 }
+             } else {
+                 // Find new target if current is dead
+                  let near=null, minD=400;
+                  for(let e of window.Game.enemies) { const d=this.dist(e); if(d<minD){minD=d; near=e;} }
+                  if(near) this.target = near;
+             }
+             this.x += this.vx * dt;
+             this.y += this.vy * dt;
+             
+        } else if (this.type === 'bard') {
+             // Sine Wave Movement
+             // Base movement
+             this.x += this.originVX * dt;
+             this.y += this.originVY * dt;
+             
+             // Perpendicular oscillation
+             // Vector perpendicular to velocity: (-vy, vx)
+             const amp = 150 * dt * Math.cos(this.bornTime * 10); // 10 rad/s freq
+             const speed = Math.hypot(this.originVX, this.originVY);
+             const perpX = -this.originVY / speed;
+             const perpY = this.originVX / speed;
+             
+             this.x += perpX * amp;
+             this.y += perpY * amp;
+             
+             this.angle = Math.atan2(this.vy, this.vx); // Keeps pointing fwd roughly
+        } else {
+             this.x+=this.vx*dt; this.y+=this.vy*dt;
+        }
         
         if(this.type === 'fire') {
             if(Math.random()>0.2) window.Game.particles.push(new Particle(this.x,this.y,'#ff5722',0.5, 5));
@@ -233,6 +352,10 @@ export class Bullet extends Entity {
         } else if (this.type === 'thunder') {
              // Keep compatible for fallback logic
              window.Game.particles.push(new Particle(this.x,this.y,'#fff',0.2, 2));
+        } else if (this.type === 'beast') {
+             if(Math.random()>0.7) window.Game.particles.push(new Particle(this.x,this.y,'#5d4037',0.3, 3));
+        } else if (this.type === 'bard') {
+             if(Math.random()>0.5) window.Game.particles.push(new Particle(this.x,this.y,'#f48fb1',0.4, 4));
         } else {
             if(Math.random()>0.5) window.Game.particles.push(new Particle(this.x,this.y,'#00bcd4',0.3, 3));
         }
@@ -252,7 +375,8 @@ export class Bullet extends Entity {
     }
     hit(e) {
         e.takeDamage(this.dmg, Math.cos(this.angle), Math.sin(this.angle), this.type);
-        
+        if (this.stun) e.slowTimer = 1.0; // Bard stun (slow)
+
         if(this.type === 'fire') {
             for(let i=0; i<10; i++) window.Game.particles.push(new Particle(this.x,this.y,'#ff9800', 0.6, 8));
         } else if(this.type === 'water') {
@@ -260,6 +384,12 @@ export class Bullet extends Entity {
         } else if(this.type === 'earth') {
              window.Game.screenShake(0.2);
              for(let i=0; i<8; i++) window.Game.particles.push(new Particle(this.x,this.y,'#795548', 0.5, 6));
+        } else if(this.type === 'beast') {
+             // Blood effect?
+             for(let i=0; i<5; i++) window.Game.particles.push(new Particle(this.x,this.y,'#8d6e63', 0.4, 5));
+        } else if(this.type === 'bard') {
+             // Music note effect
+             for(let i=0; i<6; i++) window.Game.particles.push(new Particle(this.x,this.y,'#ec407a', 0.5, 6));
         } else {
             window.Game.particles.push(new Particle(this.x,this.y,'#fff',0.2, 6));
         }
@@ -278,13 +408,20 @@ export class Bullet extends Entity {
         } else if(this.type === 'earth') {
             ctx.rotate(window.Game.playTime * 2);
             ctx.drawImage(Assets['rock_b'], -20, -20, 40, 40);
+        } else if(this.type === 'beast') {
+             ctx.rotate(-Math.PI/2); // Adjust wolf rotation
+             if (this.vx < 0) ctx.scale(1, -1); // Flip if moving left
+             ctx.drawImage(Assets['wolf'], -24, -16, 48, 32);
+        } else if(this.type === 'bard') {
+             ctx.rotate(Math.sin(this.bornTime*10)*0.5);
+             ctx.drawImage(Assets['note'], -16, -24, 32, 48);
         } else {
             ctx.drawImage(Assets['sword'], -10, -20, 20, 40);
         }
         ctx.restore();
     }
 }
-
+// ... Lightning, Particle, Orb, Chest, FloatText, StaticObject classes ...
 export class Lightning {
     constructor(x1, y1, x2, y2) {
         this.path = [];

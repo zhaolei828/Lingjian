@@ -29,18 +29,48 @@
 <div id="overlay">
     <div id="start-menu" class="menu-box">
         <div class="game-title">灵剑 • 绝世仙缘</div>
-        <p style="color: #aaa; margin-bottom: 40px;">万法归一 • 特效升级版</p>
+        <p style="color: #aaa; margin-bottom: 20px;">万法归一 • 特效升级版</p>
+        
+        <div style="color:#f1c40f; margin-bottom: 10px; font-size: 18px;">--- 选择仙门传承 ---</div>
+        <div class="role-select" style="flex-wrap: wrap; gap: 15px;">
+            <div class="role-card selected" data-id="sword" onclick="selectRole('sword')">
+                <div class="role-icon">⚔️</div>
+                <h4>蜀山剑修</h4>
+                <p>御剑飞行，攻速极快</p>
+            </div>
+            <div class="role-card" data-id="mage" onclick="selectRole('mage')">
+                <div class="role-icon">🔥</div>
+                <h4>昆仑符师</h4>
+                <p>五行术法，威力巨大</p>
+            </div>
+            <div class="role-card" data-id="body" onclick="selectRole('body')">
+                <div class="role-icon">💪</div>
+                <h4>蓬莱体修</h4>
+                <p>肉身成圣，血厚防高</p>
+            </div>
+            <div class="role-card" data-id="beast" onclick="selectRole('beast')">
+                <div class="role-icon">🐺</div>
+                <h4>万兽山庄</h4>
+                <p>驱使灵兽，自动索敌</p>
+            </div>
+            <div class="role-card" data-id="bard" onclick="selectRole('bard')">
+                <div class="role-icon">🎵</div>
+                <h4>长歌门</h4>
+                <p>琴音化刃，穿透群敌</p>
+            </div>
+        </div>
+
         <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
-            <button class="btn" onclick="Game.start(0)">开宗立派</button>
+            <button class="btn" onclick="startGame(0)">开宗立派</button>
             
             <div class="stage-select">
                 <div style="color:#aaa; font-size:12px; margin-bottom:8px; letter-spacing:1px;">--- 或 选择试炼之地 ---</div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-                     <button class="btn-mini" onclick="Game.start(0)">密林</button>
-                     <button class="btn-mini" onclick="Game.start(1)">埋骨</button>
-                     <button class="btn-mini" onclick="Game.start(2)">炼狱</button>
-                     <button class="btn-mini" onclick="Game.start(3)">冰原</button>
-                     <button class="btn-mini" onclick="Game.start(4)" style="color:#f1c40f; border-color:#f1c40f;">仙境</button>
+                     <button class="btn-mini" onclick="startGame(0)">密林</button>
+                     <button class="btn-mini" onclick="startGame(1)">埋骨</button>
+                     <button class="btn-mini" onclick="startGame(2)">炼狱</button>
+                     <button class="btn-mini" onclick="startGame(3)">冰原</button>
+                     <button class="btn-mini" onclick="startGame(4)" style="color:#f1c40f; border-color:#f1c40f;">仙境</button>
                 </div>
             </div>
 

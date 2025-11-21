@@ -1,9 +1,21 @@
 export const SVG_LIB = {
+    // ... existing SVGs ...
     player: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g"><feGaussianBlur stdDeviation="2"/></filter></defs><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M30 80 Q10 90 20 110" stroke="#3498db" stroke-width="4" fill="none"/><path d="M98 80 Q118 90 108 110" stroke="#3498db" stroke-width="4" fill="none"/><path d="M44 70 Q64 120 84 70 L 84 50 L 44 50 Z" fill="#ecf0f1"/><rect x="44" y="50" width="40" height="30" fill="#ecf0f1"/><path d="M44 50 L44 100 L64 90 L84 100 L84 50" fill="none" stroke="#2c3e50" stroke-width="2"/><path d="M64 50 L64 100" stroke="#3498db" stroke-width="4"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M40 30 Q64 10 88 30 Q90 50 86 60 Q64 65 42 60 Q38 50 40 30" fill="#2c3e50"/><circle cx="64" cy="15" r="10" fill="#2c3e50"/><rect x="59" y="10" width="10" height="5" fill="#f1c40f"/><circle cx="56" cy="42" r="2" fill="#000"/><circle cx="72" cy="42" r="2" fill="#000"/></svg>`,
     
+    // New Role SVGs
+    player_sword: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L44 100 L64 90 L84 100 L84 50" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M40 30 Q64 10 88 30 Q90 50 86 60 Q64 65 42 60 Q38 50 40 30" fill="#1565c0"/><rect x="59" y="10" width="10" height="5" fill="#f1c40f"/><path d="M20 60 L40 70 L30 90 Z" fill="#90caf9"/><path d="M108 60 L88 70 L98 90 Z" fill="#90caf9"/></svg>`,
+    player_mage: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 110 L88 110 L84 50" fill="#ffecb3" stroke="#ff6f00" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M35 35 Q64 0 93 35 Q95 55 64 60 Q33 55 35 35" fill="#d84315"/><circle cx="64" cy="20" r="8" fill="#ffeb3b"/><path d="M20 50 Q10 70 30 80" fill="none" stroke="#ff6f00" stroke-width="3"/><path d="M108 50 Q118 70 98 80" fill="none" stroke="#ff6f00" stroke-width="3"/></svg>`,
+    player_body: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M34 50 L44 100 L64 90 L84 100 L94 50" fill="#795548" stroke="#3e2723" stroke-width="2"/><rect x="34" y="50" width="60" height="40" fill="#5d4037"/><circle cx="64" cy="40" r="20" fill="#ffe0b2"/><path d="M44 30 L84 30" stroke="#000" stroke-width="5"/><circle cx="44" cy="30" r="10" fill="#3e2723"/><circle cx="84" cy="30" r="10" fill="#3e2723"/><path d="M20 60 L34 60 L30 80" fill="#ffe0b2" stroke="#3e2723"/><path d="M108 60 L94 60 L98 80" fill="#ffe0b2" stroke="#3e2723"/></svg>`,
+    
+    player_beast: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 100 L64 90 L88 100 L84 50" fill="#a1887f" stroke="#5d4037" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M30 30 Q64 10 98 30 Q90 50 86 60 Q64 65 42 60 Q38 50 30 30" fill="#33691e"/><path d="M30 20 L40 40 L30 50 Z" fill="#a1887f"/><path d="M98 20 L88 40 L98 50 Z" fill="#a1887f"/><path d="M20 60 L30 70 L25 90 Z" fill="#558b2f"/><path d="M108 60 L98 70 L103 90 Z" fill="#558b2f"/></svg>`,
+    player_bard: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 110 L88 110 L84 50" fill="#f8bbd0" stroke="#e91e63" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M35 30 Q64 5 93 30 Q95 55 64 60 Q33 55 35 30" fill="#880e4f"/><rect x="25" y="60" width="78" height="20" fill="#3e2723" transform="rotate(-15 64 70)"/><path d="M30 60 L100 80" stroke="#fff" stroke-width="1" transform="rotate(-15 64 70)"/></svg>`,
+
     sword: `<svg width="64" height="128" viewBox="0 0 64 128" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#00bcd4"/></linearGradient></defs><path d="M32 0 L22 20 L28 100 L36 100 L42 20 Z" fill="url(#sg)"/><rect x="20" y="90" width="24" height="6" fill="#f1c40f"/><circle cx="32" cy="110" r="4" fill="#f1c40f"/></svg>`,
     
     fire: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="fg"><stop offset="0%" stop-color="#ffff00"/><stop offset="50%" stop-color="#ff5722"/><stop offset="100%" stop-color="rgba(255,0,0,0)"/></radialGradient></defs><circle cx="32" cy="32" r="28" fill="url(#fg)"/><path d="M32 60 Q10 40 32 10 Q54 40 32 60" fill="#ff9800" opacity="0.7"/></svg>`,
+    
+    wolf: `<svg width="48" height="32" viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><path d="M10 20 L0 10 L15 5 L30 15 L45 10 L48 20 L30 30 L10 25 Z" fill="#a1887f" stroke="#5d4037"/><circle cx="10" cy="15" r="2" fill="#fff"/></svg>`,
+    note: `<svg width="32" height="48" viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="40" rx="8" ry="6" fill="#e91e63" transform="rotate(-20 10 40)"/><rect x="16" y="5" width="4" height="35" fill="#e91e63"/><path d="M16 5 Q32 15 32 30" stroke="#e91e63" stroke-width="4" fill="none"/></svg>`,
     
     thunder: `<svg width="40" height="100" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg"><path d="M20 0 L0 40 L15 40 L5 100 L35 50 L20 50 L40 10 Z" fill="#fff" stroke="#ffeb3b" stroke-width="2" stroke-linejoin="round"/></svg>`,
 
@@ -40,6 +52,14 @@ export const SVG_LIB = {
     ruin_pillar: `<svg width="50" height="80" viewBox="0 0 50 80" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="30" height="60" fill="#555"/><path d="M10 20 L40 30 L40 40 L10 30 Z" fill="#444"/><path d="M15 50 L35 50 M15 60 L35 60" stroke="#333" stroke-width="2"/></svg>`
 };
 
+export const ROLES = [
+    { id: 'sword', name: '蜀山剑修', hp: 100, dmg: 10, cd: 0.5, speed: 160, desc: '御剑飞行，攻速极快', svg: 'player_sword' },
+    { id: 'mage', name: '昆仑符师', hp: 80,  dmg: 25, cd: 1.0, speed: 140, desc: '五行术法，威力巨大', svg: 'player_mage' },
+    { id: 'body', name: '蓬莱体修', hp: 200, dmg: 15, cd: 0.8, speed: 150, desc: '肉身成圣，血厚防高', svg: 'player_body' },
+    { id: 'beast', name: '万兽山庄', hp: 120, dmg: 15, cd: 1.2, speed: 150, desc: '驱使灵兽，自动索敌', svg: 'player_beast' },
+    { id: 'bard', name: '长歌门', hp: 90, dmg: 18, cd: 0.6, speed: 145, desc: '琴音化刃，穿透群敌', svg: 'player_bard' }
+];
+
 export const STAGES = [
     { name: '幽暗密林', time: 0, bg: '#0f1519', grid: '#1c262b', mobs: ['bat'] },
     { name: '埋骨之地', time: 60, bg: '#202020', grid: '#333333', mobs: ['bat', 'ghost'] },
@@ -48,13 +68,34 @@ export const STAGES = [
     { name: '昆仑仙境', time: 300, bg: '#2c3e50', grid: '#34495e', mobs: ['bat_fire', 'ghost_ice', 'rock'] }
 ];
 
-export const SKILLS = [
-    { id:'sword_mult', name:'万剑归宗', desc:'飞剑数量 +1', icon:'⚔️', effect:s=>s.count++ },
-    { id:'dmg', name:'太乙剑气', desc:'基础伤害 +20', icon:'💪', effect:s=>s.dmg+=20 },
-    { id:'spd', name:'御剑术', desc:'攻速 +15%', icon:'🌪️', effect:s=>s.cd*=0.85 },
-    { id:'fire', name:'红莲业火', desc:'<b>[火系]</b> 攻击转化为爆裂火球', icon:'🔥', rare:'fire', effect:s=>{s.element='fire'; s.dmg+=10; s.spd*=0.8;} },
-    { id:'thunder', name:'九天神雷', desc:'<b>[雷系]</b> 攻击转化为极速闪电', icon:'⚡', rare:'thunder', effect:s=>{s.element='thunder'; s.cd*=0.7; s.dmg*=0.8;} },
-    { id:'wood', name:'青帝长生', desc:'<b>[木系]</b> 攻击附带穿透效果', icon:'🍃', rare:'wood', effect:s=>{s.element='wood'; s.pierce=3; s.dmg*=0.8;} },
-    { id:'water', name:'玄冥寒冰', desc:'<b>[水系]</b> 攻击造成大幅减速', icon:'❄️', rare:'water', effect:s=>{s.element='water'; s.dmg*=0.9;} },
-    { id:'earth', name:'厚土泰山', desc:'<b>[土系]</b> 攻击附带巨额击退', icon:'⛰️', rare:'earth', effect:s=>{s.element='earth'; s.dmg*=1.5; s.spd*=0.6;} }
-];
+export const SKILLS = {
+    common: [
+        { id:'dmg', name:'灵气护体', desc:'基础伤害 +15', icon:'💎', effect:s=>s.dmg+=15 },
+        { id:'spd', name:'轻身术', desc:'移动速度 +20', icon:'🦶', effect:s=>s.speed=(s.speed||150)+20 }
+    ],
+    sword: [
+        { id:'sword_mult', name:'万剑归宗', desc:'飞剑数量 +1', icon:'⚔️', effect:s=>s.count++ },
+        { id:'sword_spd', name:'御剑术', desc:'攻速 +20%', icon:'🌪️', effect:s=>s.cd*=0.8 },
+        { id:'sword_pierce', name:'青莲剑歌', desc:'飞剑穿透 +1', icon:'🗡️', effect:s=>s.pierce=(s.pierce||0)+1 }
+    ],
+    mage: [
+        { id:'mage_boom', name:'红莲业火', desc:'爆炸范围 +50%', icon:'💥', effect:s=>s.area=(s.area||100)*1.5 },
+        { id:'mage_cd', name:'五行流转', desc:'施法速度 +25%', icon:'📜', effect:s=>s.cd*=0.75 },
+        { id:'mage_thunder', name:'九天神雷', desc:'普通攻击 20% 几率触发落雷', icon:'⚡', effect:s=>s.thunderProb=(s.thunderProb||0)+0.2 }
+    ],
+    body: [
+        { id:'body_range', name:'法天象地', desc:'震荡范围 +30%', icon:'⛰️', effect:s=>s.area=(s.area||150)*1.3 },
+        { id:'body_dmg', name:'金刚不坏', desc:'震荡伤害 +40%', icon:'💪', effect:s=>s.dmg*=1.4 },
+        { id:'body_kb', name:'力拔山兮', desc:'击退效果大幅增强', icon:'👊', effect:s=>s.knockback=(s.knockback||1.0)*1.5 }
+    ],
+    beast: [
+        { id:'beast_speed', name:'灵兽狂暴', desc:'灵兽扑击速度 +30%', icon:'🐺', effect:s=>s.bulletSpeed=(s.bulletSpeed||250)*1.3 },
+        { id:'beast_duration', name:'兽魂不灭', desc:'灵兽存在时间 +50%', icon:'⏳', effect:s=>s.bulletLife=(s.bulletLife||1.5)*1.5 },
+        { id:'beast_mult', name:'万兽奔腾', desc:'召唤数量 +1', icon:'🐾', effect:s=>s.count++ }
+    ],
+    bard: [
+        { id:'bard_size', name:'大音希声', desc:'音波范围 +30%', icon:'🎵', effect:s=>s.area=(s.area||1.0)*1.3 },
+        { id:'bard_pierce', name:'魔音贯耳', desc:'音波穿透 +2', icon:'🎼', effect:s=>s.pierce=(s.pierce||99)+2 },
+        { id:'bard_stun', name:'余音绕梁', desc:'音波附带减速效果', icon:'❄️', effect:s=>s.stun=true }
+    ]
+};

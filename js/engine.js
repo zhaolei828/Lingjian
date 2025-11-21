@@ -35,8 +35,8 @@ export class GameEngine {
     
     resize() { this.width=this.canvas.width=window.innerWidth; this.height=this.canvas.height=window.innerHeight; }
     
-    start(stageIdx = 0) {
-        this.player = new Player();
+    start(stageIdx = 0, roleId = 'sword') {
+        this.player = new Player(roleId);
         this.enemies=[]; this.bullets=[]; this.particles=[]; this.orbs=[]; this.texts=[]; this.chests=[]; this.staticObjects=[];
         
         this.stageIdx = stageIdx;
