@@ -68,7 +68,6 @@ export class Player extends Entity {
             // Footprints
             this.footprintTimer -= dt;
             if(this.footprintTimer <= 0) {
-                // Only spawn footprints on ground-like stages (0, 1, 3)
                 if ([0,1,3].includes(window.Game.stageIdx)) {
                     window.Game.footprints.push(new Footprint(this.x, this.y + 20, Math.atan2(dy, dx)));
                     this.footprintTimer = 0.2;
@@ -209,7 +208,7 @@ export class Enemy extends Entity {
     }
     takeDamage(v, kx, ky, type, knockbackMult = 1.0) {
         this.hp-=v; 
-        this.hitFlashTimer = 0.1; // Flash white
+        this.hitFlashTimer = 0.1; // Flash
         
         let force = 120;
         if(type === 'earth') force = 300; 
@@ -265,18 +264,15 @@ export class Enemy extends Entity {
             ctx.restore();
         }
 
+        ctx.drawImage(Assets[this.img], -24, -24, 48, 48);
+
         if (this.hitFlashTimer > 0) {
-            // Hit Flash Silhouette
+            // Optimized Hit Flash: Use additive blending to brighten
             ctx.save();
-            ctx.globalCompositeOperation = 'source-atop'; // Masking
-            // Wait, to do white flash on an image, easiest is brightness filter or replacing pixels.
-            // Or simply draw a white shape over it? 
-            // Filter is easiest.
-            ctx.filter = 'brightness(1000%)'; 
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = 0.8;
             ctx.drawImage(Assets[this.img], -24, -24, 48, 48);
             ctx.restore();
-        } else {
-            ctx.drawImage(Assets[this.img], -24, -24, 48, 48);
         }
 
         if(this.slowTimer>0) {
