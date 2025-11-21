@@ -1,6 +1,6 @@
 import { STAGES, ARTIFACTS } from './data.js';
 import { loadAssets } from './assets.js';
-import { Player, Enemy, FloatText, Chest, StaticObject, Particle, Artifact, Beam } from './entities.js';
+import { Player, Enemy, FloatText, Chest, StaticObject, Particle, Artifact, Beam, Footprint } from './entities.js';
 import { generateStagePattern } from './map.js';
 import { WeatherSystem } from './weather.js';
 
@@ -19,6 +19,7 @@ export class GameEngine {
         this.player = null;
         this.artifact = null;
         this.enemies = []; this.bullets = []; this.particles = []; this.orbs = []; this.texts = []; this.chests = []; this.staticObjects = [];
+        this.footprints = [];
         this.edgeDecorations = [];
         this.camera = { x: 0, y: 0 };
         this.bgPattern = null;
@@ -38,11 +39,11 @@ export class GameEngine {
     
     start(stageIdx = 0, roleId = 'sword') {
         this.player = new Player(roleId);
-        // Randomly assign an artifact for now
         const randArtifact = ARTIFACTS[Math.floor(Math.random() * ARTIFACTS.length)];
         this.artifact = new Artifact(randArtifact.id);
         
         this.enemies=[]; this.bullets=[]; this.particles=[]; this.orbs=[]; this.texts=[]; this.chests=[]; this.staticObjects=[];
+        this.footprints = [];
         
         this.stageIdx = stageIdx;
         this.playTime = STAGES[stageIdx].time;
@@ -50,7 +51,6 @@ export class GameEngine {
         this.eliteTimer = 0; 
         this.state='PLAY';
         
-        // Compensate stats if skipping
         if (stageIdx > 0) {
              this.player.lvl = stageIdx * 3 + 1;
              this.player.stats.dmg += stageIdx * 15;
@@ -81,7 +81,6 @@ export class GameEngine {
         this.eliteTimer += dt;
         if(this.shake > 0) this.shake -= dt * 10;
         
-        // 关卡检测
         const nextStage = STAGES[this.stageIdx + 1];
         if (nextStage && this.playTime >= nextStage.time) {
             this.stageIdx++;
@@ -90,16 +89,13 @@ export class GameEngine {
             
             this.initStageMap();
 
-            // 进阶回血
             this.player.hp = Math.min(this.player.hp + 20, this.player.maxHp);
             this.updateUI();
         }
 
-        // 刷怪
         const diff = 1 + this.playTime/60;
         if(Math.random() < dt / (1.5/diff)) this.spawnEnemy(diff);
         
-        // 精英怪生成 (每45秒)
         if(this.eliteTimer > 45) {
             this.eliteTimer = 0;
             this.spawnElite(diff);
@@ -108,7 +104,6 @@ export class GameEngine {
         this.player.update(dt);
         if (this.artifact) this.artifact.update(dt, this.player);
         
-        // Boundary (All Stages are Islands now)
         const R = 600;
         const d = Math.hypot(this.player.x, this.player.y);
         if(d > R) {
@@ -117,7 +112,6 @@ export class GameEngine {
             this.player.y = Math.sin(a)*R;
         }
         
-        // 相机跟随 + 震动 (调整：人物位于屏幕下方，显示更多上方视野)
         let tx = this.player.x - this.width/2;
         let ty = this.player.y - this.height * 1.2; 
         this.camera.x += (tx - this.camera.x) * 5 * dt;
@@ -129,14 +123,15 @@ export class GameEngine {
         this.orbs.forEach(o => o.update(dt, this.player));
         this.texts.forEach(t => t.update(dt));
         this.chests.forEach(c => c.update(dt, this.player));
+        this.footprints.forEach(f => f.update(dt));
         
-        // 清理
         this.enemies = this.enemies.filter(e => !e.dead);
         this.bullets = this.bullets.filter(b => !b.dead);
         this.particles = this.particles.filter(p => !p.dead);
         this.orbs = this.orbs.filter(o => !o.dead);
         this.texts = this.texts.filter(t => !t.dead);
         this.chests = this.chests.filter(c => !c.dead);
+        this.footprints = this.footprints.filter(f => !f.dead);
         
         this.weather.update(dt, this.stageIdx, this.camera);
 
@@ -159,7 +154,6 @@ export class GameEngine {
     initEdgeDecorations() {
         this.edgeDecorations = [];
         const R = 600;
-        // 增加密度 for smoother look
         const count = this.stageIdx === 0 ? 90 : 60; 
         
         for(let i=0; i<count; i++) {
@@ -174,10 +168,9 @@ export class GameEngine {
             let color = '#555';
             
             switch(this.stageIdx) {
-                case 0: // Forest
+                case 0: 
                     type = 'bush';
                     color = Math.random()>0.5 ? '#2e7d32' : '#1b5e20';
-                    // More vines, longer, varied
                     if(Math.random() < 0.6) { 
                         this.edgeDecorations.push({ 
                             x, y, 
@@ -185,19 +178,19 @@ export class GameEngine {
                             rotation: angle, 
                             type: 'vine', 
                             color: Math.random()>0.5 ? '#2e7d32' : '#388e3c',
-                            length: 100 + Math.random() * 300, // Much Longer vines
-                            width: 2 + Math.random() * 6, // Varied thickness
+                            length: 100 + Math.random() * 300, 
+                            width: 2 + Math.random() * 6, 
                             swayOffset: Math.random() * 10,
-                            twistFreq: 0.02 + Math.random() * 0.03, // Random twist frequency
-                            twistAmp: 5 + Math.random() * 10 // Random twist amplitude
+                            twistFreq: 0.02 + Math.random() * 0.03, 
+                            twistAmp: 5 + Math.random() * 10 
                         });
                     }
                     break;
-                case 1: // Bone
+                case 1: 
                     type = 'rock';
                     color = '#424242';
                     break;
-                case 2: // Magma
+                case 2: 
                     if(Math.random() < 0.2) {
                         type = 'lava_fall';
                         color = '#ff5722';
@@ -207,18 +200,18 @@ export class GameEngine {
                             type: 'lava_fall', 
                             width: 20 + Math.random() * 30,
                             length: 100 + Math.random() * 200,
-                            speed: 30 + Math.random() * 20 // Faster flow
+                            speed: 30 + Math.random() * 20 
                         });
-                        continue; // Skip adding default rock if lava
+                        continue; 
                     }
                     type = 'sharp';
                     color = '#3e2723';
                     break;
-                case 3: // Ice
+                case 3: 
                     type = 'ice';
                     color = 'rgba(225, 245, 254, 0.8)';
                     break;
-                case 4: // Fairyland
+                case 4: 
                     type = 'cloud';
                     color = '#cfd8dc';
                     break;
@@ -242,7 +235,6 @@ export class GameEngine {
     }
 
     initBone() {
-        // Edge: Dead Trees, Steles, Spirit Banners
         for(let i=0; i<25; i++) {
              const a = Math.random() * Math.PI * 2;
              const r = 480 + Math.random() * 120; 
@@ -253,7 +245,6 @@ export class GameEngine {
              
              this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, type));
         }
-        // Interior: Mounds, Steles, Ruins, Paper Money (Removed Bones)
         for(let i=0; i<40; i++) {
              const a = Math.random() * Math.PI * 2;
              const r = Math.random() * 500;
@@ -261,7 +252,6 @@ export class GameEngine {
              const y = Math.sin(a)*r;
              
              if(Math.random() < 0.3) {
-                 // Grave Cluster
                  const m = new StaticObject(x, y, 'grave_mound');
                  this.staticObjects.push(m);
                  this.staticObjects.push(new StaticObject(x, y+15, 'stele_c'));
@@ -276,7 +266,6 @@ export class GameEngine {
                  this.staticObjects.push(new StaticObject(x, y, type));
              }
         }
-        // Scatter Paper Money Everywhere
         for(let i=0; i<150; i++) {
             const a = Math.random() * Math.PI * 2;
             const r = Math.random() * 550;
@@ -325,7 +314,6 @@ export class GameEngine {
 
     draw() {
         const ctx = this.ctx;
-        
         ctx.save();
 
         let skyTop, skyBot, groundBase, groundSurf, drawFar, patternColor;
@@ -378,7 +366,6 @@ export class GameEngine {
             }
         };
         
-        // Draw Edge Decoration Function
         const drawEdgeDeco = (d) => {
             ctx.save();
             ctx.translate(d.x, d.y);
@@ -423,12 +410,9 @@ export class GameEngine {
             } else if (d.type === 'sharp') {
                 ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(5, -15); ctx.lineTo(15, 0); ctx.fill();
             } else if (d.type === 'lava_fall') {
-                // Lava Fall Animation
-                // Pool at edge
                 ctx.fillStyle = '#ff5722';
                 ctx.beginPath(); ctx.ellipse(0, 0, d.width/2, 5, 0, 0, Math.PI*2); ctx.fill();
                 
-                // Flowing Magma Down
                 const grad = ctx.createLinearGradient(0, 0, 0, d.length);
                 grad.addColorStop(0, '#ff9800');
                 grad.addColorStop(0.5, '#ff5722');
@@ -442,7 +426,6 @@ export class GameEngine {
                 ctx.lineTo(d.width/2, 0);
                 ctx.fill();
                 
-                // Flow Particles/Lines
                 ctx.strokeStyle = '#ffeb3b'; ctx.globalAlpha = 0.7;
                 ctx.beginPath();
                 const t = this.playTime * d.speed;
@@ -454,20 +437,18 @@ export class GameEngine {
                 ctx.stroke();
                 ctx.setLineDash([]); ctx.globalAlpha = 1.0;
 
-                // ** Dynamic Drops **
                 const numDrops = 5;
                 const dropSpeed = d.speed * 2;
                 for(let i=0; i<numDrops; i++) {
-                    // Loop drop positions
                     const dropT = (this.playTime * dropSpeed + i * (d.length/numDrops*1.5)) % (d.length * 1.8);
-                    const dropAlpha = 1.0 - Math.max(0, (dropT - d.length) / (d.length * 0.8)); // Fade after length
+                    const dropAlpha = 1.0 - Math.max(0, (dropT - d.length) / (d.length * 0.8)); 
                     
                     if(dropAlpha > 0) {
-                        ctx.fillStyle = `rgba(255, 235, 59, ${dropAlpha})`; // Bright yellow start
-                        if(dropT > d.length) ctx.fillStyle = `rgba(255, 87, 34, ${dropAlpha})`; // Red fall
+                        ctx.fillStyle = `rgba(255, 235, 59, ${dropAlpha})`; 
+                        if(dropT > d.length) ctx.fillStyle = `rgba(255, 87, 34, ${dropAlpha})`; 
                         
                         const dy = dropT;
-                        const dx = Math.sin(this.playTime * 10 + i) * (d.width/4); // Wiggle
+                        const dx = Math.sin(this.playTime * 10 + i) * (d.width/4); 
                         
                         const sz = 3 + Math.random();
                         ctx.beginPath(); 
@@ -483,23 +464,17 @@ export class GameEngine {
         };
 
         switch(this.stageIdx) {
-            case 0: // Forest
+            case 0: 
                 skyTop='#000500'; skyBot='#0f1519';
                 groundBase='#0b1013'; groundSurf='#1b5e20';
                 patternColor='#000';
                 drawFar = (w, h) => {
                     const pX = this.camera.x * 0.1; const pY = this.camera.y * 0.1;
                     const sX = this.camera.x * 0.02; const sY = this.camera.y * 0.02;
-                    
-                    // Background Moon
                     ctx.fillStyle = '#f1f8e9'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 10;
                     ctx.beginPath(); ctx.arc(w*0.85 - sX, h*0.15 - sY, 30, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
-                    
-                    // Distant Islands
                     drawDistantIsland(w*0.2, h*0.2, -pX, -pY, 120, 90, '#0b1013', '#1b5e20', 'tree');
                     drawDistantIsland(w*0.8, h*0.15, -pX, -pY, 180, 120, '#0b1013', '#1b5e20', 'tree');
-                    
-                    // Floating Fog (Underneath)
                     ctx.save();
                     ctx.filter = 'blur(20px)';
                     ctx.fillStyle = 'rgba(200, 230, 200, 0.15)';
@@ -512,34 +487,32 @@ export class GameEngine {
                     ctx.restore();
                 };
                 break;
-            case 1: // Bone
+            case 1: 
                 skyTop='#1a1a1a'; skyBot='#2c3e50';
                 groundBase='#212121'; groundSurf='#424242';
                 patternColor='#000';
                 drawFar = (w, h) => {
                     const pX = this.camera.x * 0.1; const pY = this.camera.y * 0.1;
                     const sX = this.camera.x * 0.02; const sY = this.camera.y * 0.02;
-
                     drawDistantIsland(w*0.15, h*0.25, -pX, -pY, 100, 80, '#212121', '#424242', 'cross');
                     drawDistantIsland(w*0.75, h*0.15, -pX, -pY, 200, 150, '#212121', '#424242', 'cross');
                     ctx.fillStyle = '#cfd8dc'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 15;
                     ctx.beginPath(); ctx.arc(w*0.8 - sX, h*0.15 - sY, 50, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
                 };
                 break;
-            case 2: // Magma
+            case 2: 
                 skyTop='#210000'; skyBot='#3e2723';
                 groundBase='#210000'; groundSurf='#3e2723';
                 patternColor='#ff5722';
                 drawFar = (w, h) => {
                     const pX = this.camera.x * 0.1; const pY = this.camera.y * 0.1;
-                    
                     drawDistantIsland(w*0.2, h*0.15, -pX, -pY, 150, 100, '#210000', '#3e2723', 'spike');
                     drawDistantIsland(w*0.85, h*0.2, -pX, -pY, 120, 140, '#210000', '#3e2723', 'spike');
                     ctx.fillStyle = 'rgba(0,0,0,0.2)';
                     ctx.beginPath(); ctx.arc(w/2 - this.camera.x*0.05, h - this.camera.y*0.05, w/2, 0, Math.PI*2); ctx.fill();
                 };
                 break;
-            case 3: // Ice
+            case 3: 
                 skyTop='#0d47a1'; skyBot='#1976d2';
                 groundBase='#0d47a1'; groundSurf='#64b5f6';
                 patternColor='#e1f5fe';
@@ -549,17 +522,15 @@ export class GameEngine {
                      drawDistantIsland(w*0.8, h*0.2, -pX, -pY, 160, 100, '#0d47a1', '#64b5f6', 'crystal');
                 };
                 break;
-            case 4: // Fairyland
+            case 4: 
                 skyTop='#000000'; skyBot='#2c3e50';
                 groundBase='#37474f'; groundSurf='#ecf0f1';
                 patternColor=null; 
                 drawFar = (w, h) => {
                    const pX = this.camera.x * 0.1; const pY = this.camera.y * 0.1;
                    const sX = this.camera.x * 0.02; const sY = this.camera.y * 0.02;
-                   
                    ctx.fillStyle = '#e74c3c'; ctx.shadowColor = '#c0392b'; ctx.shadowBlur = 30;
                    ctx.beginPath(); ctx.arc(w/2 - sX, h*0.15 - sY, 60, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
-                   
                    drawDistantIsland(w*0.2, h*0.2, -pX, -pY, 120, 90, '#37474f', '#cfd8dc', 'pavilion');
                    drawDistantIsland(w*0.8, h*0.15, -pX, -pY, 280, 180, '#37474f', '#cfd8dc', 'pine');
                 };
@@ -581,11 +552,9 @@ export class GameEngine {
         let sy = (Math.random() - 0.5) * this.shake * 10;
         ctx.translate(-this.camera.x + sx, -this.camera.y + sy);
         
-        // Separate edge decorations: Back (y<0) and Front (y>=0)
         const backDecos = this.edgeDecorations.filter(d => d.y < 0);
         const frontDecos = this.edgeDecorations.filter(d => d.y >= 0);
         
-        // 1. DRAW BACK DECORATIONS (Behind Base)
         backDecos.forEach(d => drawEdgeDeco(d));
         
         ctx.fillStyle = groundBase; 
@@ -620,11 +589,13 @@ export class GameEngine {
             ctx.globalAlpha = 1.0;
         }
         
+        // Footprints Layer
+        this.footprints.forEach(f => f.draw(ctx));
+        
         ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 10;
         ctx.beginPath(); ctx.arc(0, 0, R-5, 0, Math.PI*2); ctx.stroke();
         ctx.restore(); 
 
-        // 2. DRAW FRONT DECORATIONS (After Surface)
         frontDecos.forEach(d => drawEdgeDeco(d));
 
         ctx.restore(); 
@@ -641,17 +612,13 @@ export class GameEngine {
                 const oy = e.y;
                 e.y = e.y * tilt; 
                 
-                // Custom Procedural Draw for Spirit Banner
                 if(e.img === 'spirit_banner') {
                     ctx.save();
                     ctx.translate(e.x, e.y);
-                    // Pole
                     ctx.strokeStyle = '#5d4037'; ctx.lineWidth = 3;
                     ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0, -80); ctx.stroke();
-                    
-                    // Paper Strips (Animated)
                     ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
-                    const t = this.playTime * 2.0 + e.x*0.1; // Phase shift by x
+                    const t = this.playTime * 2.0 + e.x*0.1; 
                     for(let i=0; i<3; i++) {
                         const offX = (i-1)*5;
                         ctx.beginPath(); ctx.moveTo(0, -80); 
@@ -661,7 +628,6 @@ export class GameEngine {
                     }
                     ctx.restore();
                 } else {
-                    // Default Draw
                     e.draw(ctx);
                 }
                 
@@ -679,16 +645,7 @@ export class GameEngine {
         const py = this.player.y;
         this.player.y *= tilt;
         this.player.draw(ctx);
-        // Draw Artifact manually after player (no tilt for floating artifact? or billboard?)
-        // Artifact `draw` handles its own transform.
-        if (this.artifact) {
-            // Apply billboard tilt logic to artifact base position?
-            // Artifact is at player.x, player.y
-            // Let's just draw it at player pos but offset.
-            // Player draw uses `this.player.y *= tilt` trick.
-            // Let's rely on Artifact's own draw method to handle visuals relative to player.
-            this.artifact.draw(ctx);
-        }
+        if (this.artifact) this.artifact.draw(ctx);
         
         this.player.y = py;
         
