@@ -10,6 +10,11 @@ export const SVG_LIB = {
     player_beast: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 100 L64 90 L88 100 L84 50" fill="#a1887f" stroke="#5d4037" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M30 30 Q64 10 98 30 Q90 50 86 60 Q64 65 42 60 Q38 50 30 30" fill="#33691e"/><path d="M30 20 L40 40 L30 50 Z" fill="#a1887f"/><path d="M98 20 L88 40 L98 50 Z" fill="#a1887f"/><path d="M20 60 L30 70 L25 90 Z" fill="#558b2f"/><path d="M108 60 L98 70 L103 90 Z" fill="#558b2f"/></svg>`,
     player_bard: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 110 L88 110 L84 50" fill="#f8bbd0" stroke="#e91e63" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M35 30 Q64 5 93 30 Q95 55 64 60 Q33 55 35 30" fill="#880e4f"/><rect x="25" y="60" width="78" height="20" fill="#3e2723" transform="rotate(-15 64 70)"/><path d="M30 60 L100 80" stroke="#fff" stroke-width="1" transform="rotate(-15 64 70)"/></svg>`,
 
+    // Artifacts
+    fantian_seal: `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="60" height="60" fill="#f1c40f" stroke="#f39c12" stroke-width="4"/><path d="M10 10 L70 70 M70 10 L10 70" stroke="#e67e22" stroke-width="2"/><rect x="25" y="25" width="30" height="30" fill="#e74c3c" stroke="#c0392b" stroke-width="3"/><circle cx="40" cy="40" r="8" fill="#f1c40f"/></svg>`,
+    yinyang_mirror: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="28" fill="#fff" stroke="#bdc3c7" stroke-width="2"/><path d="M30 2 A 28 28 0 0 1 30 58 A 14 14 0 0 1 30 30 A 14 14 0 0 0 30 2" fill="#000"/><circle cx="30" cy="16" r="4" fill="#fff"/><circle cx="30" cy="44" r="4" fill="#000"/></svg>`,
+    slaying_gourd: `<svg width="60" height="80" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg"><path d="M30 80 C10 80 0 60 10 40 C15 30 25 30 25 20 L25 10 L35 10 L35 20 C35 30 45 30 50 40 C60 60 50 80 30 80" fill="#e67e22" stroke="#d35400" stroke-width="2"/><path d="M30 10 L30 0 L50 5" stroke="#fff" stroke-width="3"/></svg>`,
+
     sword: `<svg width="64" height="128" viewBox="0 0 64 128" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#00bcd4"/></linearGradient></defs><path d="M32 0 L22 20 L28 100 L36 100 L42 20 Z" fill="url(#sg)"/><rect x="20" y="90" width="24" height="6" fill="#f1c40f"/><circle cx="32" cy="110" r="4" fill="#f1c40f"/></svg>`,
     
     fire: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="fg"><stop offset="0%" stop-color="#ffff00"/><stop offset="50%" stop-color="#ff5722"/><stop offset="100%" stop-color="rgba(255,0,0,0)"/></radialGradient></defs><circle cx="32" cy="32" r="28" fill="url(#fg)"/><path d="M32 60 Q10 40 32 10 Q54 40 32 60" fill="#ff9800" opacity="0.7"/></svg>`,
@@ -58,6 +63,12 @@ export const ROLES = [
     { id: 'body', name: '蓬莱体修', hp: 200, dmg: 15, cd: 0.8, speed: 150, desc: '肉身成圣，血厚防高', svg: 'player_body' },
     { id: 'beast', name: '万兽山庄', hp: 120, dmg: 15, cd: 1.2, speed: 150, desc: '驱使灵兽，自动索敌', svg: 'player_beast' },
     { id: 'bard', name: '长歌门', hp: 90, dmg: 18, cd: 0.6, speed: 145, desc: '琴音化刃，穿透群敌', svg: 'player_bard' }
+];
+
+export const ARTIFACTS = [
+    { id: 'fantian', name: '翻天印', desc: '每10秒造成全屏震荡眩晕', cd: 10, svg: 'fantian_seal' },
+    { id: 'mirror', name: '阴阳镜', desc: '光环: 前方灼烧 后方减速', cd: 0, svg: 'yinyang_mirror' },
+    { id: 'gourd', name: '斩仙葫芦', desc: '针对精英怪造成毁灭打击', cd: 5, svg: 'slaying_gourd' }
 ];
 
 export const STAGES = [

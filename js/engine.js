@@ -1,6 +1,6 @@
-import { STAGES } from './data.js';
+import { STAGES, ARTIFACTS } from './data.js';
 import { loadAssets } from './assets.js';
-import { Player, Enemy, FloatText, Chest, StaticObject, Particle } from './entities.js';
+import { Player, Enemy, FloatText, Chest, StaticObject, Particle, Artifact, Beam } from './entities.js';
 import { generateStagePattern } from './map.js';
 import { WeatherSystem } from './weather.js';
 
@@ -17,6 +17,7 @@ export class GameEngine {
         this.stageIdx = 0;
         this.eliteTimer = 0; 
         this.player = null;
+        this.artifact = null;
         this.enemies = []; this.bullets = []; this.particles = []; this.orbs = []; this.texts = []; this.chests = []; this.staticObjects = [];
         this.edgeDecorations = [];
         this.camera = { x: 0, y: 0 };
@@ -37,6 +38,10 @@ export class GameEngine {
     
     start(stageIdx = 0, roleId = 'sword') {
         this.player = new Player(roleId);
+        // Randomly assign an artifact for now
+        const randArtifact = ARTIFACTS[Math.floor(Math.random() * ARTIFACTS.length)];
+        this.artifact = new Artifact(randArtifact.id);
+        
         this.enemies=[]; this.bullets=[]; this.particles=[]; this.orbs=[]; this.texts=[]; this.chests=[]; this.staticObjects=[];
         
         this.stageIdx = stageIdx;
@@ -101,6 +106,7 @@ export class GameEngine {
         }
         
         this.player.update(dt);
+        if (this.artifact) this.artifact.update(dt, this.player);
         
         // Boundary (All Stages are Islands now)
         const R = 600;
@@ -673,6 +679,17 @@ export class GameEngine {
         const py = this.player.y;
         this.player.y *= tilt;
         this.player.draw(ctx);
+        // Draw Artifact manually after player (no tilt for floating artifact? or billboard?)
+        // Artifact `draw` handles its own transform.
+        if (this.artifact) {
+            // Apply billboard tilt logic to artifact base position?
+            // Artifact is at player.x, player.y
+            // Let's just draw it at player pos but offset.
+            // Player draw uses `this.player.y *= tilt` trick.
+            // Let's rely on Artifact's own draw method to handle visuals relative to player.
+            this.artifact.draw(ctx);
+        }
+        
         this.player.y = py;
         
         ctx.globalCompositeOperation = 'lighter';

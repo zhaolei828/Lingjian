@@ -1,5 +1,5 @@
 import { Assets } from './assets.js';
-import { ROLES } from './data.js';
+import { ROLES, ARTIFACTS } from './data.js';
 
 export class Entity { 
     constructor(x,y) { this.x=x; this.y=y; this.dead=false; } 
@@ -421,7 +421,132 @@ export class Bullet extends Entity {
         ctx.restore();
     }
 }
-// ... Lightning, Particle, Orb, Chest, FloatText, StaticObject classes ...
+
+export class Artifact extends Entity {
+    constructor(id) {
+        super(0, 0);
+        this.id = id;
+        this.data = ARTIFACTS.find(a => a.id === id) || ARTIFACTS[0];
+        this.cd = 0;
+        this.maxCd = this.data.cd;
+        this.angle = 0;
+    }
+    update(dt, player) {
+        // Follow player
+        this.x = player.x;
+        this.y = player.y;
+        
+        // Cooldown logic
+        if (this.maxCd > 0) {
+            this.cd -= dt;
+            if (this.cd <= 0) {
+                this.trigger(player);
+                this.cd = this.maxCd;
+            }
+        }
+        
+        // Passive behaviors
+        if (this.id === 'mirror') {
+            this.angle += dt * 2; // Rotate
+            // Check collision with enemies in front/back
+            for (let e of window.Game.enemies) {
+                const d = this.dist(e);
+                if (d < 150) { // Aura range
+                    const angToEnemy = Math.atan2(e.y - this.y, e.x - this.x);
+                    // Normalise angle diff
+                    let diff = angToEnemy - this.angle;
+                    while (diff > Math.PI) diff -= Math.PI*2;
+                    while (diff < -Math.PI) diff += Math.PI*2;
+                    
+                    if (Math.abs(diff) < Math.PI/2) {
+                        // Front: Burn
+                        if (Math.random() < dt * 5) {
+                            e.takeDamage(10 * dt, 0, 0, 'fire');
+                            window.Game.particles.push(new Particle(e.x, e.y, '#e74c3c', 0.3, 2));
+                        }
+                    } else {
+                        // Back: Slow
+                        e.slowTimer = 0.2;
+                        if (Math.random() < dt * 2) {
+                            window.Game.particles.push(new Particle(e.x, e.y, '#3498db', 0.3, 2));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    trigger(player) {
+        if (this.id === 'fantian') {
+            // Full screen stun + damage
+            window.Game.screenShake(2.0);
+            window.Game.enemies.forEach(e => {
+                e.takeDamage(50, 0, 0, 'earth', 2.0);
+                e.slowTimer = 3.0; // Stun-like
+            });
+            // Visual
+            window.Game.texts.push(new FloatText(player.x, player.y - 100, "翻天印!", "#f1c40f"));
+        } else if (this.id === 'gourd') {
+            // Slaying beam
+            const elites = window.Game.enemies.filter(e => e.isElite);
+            const target = elites.length > 0 ? elites[0] : null;
+            if (target) {
+                window.Game.texts.push(new FloatText(player.x, player.y - 80, "请宝贝转身!", "#fff"));
+                window.Game.particles.push(new Beam(player.x, player.y, target.x, target.y));
+                target.takeDamage(500, 0, 0, 'sword'); // Huge dmg
+            } else {
+                // No target, refund CD slightly
+                this.cd = 1.0;
+            }
+        }
+    }
+    draw(ctx) {
+        const img = Assets[this.data.svg];
+        if (!img) return;
+        
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        if (this.id === 'mirror') {
+            // Rotate around player
+            ctx.rotate(this.angle);
+            ctx.translate(60, 0); // Orbit radius
+            // Aura visual
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+            ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, 100, -Math.PI/2, Math.PI/2); ctx.fill();
+            ctx.fillStyle = 'rgba(0, 0, 255, 0.1)';
+            ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, 100, Math.PI/2, 3*Math.PI/2); ctx.fill();
+        } else {
+            // Hover above player
+            const hover = Math.sin(window.Game.playTime * 2) * 10;
+            ctx.translate(40, -60 + hover);
+        }
+        
+        ctx.drawImage(img, -20, -20, 40, 40);
+        ctx.restore();
+    }
+}
+
+export class Beam extends Entity {
+    constructor(x1, y1, x2, y2) {
+        super(x1, y1);
+        this.x2 = x2; this.y2 = y2;
+        this.life = 0.5;
+    }
+    update(dt) { this.life -= dt; if (this.life <= 0) this.dead = true; }
+    draw(ctx) {
+        const w = this.life * 20;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = `rgba(255, 255, 255, ${this.life*2})`;
+        ctx.lineWidth = w;
+        ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x2, this.y2); ctx.stroke();
+        ctx.strokeStyle = `rgba(200, 240, 255, ${this.life})`;
+        ctx.lineWidth = w * 2;
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
 export class Lightning {
     constructor(x1, y1, x2, y2) {
         this.path = [];
