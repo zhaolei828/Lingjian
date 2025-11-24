@@ -27,6 +27,9 @@ export class GameEngine {
         this.keys = {};
         this.weather = new WeatherSystem();
         
+        this.freezeTimer = 0; // For Hit Stop
+        this.hitStopCooldown = 0; // Cooldown for Hit Stop
+        
         window.addEventListener('resize', () => this.resize());
         window.addEventListener('keydown', e => this.keys[e.code] = true);
         window.addEventListener('keyup', e => this.keys[e.code] = false);
@@ -70,16 +73,30 @@ export class GameEngine {
     }
     
     loop(now) {
-        const dt = Math.min((now - this.lastTime) / 1000, 0.1);
+        let dt = Math.min((now - this.lastTime) / 1000, 0.1);
         this.lastTime = now;
+        
+        if (this.freezeTimer > 0) {
+            this.freezeTimer -= dt;
+            dt = 0; // Freeze logic for impact
+        }
+
         if (this.state === 'PLAY') { this.update(dt); this.draw(); }
         requestAnimationFrame(t => this.loop(t));
     }
     
+    hitStop(duration) {
+        if (this.hitStopCooldown <= 0) {
+            this.freezeTimer = duration;
+            this.hitStopCooldown = 0.1; // Don't freeze again for 100ms
+        }
+    }
+
     update(dt) {
         this.playTime += dt;
         this.eliteTimer += dt;
         if(this.shake > 0) this.shake -= dt * 10;
+        if(this.hitStopCooldown > 0) this.hitStopCooldown -= dt;
         
         const nextStage = STAGES[this.stageIdx + 1];
         if (nextStage && this.playTime >= nextStage.time) {
@@ -151,6 +168,34 @@ export class GameEngine {
         }
     }
     
+    // Optimized Map Ecology: Map-specific mob pools
+    spawnEnemy(diff) {
+        let x, y;
+        const a = Math.random() * Math.PI * 2;
+        const r = 580; 
+        x = Math.cos(a) * r;
+        y = Math.sin(a) * r;
+        
+        const colors = ['#1b5e20', '#7f8c8d', '#ff5722', '#4fc3f7', '#2c3e50'];
+        for(let i=0; i<5; i++) this.particles.push(new Particle(x, y, colors[this.stageIdx]||'#000', 0.5, 4));
+        
+        // Ecology Logic:
+        // Forest (0): Bat (Wood/Poison), Rock (Earth)
+        // Bone (1): Ghost (Soul), Skeleton/Rock (Bone)
+        // Magma (2): Bat_Fire, Magma_Rock
+        // Ice (3): Ghost_Ice, Ice_Rock
+        // Fairy (4): All Elite Mix
+        
+        const stage = STAGES[this.stageIdx];
+        // Use data-driven mob lists from STAGES
+        let type = 'rock';
+        if (stage && stage.mobs && stage.mobs.length > 0) {
+            type = stage.mobs[Math.floor(Math.random() * stage.mobs.length)];
+        }
+        
+        this.enemies.push(new Enemy(type, x, y, diff));
+    }
+
     initEdgeDecorations() {
         this.edgeDecorations = [];
         const R = 600;
@@ -674,22 +719,10 @@ export class GameEngine {
         }
     }
     
-    spawnEnemy(diff) {
-        let x, y;
-        const a = Math.random() * Math.PI * 2;
-        const r = 580; 
-        x = Math.cos(a) * r;
-        y = Math.sin(a) * r;
-        
-        const colors = ['#1b5e20', '#7f8c8d', '#ff5722', '#4fc3f7', '#2c3e50'];
-        for(let i=0; i<5; i++) this.particles.push(new Particle(x, y, colors[this.stageIdx]||'#000', 0.5, 4));
-        
-        const stage = STAGES[this.stageIdx];
-        const type = stage.mobs[Math.floor(Math.random() * stage.mobs.length)];
-        
-        this.enemies.push(new Enemy(type, x, y, diff));
-    }
-
+    // Optimized Map Ecology: Map-specific mob pools
+    // spawnEnemy removed here as it is now defined above initEdgeDecorations to group spawn logic.
+    // Wait, I inserted it above. Let's remove the duplicate old spawnEnemy below if it exists.
+    
     spawnElite(diff) {
         const a = Math.random() * Math.PI * 2;
         const r = 550;

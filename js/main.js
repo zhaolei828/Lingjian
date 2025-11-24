@@ -1,10 +1,42 @@
 import { GameEngine } from './engine.js';
 import { initAvatar } from './assets.js';
-import { SKILLS, ROLES } from './data.js';
+import { SKILLS, ROLES, SVG_LIB } from './data.js';
 
 // Initialize Game instance globally
 window.Game = new GameEngine();
 window.currentRole = 'sword';
+
+function initRoleSelection() {
+    const container = document.getElementById('role-select-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    ROLES.forEach(role => {
+        const card = document.createElement('div');
+        card.className = `role-card ${role.id === window.currentRole ? 'selected' : ''}`;
+        card.dataset.id = role.id;
+        card.onclick = () => window.selectRole(role.id);
+
+        // Normalize stats for bars (approximate max values)
+        const hpPct = Math.min(100, (role.hp / 200) * 100);
+        const dmgPct = Math.min(100, (role.dmg / 30) * 100);
+        const asPct = Math.min(100, ((1.5 - role.cd) / 1.2) * 100); // Inverse CD
+        const spdPct = Math.min(100, ((role.speed - 100) / 80) * 100); // 100-180 range
+
+        card.innerHTML = `
+            <div class="role-icon">${SVG_LIB[role.svg] || SVG_LIB.player}</div>
+            <h4>${role.name}</h4>
+            <p>${role.desc}</p>
+            <div class="stat-box">
+                <div class="stat-row"><div class="stat-label">血</div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${hpPct}%; background:#e74c3c"></div></div></div>
+                <div class="stat-row"><div class="stat-label">攻</div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${dmgPct}%; background:#e67e22"></div></div></div>
+                <div class="stat-row"><div class="stat-label">速</div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${asPct}%; background:#f1c40f"></div></div></div>
+                <div class="stat-row"><div class="stat-label">移</div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${spdPct}%; background:#3498db"></div></div></div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
 
 // Define global UI functions required by HTML onclick handlers
 window.showUpgradeMenu = function() { 
@@ -66,4 +98,5 @@ window.startGame = function(stageIdx) {
 // Initialize Avatar with a slight delay to ensure Assets are ready
 setTimeout(() => {
     initAvatar();
+    initRoleSelection();
 }, 100);

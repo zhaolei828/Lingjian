@@ -33,14 +33,16 @@ export class Player extends Entity {
         }; 
         
         if (roleId === 'mage') this.stats.element = 'fire';
-        if (roleId === 'beast') { this.stats.element = 'beast'; this.stats.bulletSpeed = 300; this.stats.bulletLife = 3.0; }
-        if (roleId === 'bard') { this.stats.element = 'bard'; this.stats.pierce = 99; this.stats.area = 1.0; this.stats.spd = 300; }
+        if (roleId === 'ghost') { this.stats.element = 'ghost'; this.stats.bulletSpeed = 300; this.stats.bulletLife = 3.0; }
+        if (roleId === 'formation') { this.stats.element = 'formation'; this.stats.pierce = 99; this.stats.area = 1.0; this.stats.spd = 300; }
         
         this.cdTimer=0; this.facing=1; this.lvlUpFx=0;
         this.dashCd = 0; this.dashMaxCd = 2.0; this.dashTime = 0;
         this.footprintTimer = 0;
+        this.invulnTimer = 0; // Invulnerability Timer
     }
     update(dt) {
+        if (this.invulnTimer > 0) this.invulnTimer -= dt;
         this.dashCd -= dt;
         this.dashTime -= dt;
 
@@ -119,6 +121,8 @@ export class Player extends Entity {
         }
     }
     draw(ctx) {
+        if (this.invulnTimer > 0 && Math.floor(window.Game.playTime * 15) % 2 === 0) return; // Blink effect
+
         const t = window.Game.playTime;
         
         // Shadow
@@ -143,8 +147,8 @@ export class Player extends Entity {
         if(this.stats.element === 'wood') auraColor = '#2ecc71';
         if(this.stats.element === 'water') auraColor = '#3498db';
         if(this.stats.element === 'earth') auraColor = '#e67e22';
-        if(this.stats.element === 'beast') auraColor = '#33691e';
-        if(this.stats.element === 'bard') auraColor = '#e91e63';
+        if(this.stats.element === 'ghost') auraColor = '#4a148c';
+        if(this.stats.element === 'formation') auraColor = '#607d8b';
         
         ctx.rotate(t*0.5);
         ctx.beginPath(); ctx.arc(0,0,45,0,Math.PI*2);
@@ -171,16 +175,27 @@ export class Player extends Entity {
     }
     gainExp(v){ this.exp+=v; if(this.exp>=this.maxExp) this.levelUp(); window.Game.updateUI(); }
     levelUp(){ this.lvl++; this.exp=0; this.maxExp=Math.floor(this.maxExp*1.4); this.hp=this.maxHp; this.lvlUpFx=1.0; window.showUpgradeMenu(); }
-    hit(d){ this.hp-=d; window.Game.texts.push(new FloatText(this.x,this.y,"-"+Math.floor(d),'#e74c3c', true)); window.Game.updateUI(); if(this.hp<=0) window.Game.gameOver(); }
+    hit(d){ 
+        if(this.invulnTimer > 0) return;
+        this.hp-=d; 
+        this.invulnTimer = 0.3; // 0.3s i-frame
+        window.Game.texts.push(new FloatText(this.x,this.y,"-"+Math.floor(d),'#e74c3c', true)); 
+        window.Game.updateUI(); 
+        window.Game.screenShake(0.3);
+        if(this.hp<=0) window.Game.gameOver(); 
+    }
 }
 
 export class Enemy extends Entity {
     constructor(type,x,y,diff,isElite=false) {
         super(x,y); this.type=type; this.isElite=isElite;
-        if(type==='bat'){ this.hp=20*diff; this.speed=150; this.dmg=5; this.exp=5; this.img='bat'; }
-        else if(type==='bat_fire'){ this.hp=30*diff; this.speed=180; this.dmg=8; this.exp=8; this.img='bat_fire'; }
-        else if(type==='ghost'){ this.hp=40*diff; this.speed=100; this.dmg=10; this.exp=10; this.img='ghost'; }
-        else if(type==='ghost_ice'){ this.hp=50*diff; this.speed=90; this.dmg=12; this.exp=15; this.img='ghost_ice'; }
+        // Reduced speeds for better kiting
+        if(type==='bat'){ this.hp=20*diff; this.speed=130; this.dmg=5; this.exp=5; this.img='bat'; }
+        else if(type==='bat_fire'){ this.hp=30*diff; this.speed=140; this.dmg=8; this.exp=8; this.img='bat_fire'; } // Nerfed from 150 to 140
+        else if(type==='ghost'){ this.hp=40*diff; this.speed=90; this.dmg=10; this.exp=10; this.img='ghost'; }
+        else if(type==='ghost_ice'){ this.hp=50*diff; this.speed=80; this.dmg=12; this.exp=15; this.img='ghost_ice'; }
+        else if(type==='magma_rock'){ this.hp=120*diff; this.speed=50; this.dmg=25; this.exp=30; this.img='magma_rock'; }
+        else if(type==='crystal'){ this.hp=150*diff; this.speed=40; this.dmg=30; this.exp=35; this.img='crystal'; }
         else { this.hp=100*diff; this.speed=60; this.dmg=20; this.exp=25; this.img='rock'; }
         
         if(isElite) {
@@ -200,11 +215,31 @@ export class Enemy extends Entity {
         let spd = this.speed;
         if(this.slowTimer>0) spd *= 0.5; 
 
+        // Soft collision with other enemies (optional optimization)
+        // For performance, we won't check all-vs-all every frame in JS for 500 enemies.
+        // But we can prevent stacking on player.
+        
+        const dToPlayer = this.dist(p);
+        const minDist = 25 * this.scale; // Collision radius
+
+        if (dToPlayer < minDist) {
+             // Too close to player, push back slightly to avoid perfect overlap "sticking"
+             // This simulates body block without hard collision
+             const a = Math.atan2(this.y - p.y, this.x - p.x);
+             // Stronger repulsion force to overcome forward movement
+             this.pushX += Math.cos(a) * 1000 * dt; 
+             this.pushY += Math.sin(a) * 1000 * dt;
+        }
+
         const a = Math.atan2(p.y-this.y, p.x-this.x);
+        
+        // Only move towards player if not pushed too hard
         this.x += (Math.cos(a)*spd+this.pushX)*dt;
         this.y += (Math.sin(a)*spd+this.pushY)*dt;
+        
         this.pushX*=0.9; this.pushY*=0.9;
-        if(this.dist(p)<30*this.scale) p.hit(this.dmg*dt);
+        
+        if(dToPlayer<30*this.scale) p.hit(this.dmg); // Discrete damage
     }
     takeDamage(v, kx, ky, type, knockbackMult = 1.0) {
         this.hp-=v; 
@@ -220,15 +255,44 @@ export class Enemy extends Entity {
         
         let c = '#fff';
         let crit = false;
-        if(type === 'fire') { c = '#ff5722'; crit = true; }
-        if(type === 'thunder') { c = '#ffeb3b'; crit = true; }
-        if(type === 'wood') c = '#2ecc71';
-        if(type === 'water') c = '#3498db';
-        if(type === 'earth') { c = '#e67e22'; crit = true; }
-        if(type === 'beast') c = '#8d6e63';
-        if(type === 'bard') c = '#ec407a';
         
-        window.Game.texts.push(new FloatText(this.x, this.y-20*this.scale, Math.floor(v), c, crit));
+        // Ensure consistent colors for damage sources (Player Attacks)
+        if(type === 'fire') { c = '#ff5722'; crit = true; }
+        else if(type === 'thunder') { c = '#ffeb3b'; crit = true; }
+        else if(type === 'wood') c = '#2ecc71';
+        else if(type === 'water') c = '#3498db';
+        else if(type === 'earth') { c = '#e67e22'; crit = true; }
+        else if(type === 'ghost') c = '#9c27b0';
+        else if(type === 'formation') c = '#cfd8dc';
+        else if(type === 'sword') c = '#ffffff'; // Explicit white for sword
+        
+        // Override if this is environmental damage (e.g., hazard zones) or trap damage
+        // Assuming "trap" or "hazard" types might exist in future, we can color them differently.
+        
+        // Throttling damage numbers to reduce visual clutter
+        // Check if this entity was recently hit by the same type to avoid number spam
+        if (!this.lastDamageTime) this.lastDamageTime = {};
+        const now = window.Game.playTime;
+        // Only show text if enough time passed since last hit of this type (0.2s)
+        // OR if it's a crit (always show crits)
+        if (crit || !this.lastDamageTime[type] || (now - this.lastDamageTime[type] > 0.2)) {
+             window.Game.texts.push(new FloatText(this.x, this.y-20*this.scale, Math.floor(v), c, crit));
+             this.lastDamageTime[type] = now;
+        }
+        
+        if (crit || this.hp <= 0) {
+            window.Game.hitStop(0.05);
+            // Debris FX - Optimized: Fewer particles for non-lethal hits
+            const count = this.hp <= 0 ? 3 : 1; 
+            if (Math.random() < 0.5 || this.hp <= 0) { // 50% chance for debris on crit, 100% on death
+                for(let i=0; i<count; i++) {
+                    const p = new Particle(this.x, this.y, this.hp<=0 ? '#555' : c, 0.4 + Math.random()*0.3, 3 + Math.random()*3, 800);
+                    p.vx = (Math.random()-0.5)*300;
+                    p.vy = -100 - Math.random()*200;
+                    window.Game.particles.push(p);
+                }
+            }
+        }
         
         if(type === 'water') this.slowTimer = 2.0; 
 
@@ -308,28 +372,107 @@ export class Bullet extends Entity {
         this.bornTime = 0;
         this.originVX = this.vx;
         this.originVY = this.vy;
+        this.currentSpeed = spd;
+        this.area = s.area || 0;
         
         if(this.type === 'earth') { this.life = 3.0; this.dmg *= 1.5; }
+        
+        // Formation (Trap) Init
+        if (this.type === 'formation') {
+             this.destX = t.x;
+             this.destY = t.y;
+             this.maxLife = 3.0; // Trap duration
+             this.life = 3.0; 
+             this.pierce = 999; // Don't die on hit
+             this.deployed = false;
+             this.trapInterval = 0.3;
+             this.trapTimer = 0;
+             this.scale = 0.1; // Grow in
+        }
+        
+        // Ghost (Wobble) Init
+        if (this.type === 'ghost') {
+             this.wobblePhase = Math.random() * Math.PI * 2;
+        }
     }
     update(dt) {
-        this.life-=dt; if(this.life<=0) this.dead=true;
+        // Sword Acceleration
+        if (this.type === 'sword') {
+            this.currentSpeed += 800 * dt;
+            const currentMag = Math.hypot(this.vx, this.vy);
+            if (currentMag > 0) {
+                 this.vx = (this.vx / currentMag) * this.currentSpeed;
+                 this.vy = (this.vy / currentMag) * this.currentSpeed;
+            }
+        }
+
+        // Formation Logic
+        if (this.type === 'formation') {
+             if (!this.deployed) {
+                 // Move towards dest
+                 const d = Math.hypot(this.destX - this.x, this.destY - this.y);
+                 if (d < 20) {
+                     this.deployed = true;
+                     this.vx = 0; this.vy = 0;
+                     this.life = this.maxLife; // Reset life for duration
+                 } else {
+                     const a = Math.atan2(this.destY - this.y, this.destX - this.x);
+                     this.vx = Math.cos(a) * this.currentSpeed;
+                     this.vy = Math.sin(a) * this.currentSpeed;
+                     this.x += this.vx * dt;
+                     this.y += this.vy * dt;
+                     this.angle = a;
+                 }
+             } else {
+                 // Trap Logic
+                 if (this.scale < 1.0) this.scale += dt * 5;
+                 this.trapTimer -= dt;
+                 if (this.trapTimer <= 0) {
+                     this.trapTimer = this.trapInterval;
+                     // Visual Pulse
+                     window.Game.particles.push(new Particle(this.x, this.y, '#cfd8dc', 0.5, this.area*0.5 || 50));
+                     
+                     for (let e of window.Game.enemies) {
+                         if (this.dist(e) < (this.area || 80)) { // Slightly larger effective range
+                             this.hit(e);
+                         }
+                     }
+                 }
+                 this.life -= dt;
+                 if (this.life <= 0) this.dead = true;
+                 return;
+             }
+        }
+
+        if (this.type !== 'formation') {
+            this.life-=dt; if(this.life<=0) this.dead=true;
+        }
         this.bornTime += dt;
         
-        if (this.type === 'beast') {
+        if (this.type === 'ghost') {
+             // Wobbly Homing
              if (!this.target.dead) {
                  const d = this.dist(this.target);
                  if (d > 10) {
                      const a = Math.atan2(this.target.y - this.y, this.target.x - this.x);
+                     
+                     // Add Wobble
+                     const wobble = Math.sin(this.bornTime * 10 + this.wobblePhase) * 0.5;
+                     
                      const turnSpeed = 5.0 * dt;
                      const speed = Math.hypot(this.vx, this.vy);
-                     this.vx += Math.cos(a) * speed * turnSpeed;
-                     this.vy += Math.sin(a) * speed * turnSpeed;
+                     
+                     // Blend straight homing with wobble
+                     this.vx += (Math.cos(a + wobble) * speed - this.vx) * turnSpeed;
+                     this.vy += (Math.sin(a + wobble) * speed - this.vy) * turnSpeed;
+                     
                      const newSpeed = Math.hypot(this.vx, this.vy);
                      this.vx = (this.vx / newSpeed) * speed;
                      this.vy = (this.vy / newSpeed) * speed;
                      this.angle = Math.atan2(this.vy, this.vx);
                  }
              } else {
+                 // Find new target
                   let near=null, minD=400;
                   for(let e of window.Game.enemies) { const d=this.dist(e); if(d<minD){minD=d; near=e;} }
                   if(near) this.target = near;
@@ -337,17 +480,7 @@ export class Bullet extends Entity {
              this.x += this.vx * dt;
              this.y += this.vy * dt;
              
-        } else if (this.type === 'bard') {
-             this.x += this.originVX * dt;
-             this.y += this.originVY * dt;
-             const amp = 150 * dt * Math.cos(this.bornTime * 10); 
-             const speed = Math.hypot(this.originVX, this.originVY);
-             const perpX = -this.originVY / speed;
-             const perpY = this.originVX / speed;
-             this.x += perpX * amp;
-             this.y += perpY * amp;
-             this.angle = Math.atan2(this.vy, this.vx); 
-        } else {
+        } else if (this.type !== 'formation') {
              this.x+=this.vx*dt; this.y+=this.vy*dt;
         }
         
@@ -357,10 +490,10 @@ export class Bullet extends Entity {
              if(Math.random()>0.5) window.Game.particles.push(new Particle(this.x,this.y,'#e1f5fe',0.3, 3));
         } else if (this.type === 'thunder') {
              window.Game.particles.push(new Particle(this.x,this.y,'#fff',0.2, 2));
-        } else if (this.type === 'beast') {
-             if(Math.random()>0.7) window.Game.particles.push(new Particle(this.x,this.y,'#5d4037',0.3, 3));
-        } else if (this.type === 'bard') {
-             if(Math.random()>0.5) window.Game.particles.push(new Particle(this.x,this.y,'#f48fb1',0.4, 4));
+        } else if (this.type === 'ghost') {
+             if(Math.random()>0.7) window.Game.particles.push(new Particle(this.x,this.y,'#4a148c',0.3, 3));
+        } else if (this.type === 'formation') {
+             // Pulse particle handled in trap logic
         } else {
             if(Math.random()>0.5) window.Game.particles.push(new Particle(this.x,this.y,'#00bcd4',0.3, 3));
         }
@@ -381,24 +514,61 @@ export class Bullet extends Entity {
     hit(e) {
         e.takeDamage(this.dmg, Math.cos(this.angle), Math.sin(this.angle), this.type);
         if (this.stun) e.slowTimer = 1.0; 
-
+        
+        // Mage AOE Explosion
         if(this.type === 'fire') {
-            for(let i=0; i<10; i++) window.Game.particles.push(new Particle(this.x,this.y,'#ff9800', 0.6, 8));
-        } else if(this.type === 'water') {
+            for(let other of window.Game.enemies) {
+                 if (other !== e && this.dist(other) < (this.area || 120)) {
+                     // Reduced damage for splash
+                     other.takeDamage(this.dmg * 0.5, 0, 0, 'fire');
+                 }
+             }
+             // Big Boom Visual
+             window.Game.particles.push(new Particle(this.x, this.y, '#ff5722', 0.6, this.area || 100));
+             for(let i=0; i<10; i++) window.Game.particles.push(new Particle(this.x,this.y,'#ff9800', 0.6, 8));
+             return; // Skip standard small particles
+        }
+
+        if(this.type === 'water') {
             for(let i=0; i<5; i++) window.Game.particles.push(new Particle(this.x,this.y,'#b3e5fc', 0.4, 5));
         } else if(this.type === 'earth') {
              window.Game.screenShake(0.2);
              for(let i=0; i<8; i++) window.Game.particles.push(new Particle(this.x,this.y,'#795548', 0.5, 6));
-        } else if(this.type === 'beast') {
-             for(let i=0; i<5; i++) window.Game.particles.push(new Particle(this.x,this.y,'#8d6e63', 0.4, 5));
-        } else if(this.type === 'bard') {
-             for(let i=0; i<6; i++) window.Game.particles.push(new Particle(this.x,this.y,'#ec407a', 0.5, 6));
+        } else if(this.type === 'ghost') {
+             for(let i=0; i<5; i++) window.Game.particles.push(new Particle(this.x,this.y,'#9c27b0', 0.4, 5));
+        } else if(this.type === 'formation') {
+             for(let i=0; i<6; i++) window.Game.particles.push(new Particle(this.x,this.y,'#cfd8dc', 0.5, 6));
         } else {
             window.Game.particles.push(new Particle(this.x,this.y,'#fff',0.2, 6));
         }
     }
     draw(ctx) {
         ctx.save(); ctx.translate(this.x, this.y);
+        
+        if (this.type === 'formation') {
+            // Formation Rune Drawing
+             if (this.deployed) {
+                 ctx.scale(this.scale, this.scale);
+                 ctx.rotate(window.Game.playTime * 2); // Spin
+                 ctx.beginPath();
+                 ctx.arc(0,0, this.area || 80, 0, Math.PI*2);
+                 ctx.strokeStyle = `rgba(207, 216, 220, ${0.3 + Math.sin(window.Game.playTime*10)*0.2})`;
+                 ctx.lineWidth = 2;
+                 ctx.stroke();
+                 
+                 // Inner rune
+                 ctx.strokeStyle = '#cfd8dc'; ctx.lineWidth = 3;
+                 ctx.beginPath(); ctx.moveTo(0,-20); ctx.lineTo(16,10); ctx.lineTo(-16,10); ctx.closePath(); ctx.stroke();
+             } else {
+                 // Flying Rune
+                 ctx.rotate(this.angle + Math.PI/2);
+                 ctx.strokeStyle = '#cfd8dc'; ctx.lineWidth = 2;
+                 ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(8,5); ctx.lineTo(-8,5); ctx.closePath(); ctx.stroke();
+             }
+             ctx.restore();
+             return;
+        }
+
         ctx.rotate(this.angle + Math.PI/2);
         if(this.type === 'fire') {
             ctx.rotate(window.Game.playTime * 10);
@@ -411,13 +581,14 @@ export class Bullet extends Entity {
         } else if(this.type === 'earth') {
             ctx.rotate(window.Game.playTime * 2);
             ctx.drawImage(Assets['rock_b'], -20, -20, 40, 40);
-        } else if(this.type === 'beast') {
+        } else if(this.type === 'ghost') {
              ctx.rotate(-Math.PI/2); 
              if (this.vx < 0) ctx.scale(1, -1); 
-             ctx.drawImage(Assets['wolf'], -24, -16, 48, 32);
-        } else if(this.type === 'bard') {
-             ctx.rotate(Math.sin(this.bornTime*10)*0.5);
-             ctx.drawImage(Assets['note'], -16, -24, 32, 48);
+             // Ghost fire instead of wolf
+             ctx.fillStyle = '#7b1fa2'; 
+             ctx.beginPath(); ctx.arc(0,0,8,0,Math.PI*2); ctx.fill();
+             ctx.fillStyle = '#e1bee7';
+             ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
         } else {
             ctx.drawImage(Assets['sword'], -10, -20, 20, 40);
         }
@@ -457,15 +628,24 @@ export class Artifact extends Entity {
                     while (diff < -Math.PI) diff += Math.PI*2;
                     
                     if (Math.abs(diff) < Math.PI/2) {
-                        if (Math.random() < dt * 5) {
-                            e.takeDamage(10 * dt, 0, 0, 'fire');
-                            window.Game.particles.push(new Particle(e.x, e.y, '#e74c3c', 0.3, 2));
+                        // Continuous damage logic improved:
+                        // Instead of random tiny damage, use a timer to tick damage
+                        // Fire Aura (Front)
+                        if (!e.burnTick) e.burnTick = 0;
+                        e.burnTick -= dt;
+                        if (e.burnTick <= 0) {
+                             e.takeDamage(10, 0, 0, 'fire'); // Fixed integer damage
+                             window.Game.particles.push(new Particle(e.x, e.y, '#e74c3c', 0.3, 2));
+                             e.burnTick = 0.2; // 5 ticks per second
                         }
                     } else {
+                        // Ice Aura (Back) - Slow
                         e.slowTimer = 0.2;
-                        if (Math.random() < dt * 2) {
+                        if (Math.random() < dt * 5) { // Visuals can be random
                             window.Game.particles.push(new Particle(e.x, e.y, '#3498db', 0.3, 2));
                         }
+                        // Also deal some small ice damage occasionally?
+                        // Let's keep it just slow for now as per description, or small damage
                     }
                 }
             }
@@ -585,12 +765,16 @@ export class Lightning {
 }
 
 export class Particle {
-    constructor(x,y,c,l,s) { 
-        this.x=x; this.y=y; this.c=c; this.life=l; this.maxL=l; this.size=s; 
+    constructor(x,y,c,l,s, g=0) { 
+        this.x=x; this.y=y; this.c=c; this.life=l; this.maxL=l; this.size=s; this.g=g;
         const ang = Math.random()*Math.PI*2; const spd = Math.random()*100;
         this.vx=Math.cos(ang)*spd; this.vy=Math.sin(ang)*spd; 
     }
-    update(dt) { this.life-=dt; if(this.life<=0) this.dead=true; this.x+=this.vx*dt; this.y+=this.vy*dt; }
+    update(dt) { 
+        this.life-=dt; if(this.life<=0) this.dead=true; 
+        this.vy += this.g * dt;
+        this.x+=this.vx*dt; this.y+=this.vy*dt; 
+    }
     draw(ctx) { ctx.globalAlpha=this.life/this.maxL; ctx.fillStyle=this.c; ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1; }
 }
 

@@ -7,8 +7,8 @@ export const SVG_LIB = {
     player_mage: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 110 L88 110 L84 50" fill="#ffecb3" stroke="#ff6f00" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M35 35 Q64 0 93 35 Q95 55 64 60 Q33 55 35 35" fill="#d84315"/><circle cx="64" cy="20" r="8" fill="#ffeb3b"/><path d="M20 50 Q10 70 30 80" fill="none" stroke="#ff6f00" stroke-width="3"/><path d="M108 50 Q118 70 98 80" fill="none" stroke="#ff6f00" stroke-width="3"/></svg>`,
     player_body: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M34 50 L44 100 L64 90 L84 100 L94 50" fill="#795548" stroke="#3e2723" stroke-width="2"/><rect x="34" y="50" width="60" height="40" fill="#5d4037"/><circle cx="64" cy="40" r="20" fill="#ffe0b2"/><path d="M44 30 L84 30" stroke="#000" stroke-width="5"/><circle cx="44" cy="30" r="10" fill="#3e2723"/><circle cx="84" cy="30" r="10" fill="#3e2723"/><path d="M20 60 L34 60 L30 80" fill="#ffe0b2" stroke="#3e2723"/><path d="M108 60 L94 60 L98 80" fill="#ffe0b2" stroke="#3e2723"/></svg>`,
     
-    player_beast: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 100 L64 90 L88 100 L84 50" fill="#a1887f" stroke="#5d4037" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M30 30 Q64 10 98 30 Q90 50 86 60 Q64 65 42 60 Q38 50 30 30" fill="#33691e"/><path d="M30 20 L40 40 L30 50 Z" fill="#a1887f"/><path d="M98 20 L88 40 L98 50 Z" fill="#a1887f"/><path d="M20 60 L30 70 L25 90 Z" fill="#558b2f"/><path d="M108 60 L98 70 L103 90 Z" fill="#558b2f"/></svg>`,
-    player_bard: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 110 L88 110 L84 50" fill="#f8bbd0" stroke="#e91e63" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M35 30 Q64 5 93 30 Q95 55 64 60 Q33 55 35 30" fill="#880e4f"/><rect x="25" y="60" width="78" height="20" fill="#3e2723" transform="rotate(-15 64 70)"/><path d="M30 60 L100 80" stroke="#fff" stroke-width="1" transform="rotate(-15 64 70)"/></svg>`,
+    player_ghost: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 110 L88 110 L84 50" fill="#4a148c" stroke="#311b92" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#e1bee7"/><path d="M35 30 Q64 5 93 30 Q95 55 64 60 Q33 55 35 30" fill="#212121"/><path d="M25 50 L35 60 L25 80" stroke="#9c27b0" stroke-width="2" fill="none"/><path d="M103 50 L93 60 L103 80" stroke="#9c27b0" stroke-width="2" fill="none"/><circle cx="50" cy="50" r="5" fill="#ab47bc" opacity="0.8"/><circle cx="78" cy="50" r="5" fill="#ab47bc" opacity="0.8"/></svg>`,
+    player_formation: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 110 L88 110 L84 50" fill="#eceff1" stroke="#607d8b" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M40 30 Q64 10 88 30 Q90 50 86 60 Q64 65 42 60 Q38 50 40 30" fill="#37474f"/><path d="M20 50 L40 60 L20 80 Z" fill="#cfd8dc"/><path d="M108 50 L88 60 L108 80 Z" fill="#cfd8dc"/><circle cx="64" cy="80" r="15" stroke="#3498db" stroke-width="2" fill="none"/><path d="M64 65 L64 95 M49 80 L79 80" stroke="#3498db"/></svg>`,
 
     // Artifacts
     fantian_seal: `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="60" height="60" fill="#f1c40f" stroke="#f39c12" stroke-width="4"/><path d="M10 10 L70 70 M70 10 L10 70" stroke="#e67e22" stroke-width="2"/><rect x="25" y="25" width="30" height="30" fill="#e74c3c" stroke="#c0392b" stroke-width="3"/><circle cx="40" cy="40" r="8" fill="#f1c40f"/></svg>`,
@@ -58,25 +58,25 @@ export const SVG_LIB = {
 };
 
 export const ROLES = [
-    { id: 'sword', name: '蜀山剑修', hp: 100, dmg: 10, cd: 0.5, speed: 160, desc: '御剑飞行，攻速极快', svg: 'player_sword' },
-    { id: 'mage', name: '昆仑符师', hp: 80,  dmg: 25, cd: 1.0, speed: 140, desc: '五行术法，威力巨大', svg: 'player_mage' },
-    { id: 'body', name: '蓬莱体修', hp: 200, dmg: 15, cd: 0.8, speed: 150, desc: '肉身成圣，血厚防高', svg: 'player_body' },
-    { id: 'beast', name: '万兽山庄', hp: 120, dmg: 15, cd: 1.2, speed: 150, desc: '驱使灵兽，自动索敌', svg: 'player_beast' },
-    { id: 'bard', name: '长歌门', hp: 90, dmg: 18, cd: 0.6, speed: 145, desc: '琴音化刃，穿透群敌', svg: 'player_bard' }
+    { id: 'sword', name: '天剑宗', hp: 100, dmg: 10, cd: 0.5, speed: 160, desc: '以身化剑，唯快不破', svg: 'player_sword' },
+    { id: 'mage', name: '玄元道', hp: 80,  dmg: 25, cd: 1.0, speed: 140, desc: '通御五行，爆发轰炸', svg: 'player_mage' },
+    { id: 'body', name: '荒古门', hp: 200, dmg: 15, cd: 0.8, speed: 150, desc: '肉身成圣，力破万法', svg: 'player_body' },
+    { id: 'ghost', name: '幽冥涧', hp: 120, dmg: 15, cd: 1.2, speed: 150, desc: '生死无界，役使亡灵', svg: 'player_ghost' },
+    { id: 'formation', name: '天机阁', hp: 90, dmg: 18, cd: 0.6, speed: 145, desc: '算尽天机，画地为牢', svg: 'player_formation' }
 ];
 
 export const ARTIFACTS = [
-    { id: 'fantian', name: '翻天印', desc: '每10秒造成全屏震荡眩晕', cd: 10, svg: 'fantian_seal' },
-    { id: 'mirror', name: '阴阳镜', desc: '光环: 前方灼烧 后方减速', cd: 0, svg: 'yinyang_mirror' },
-    { id: 'gourd', name: '斩仙葫芦', desc: '针对精英怪造成毁灭打击', cd: 5, svg: 'slaying_gourd' }
+    { id: 'fantian', name: '虚天鼎', desc: '每10秒震晕全场敌人', cd: 10, svg: 'fantian_seal' },
+    { id: 'mirror', name: '乾蓝冰焰', desc: '光环: 前方焚烧 后方冰冻', cd: 0, svg: 'yinyang_mirror' },
+    { id: 'gourd', name: '玄天斩灵', desc: '针对精英怪的必杀一击', cd: 5, svg: 'slaying_gourd' }
 ];
 
 export const STAGES = [
-    { name: '幽暗密林', time: 0, bg: '#0f1519', grid: '#1c262b', mobs: ['bat'] },
+    { name: '幽暗密林', time: 0, bg: '#0f1519', grid: '#1c262b', mobs: ['bat', 'rock'] },
     { name: '埋骨之地', time: 60, bg: '#202020', grid: '#333333', mobs: ['bat', 'ghost'] },
-    { name: '熔岩炼狱', time: 120, bg: '#1a0505', grid: '#3d0e0e', mobs: ['bat_fire', 'rock'] },
-    { name: '极寒冰原', time: 180, bg: '#050a1a', grid: '#0e1e3d', mobs: ['ghost_ice', 'rock'] },
-    { name: '昆仑仙境', time: 300, bg: '#2c3e50', grid: '#34495e', mobs: ['bat_fire', 'ghost_ice', 'rock'] }
+    { name: '熔岩炼狱', time: 120, bg: '#1a0505', grid: '#3d0e0e', mobs: ['bat_fire', 'magma_rock'] },
+    { name: '极寒冰原', time: 180, bg: '#050a1a', grid: '#0e1e3d', mobs: ['ghost_ice', 'crystal'] },
+    { name: '昆仑仙境', time: 300, bg: '#2c3e50', grid: '#34495e', mobs: ['bat_fire', 'ghost_ice', 'magma_rock', 'crystal'] }
 ];
 
 export const SKILLS = {
@@ -99,14 +99,14 @@ export const SKILLS = {
         { id:'body_dmg', name:'金刚不坏', desc:'震荡伤害 +40%', icon:'💪', effect:s=>s.dmg*=1.4 },
         { id:'body_kb', name:'力拔山兮', desc:'击退效果大幅增强', icon:'👊', effect:s=>s.knockback=(s.knockback||1.0)*1.5 }
     ],
-    beast: [
-        { id:'beast_speed', name:'灵兽狂暴', desc:'灵兽扑击速度 +30%', icon:'🐺', effect:s=>s.bulletSpeed=(s.bulletSpeed||250)*1.3 },
-        { id:'beast_duration', name:'兽魂不灭', desc:'灵兽存在时间 +50%', icon:'⏳', effect:s=>s.bulletLife=(s.bulletLife||1.5)*1.5 },
-        { id:'beast_mult', name:'万兽奔腾', desc:'召唤数量 +1', icon:'🐾', effect:s=>s.count++ }
+    ghost: [
+        { id:'ghost_speed', name:'幽冥鬼步', desc:'召唤物移动速度 +30%', icon:'👻', effect:s=>s.bulletSpeed=(s.bulletSpeed||250)*1.3 },
+        { id:'ghost_duration', name:'怨气不散', desc:'召唤物存在时间 +50%', icon:'⏳', effect:s=>s.bulletLife=(s.bulletLife||1.5)*1.5 },
+        { id:'ghost_mult', name:'百鬼夜行', desc:'召唤数量 +1', icon:'💀', effect:s=>s.count++ }
     ],
-    bard: [
-        { id:'bard_size', name:'大音希声', desc:'音波范围 +30%', icon:'🎵', effect:s=>s.area=(s.area||1.0)*1.3 },
-        { id:'bard_pierce', name:'魔音贯耳', desc:'音波穿透 +2', icon:'🎼', effect:s=>s.pierce=(s.pierce||99)+2 },
-        { id:'bard_stun', name:'余音绕梁', desc:'音波附带减速效果', icon:'❄️', effect:s=>s.stun=true }
+    formation: [
+        { id:'form_size', name:'天罗地网', desc:'阵法范围 +30%', icon:'🕸️', effect:s=>s.area=(s.area||1.0)*1.3 },
+        { id:'form_pierce', name:'生门死门', desc:'阵法伤害频次增加', icon:'☯️', effect:s=>s.pierce=(s.pierce||99)+2 },
+        { id:'form_stun', name:'画地为牢', desc:'阵法附带强力减速', icon:'🛑', effect:s=>s.stun=true }
     ]
 };
