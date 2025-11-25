@@ -164,7 +164,8 @@ export class GameEngine {
             case 1: this.initBone(); break;
             case 2: this.initMagma(); break;
             case 3: this.initIce(); break;
-            case 4: this.initFairyland(); break;
+            case 4: this.initBattlefield(); break;
+            case 5: this.initFairyland(); break;
         }
     }
     
@@ -257,6 +258,10 @@ export class GameEngine {
                     color = 'rgba(225, 245, 254, 0.8)';
                     break;
                 case 4: 
+                    type = 'sand';
+                    color = '#5c4a2a';
+                    break;
+                case 5: 
                     type = 'cloud';
                     color = '#cfd8dc';
                     break;
@@ -347,6 +352,46 @@ export class GameEngine {
         }
     }
     
+    initBattlefield() {
+        // 战场遗迹点缀 (少量)
+        const wreckTypes = ['broken_sword', 'broken_blade', 'broken_spear', 'shield_round'];
+        
+        // 只放 8~10 件遗迹作为点缀
+        for(let i=0; i<10; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const r = 100 + Math.random() * 400;
+            
+            let type = wreckTypes[Math.floor(Math.random() * wreckTypes.length)];
+            
+            const obj = new StaticObject(Math.cos(a)*r, Math.sin(a)*r, type);
+            obj.rotation = Math.random() * Math.PI * 2;
+            this.staticObjects.push(obj);
+        }
+        
+        // 1~2 辆战车残骸（稀有大件）
+        if(Math.random() < 0.6) {
+            const a = Math.random() * Math.PI * 2;
+            const r = 200 + Math.random() * 250;
+            const obj = new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'chariot_wreck');
+            obj.rotation = Math.random() * Math.PI * 2;
+            this.staticObjects.push(obj);
+        }
+        
+        // 边缘的沙漠岩石
+        for(let i=0; i<30; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const r = 450 + Math.random() * 150;
+            this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'stone_s'));
+        }
+        
+        // 少量散落的小石块
+        for(let i=0; i<12; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const r = 80 + Math.random() * 350;
+            this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'stone_s'));
+        }
+    }
+
     initFairyland() {
         this.staticObjects.push(new StaticObject(0, -100, 'pavilion'));
         this.staticObjects.push(new StaticObject(0, 250, 'gate'));
@@ -568,6 +613,41 @@ export class GameEngine {
                 };
                 break;
             case 4: 
+                skyTop='#2d2318'; skyBot='#5c4a2a'; // 暗沉暮色
+                groundBase='#3e3626'; groundSurf='#5d5340'; // 昏黄土色
+                patternColor='#2e261a';
+                drawFar = (w, h) => {
+                   const pX = this.camera.x * 0.1; const pY = this.camera.y * 0.1;
+                   const sX = this.camera.x * 0.02; const sY = this.camera.y * 0.02;
+                   
+                   // 长河落日圆 (暗红圆日)
+                   ctx.fillStyle = '#b7410e'; ctx.shadowColor = '#8b2e0b'; ctx.shadowBlur = 50;
+                   ctx.beginPath(); ctx.arc(w*0.7 - sX, h*0.25 - sY, 70, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+                   
+                   // 大漠孤烟直 (笔直的烟柱)
+                   ctx.save();
+                   const smokeX = w*0.3 - pX*0.8;
+                   const smokeBaseY = h*0.4 - pY*0.5;
+                   // 烟柱主体
+                   const smokeGrad = ctx.createLinearGradient(smokeX, smokeBaseY, smokeX, smokeBaseY - 300);
+                   smokeGrad.addColorStop(0, 'rgba(40, 30, 20, 0.8)');
+                   smokeGrad.addColorStop(1, 'rgba(80, 70, 60, 0)');
+                   ctx.fillStyle = smokeGrad;
+                   ctx.beginPath();
+                   ctx.moveTo(smokeX - 2, smokeBaseY);
+                   ctx.lineTo(smokeX + 2, smokeBaseY);
+                   ctx.lineTo(smokeX + 10, smokeBaseY - 300); // 略微扩散
+                   ctx.lineTo(smokeX - 10, smokeBaseY - 300);
+                   ctx.fill();
+                   ctx.restore();
+
+                   // 远方的沙丘轮廓 (层峦叠嶂)
+                   drawDistantIsland(w*0.1, h*0.25, -pX, -pY, 200, 120, '#2d2318', '#3e3626', 'spike');
+                   drawDistantIsland(w*0.6, h*0.28, -pX, -pY, 250, 100, '#2d2318', '#3e3626', 'cross');
+                   drawDistantIsland(w*0.9, h*0.22, -pX, -pY, 180, 90, '#2d2318', '#3e3626', 'spike');
+                };
+                break;
+            case 5: 
                 skyTop='#000000'; skyBot='#2c3e50';
                 groundBase='#37474f'; groundSurf='#ecf0f1';
                 patternColor=null; 

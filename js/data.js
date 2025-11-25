@@ -53,7 +53,16 @@ export const SVG_LIB = {
     magma_rock: `<svg width="70" height="70" viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg"><path d="M35 5 L65 35 L50 65 L20 65 L5 35 Z" fill="#3e2723"/><path d="M35 5 L35 35 L65 35" fill="none" stroke="#ff5722" stroke-width="3"/><path d="M20 55 L35 35 L50 65" fill="none" stroke="#ff5722" stroke-width="3"/></svg>`,
     
     dead_tree: `<svg width="80" height="100" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg"><path d="M40 100 L40 40" stroke="#2d3436" stroke-width="8"/><path d="M40 70 L20 50 M40 60 L60 40 M40 40 L20 20 M40 45 L50 25" stroke="#2d3436" stroke-width="4" stroke-linecap="round"/></svg>`,
-    broken_sword: `<svg width="40" height="60" viewBox="0 0 40 60" xmlns="http://www.w3.org/2000/svg"><path d="M20 0 L20 40" stroke="#7f8c8d" stroke-width="4"/><rect x="10" y="10" width="20" height="4" fill="#34495e"/><path d="M20 40 L15 50 L25 50 Z" fill="#7f8c8d"/></svg>`,
+    broken_sword: `<svg width="60" height="100" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="blade" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#bdc3c7"/><stop offset="50%" stop-color="#ecf0f1"/><stop offset="100%" stop-color="#95a5a6"/></linearGradient></defs><!-- 剑身 --><path d="M22 50 L38 50 L35 95 L25 95 Z" fill="url(#blade)"/><!-- 护手 --><path d="M15 50 Q30 55 45 50 L45 45 Q30 50 15 45 Z" fill="#546e7a" stroke="#37474f" stroke-width="1"/><!-- 剑柄 --><rect x="26" y="15" width="8" height="30" fill="#3e2723"/><path d="M26 20 L34 22 M26 26 L34 28 M26 32 L34 34 M26 38 L34 40" stroke="#5d4037" stroke-width="1"/><!-- 剑首 --><circle cx="30" cy="15" r="6" fill="#546e7a" stroke="#37474f" stroke-width="1"/><circle cx="30" cy="15" r="2" fill="#f1c40f"/></svg>`,
+    
+    broken_blade: `<svg width="60" height="80" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg"><path d="M20 80 Q10 40 20 20 L40 20 L40 80 Z" fill="#95a5a6" stroke="#7f8c8d"/><rect x="25" y="0" width="10" height="20" fill="#5d4037"/><circle cx="30" cy="20" r="4" fill="#d7ccc8"/></svg>`,
+    
+    broken_spear: `<svg width="40" height="120" viewBox="0 0 40 120" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="0" width="4" height="100" fill="#5d4037"/><path d="M20 100 L10 120 L30 120 Z" fill="#95a5a6"/><path d="M15 90 L25 90" stroke="#8d6e63" stroke-width="2"/><path d="M12 85 L28 85" stroke="#a1887f" stroke-width="2"/></svg>`,
+    
+    shield_round: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="28" fill="#5d4037" stroke="#3e2723" stroke-width="2"/><circle cx="30" cy="30" r="10" fill="#8d6e63" stroke="#5d4037"/><path d="M30 2 L30 58 M2 30 L58 30" stroke="#3e2723" stroke-width="1" opacity="0.5"/><path d="M10 45 L20 35 M40 15 L50 25" stroke="#3e2723" opacity="0.3"/></svg>`,
+    
+    chariot_wreck: `<svg width="100" height="80" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg"><path d="M10 50 L90 50 L80 20 L20 20 Z" fill="#4e342e" stroke="#3e2723" stroke-width="2"/><circle cx="25" cy="50" r="20" fill="none" stroke="#3e2723" stroke-width="4"/><path d="M25 30 L25 70 M5 50 L45 50" stroke="#3e2723" stroke-width="2"/><circle cx="25" cy="50" r="4" fill="#3e2723"/><path d="M60 20 L70 0 L80 20" fill="none" stroke="#3e2723" stroke-width="3"/><rect x="50" y="30" width="40" height="15" fill="#3e2723" opacity="0.8"/><path d="M10 50 L0 70" stroke="#3e2723" stroke-width="3" stroke-dasharray="5,5"/></svg>`,
+    
     ruin_pillar: `<svg width="50" height="80" viewBox="0 0 50 80" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="30" height="60" fill="#555"/><path d="M10 20 L40 30 L40 40 L10 30 Z" fill="#444"/><path d="M15 50 L35 50 M15 60 L35 60" stroke="#333" stroke-width="2"/></svg>`
 };
 
@@ -76,7 +85,8 @@ export const STAGES = [
     { name: '埋骨之地', time: 60, bg: '#202020', grid: '#333333', mobs: ['bat', 'ghost'] },
     { name: '熔岩炼狱', time: 120, bg: '#1a0505', grid: '#3d0e0e', mobs: ['bat_fire', 'magma_rock'] },
     { name: '极寒冰原', time: 180, bg: '#050a1a', grid: '#0e1e3d', mobs: ['ghost_ice', 'crystal'] },
-    { name: '昆仑仙境', time: 300, bg: '#2c3e50', grid: '#34495e', mobs: ['bat_fire', 'ghost_ice', 'magma_rock', 'crystal'] }
+    { name: '塞外古战场', time: 240, bg: '#5d5340', grid: '#73654d', mobs: ['ghost', 'rock'] },
+    { name: '昆仑仙境', time: 360, bg: '#2c3e50', grid: '#34495e', mobs: ['bat_fire', 'ghost_ice', 'magma_rock', 'crystal'] }
 ];
 
 export const SKILLS = {

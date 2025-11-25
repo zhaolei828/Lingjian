@@ -25,7 +25,10 @@ export function generateStagePattern(stageIdx) {
         case 3: // Ice
             drawIce(ctx, size);
             break;
-        case 4: // Fairyland
+        case 4: // Battlefield
+            drawBattlefield(ctx, size);
+            break;
+        case 5: // Fairyland
             drawFairyland(ctx, size);
             break;
         default:
@@ -52,6 +55,226 @@ function drawFairyland(ctx, size) {
         const y = Math.random() * size;
         ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
     }
+}
+
+function drawBattlefield(ctx, size) {
+    // ===== 昏黄沙漠地形层 =====
+    
+    // 大型沙丘（阴影面）
+    ctx.fillStyle = '#3e3626';
+    ctx.globalAlpha = 0.4;
+    for(let i=0; i<6; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 80 + Math.random() * 120;
+        const h = 30 + Math.random() * 40;
+        ctx.beginPath();
+        ctx.ellipse(x, y, w, h, Math.random() * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+    
+    // 沙丘高光（昏黄）
+    ctx.fillStyle = '#73654d';
+    ctx.globalAlpha = 0.3;
+    for(let i=0; i<5; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 60 + Math.random() * 100;
+        const h = 20 + Math.random() * 30;
+        ctx.beginPath();
+        ctx.ellipse(x, y - 10, w * 0.8, h * 0.5, Math.random() * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+    
+    // 沙岭/沙脊（弧形高光线）
+    ctx.strokeStyle = '#8c7b50';
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.5;
+    for(let i=0; i<12; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 50 + Math.random() * 80;
+        ctx.beginPath();
+        ctx.arc(x, y, w, Math.PI * 0.1, Math.PI * 0.9, false);
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1.0;
+    
+    // 沙坑（暗色凹陷）
+    ctx.fillStyle = '#2e261a';
+    ctx.globalAlpha = 0.35;
+    for(let i=0; i<8; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = 15 + Math.random() * 25;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+    
+    // 风沙纹理（细密波纹）
+    ctx.strokeStyle = '#5d5340';
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.4;
+    for(let i=0; i<25; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 30 + Math.random() * 50;
+        ctx.beginPath();
+        ctx.arc(x, y, w, 0, Math.PI, false);
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1.0;
+    
+    // 散落的沙砾石子
+    ctx.fillStyle = '#4a3d28';
+    for(let i=0; i<50; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = 1 + Math.random() * 2;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    }
+    
+    // ===== 战场遗迹层 =====
+    
+    // 1. 插入沙中的残剑/兵器 (少量点缀)
+    for(let i=0; i<3; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const angle = -Math.PI/2 + (Math.random() - 0.5) * 0.6;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        
+        if(Math.random() > 0.4) {
+            // 剑
+            ctx.fillStyle = '#7f8c8d';
+            ctx.beginPath();
+            ctx.moveTo(-3, 0); ctx.lineTo(3, 0); ctx.lineTo(2, -18); ctx.lineTo(-2, -18); ctx.fill();
+            ctx.fillStyle = '#2c3e50';
+            ctx.beginPath();
+            ctx.moveTo(-6, -18); ctx.quadraticCurveTo(0, -16, 6, -18); ctx.lineTo(6, -20); ctx.quadraticCurveTo(0, -18, -6, -20); ctx.fill();
+            ctx.fillStyle = '#3e2723'; ctx.fillRect(-2, -30, 4, 10);
+        } else {
+            // 断矛杆
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(-1.5, -35, 3, 35);
+            ctx.fillStyle = '#8d6e63';
+            ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(-3, -22); ctx.lineTo(3, -22); ctx.fill();
+        }
+        ctx.restore();
+    }
+    
+    // 2. 散落地面的甲片 (少量)
+    for(let i=0; i<2; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.random() * Math.PI * 2);
+        ctx.fillStyle = '#455a64';
+        ctx.fillRect(-4, -4, 8, 8);
+        ctx.fillStyle = '#263238';
+        ctx.beginPath(); ctx.arc(0, 0, 1.5, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+    
+    // 3. 散落地面的断兵器（横躺，少量）
+    ctx.strokeStyle = '#4a4a4a';
+    ctx.lineWidth = 2;
+    for(let i=0; i<2; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const angle = Math.random() * Math.PI * 2;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(-10, 0);
+        ctx.lineTo(8 + Math.random()*6, 0);
+        ctx.stroke();
+        ctx.restore();
+    }
+    
+    // 破烂行军帐
+    ctx.strokeStyle = '#5a4a30';
+    ctx.fillStyle = '#7a6a50';
+    ctx.lineWidth = 2;
+    for(let i=0; i<2; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(-20, 5);
+        ctx.lineTo(0, -15);
+        ctx.lineTo(20, 8);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-15, 5);
+        ctx.quadraticCurveTo(-5, -5, 5, 3);
+        ctx.quadraticCurveTo(10, 8, 18, 6);
+        ctx.lineTo(15, 12);
+        ctx.quadraticCurveTo(0, 8, -12, 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+    }
+    
+    // 残破战旗
+    for(let i=0; i<4; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const lean = (Math.random() - 0.5) * 0.4;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(lean);
+        
+        ctx.strokeStyle = '#5a4a30';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 5);
+        ctx.lineTo(0, -35);
+        ctx.stroke();
+        
+        const flagColor = Math.random() > 0.5 ? '#8b2020' : '#2a2a2a';
+        ctx.fillStyle = flagColor;
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(0, -35);
+        ctx.lineTo(18, -30);
+        ctx.lineTo(15, -25);
+        ctx.lineTo(20, -20);
+        ctx.lineTo(12, -18);
+        ctx.lineTo(0, -22);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+    }
+    
+    // 枯骨残骸
+    ctx.fillStyle = '#c0b090';
+    ctx.globalAlpha = 0.6;
+    for(let i=0; i<6; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.random() * Math.PI * 2);
+        ctx.beginPath();
+        ctx.ellipse(-8, 0, 4, 2, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillRect(-6, -1, 12, 2);
+        ctx.beginPath();
+        ctx.ellipse(8, 0, 4, 2, 0, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+    ctx.globalAlpha = 1.0;
 }
 
 function drawForest(ctx, size) {
