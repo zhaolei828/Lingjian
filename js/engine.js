@@ -61,9 +61,13 @@ export class GameEngine {
              this.player.maxHp = 100 + stageIdx * 20;
         }
         
-        document.getElementById('overlay').classList.add('hidden');
-        document.getElementById('start-menu').classList.add('hidden');
-        document.getElementById('gameover-menu').classList.add('hidden');
+        // PC 版 DOM 元素（移动端可能不存在）
+        const overlay = document.getElementById('overlay');
+        const startMenu = document.getElementById('start-menu');
+        const gameoverMenu = document.getElementById('gameover-menu');
+        if (overlay) overlay.classList.add('hidden');
+        if (startMenu) startMenu.classList.add('hidden');
+        if (gameoverMenu) gameoverMenu.classList.add('hidden');
         this.updateUI();
         
         this.initStageMap();
@@ -152,7 +156,9 @@ export class GameEngine {
         
         this.weather.update(dt, this.stageIdx, this.camera);
 
-        document.getElementById('timer').innerText = this.formatTime(this.playTime);
+        // PC 版计时器（移动端可能不存在）
+        const timer = document.getElementById('timer');
+        if (timer) timer.innerText = this.formatTime(this.playTime);
     }
 
     initStageMap() {
@@ -414,7 +420,7 @@ export class GameEngine {
 
         let skyTop, skyBot, groundBase, groundSurf, drawFar, patternColor;
         const tilt = 0.5;
-        const zoom = 0.7;
+        const zoom = 0.7 * (this.gameZoom || 1); // 支持移动端双指缩放
         const R = 600;
 
         const drawDistantIsland = (bx, by, ox, oy, w, h, baseColor, topColor, decoType) => {
@@ -852,17 +858,44 @@ export class GameEngine {
 
     updateUI() {
         const p = this.player;
-        document.getElementById('hp-bar').style.width = (p.hp/p.maxHp*100)+'%';
-        document.getElementById('exp-bar').style.width = (p.exp/p.maxExp*100)+'%';
-        document.getElementById('kills').innerText = this.score;
+        if (!p) return;
+        
+        // PC 版 DOM 元素（移动端可能不存在）
+        const hpBar = document.getElementById('hp-bar');
+        const expBar = document.getElementById('exp-bar');
+        const kills = document.getElementById('kills');
+        const rankName = document.getElementById('rank-name');
+        const rankLvl = document.getElementById('rank-lvl');
+        
+        if (hpBar) hpBar.style.width = (p.hp/p.maxHp*100)+'%';
+        if (expBar) expBar.style.width = (p.exp/p.maxExp*100)+'%';
+        if (kills) kills.innerText = this.score;
+        
         const r = ['练气','筑基','金丹','元婴','化神','渡劫'];
-        document.getElementById('rank-name').innerText = r[Math.min(Math.floor((p.lvl-1)/3), r.length-1)];
-        document.getElementById('rank-lvl').innerText = ((p.lvl-1)%3 + 1) + '层';
+        if (rankName) rankName.innerText = r[Math.min(Math.floor((p.lvl-1)/3), r.length-1)];
+        if (rankLvl) rankLvl.innerText = ((p.lvl-1)%3 + 1) + '层';
     }
     
-    pause() { this.state = 'PAUSE'; document.getElementById('overlay').classList.remove('hidden'); }
-    resume() { this.state = 'PLAY'; document.getElementById('overlay').classList.add('hidden'); this.lastTime=performance.now(); }
-    gameOver() { this.state = 'OVER'; document.getElementById('final-score').innerText=`存活: ${this.formatTime(this.playTime)} | 击杀: ${this.score}`; document.getElementById('overlay').classList.remove('hidden'); document.getElementById('gameover-menu').classList.remove('hidden'); }
+    pause() { 
+        this.state = 'PAUSE'; 
+        const overlay = document.getElementById('overlay');
+        if (overlay) overlay.classList.remove('hidden'); 
+    }
+    resume() { 
+        this.state = 'PLAY'; 
+        const overlay = document.getElementById('overlay');
+        if (overlay) overlay.classList.add('hidden'); 
+        this.lastTime = performance.now(); 
+    }
+    gameOver() { 
+        this.state = 'OVER'; 
+        const finalScore = document.getElementById('final-score');
+        const overlay = document.getElementById('overlay');
+        const gameoverMenu = document.getElementById('gameover-menu');
+        if (finalScore) finalScore.innerText = `存活: ${this.formatTime(this.playTime)} | 击杀: ${this.score}`; 
+        if (overlay) overlay.classList.remove('hidden'); 
+        if (gameoverMenu) gameoverMenu.classList.remove('hidden'); 
+    }
     
     screenShake(amount) { this.shake = amount; }
 }

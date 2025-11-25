@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>灵剑 • 移动版</title>
+    <script src="js/device-detect.js"></script>
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- 游戏 HUD -->
+<div id="mobile-hud" style="display: none;">
+    <div class="m-avatar" id="m-avatar"></div>
+    <div class="m-stats">
+        <div class="m-rank"><span id="m-rank-name">练气期</span> <span id="m-rank-lvl">1层</span></div>
+        <div class="m-bar"><div id="m-hp-bar" class="m-bar-fill m-bar-hp"></div></div>
+        <div class="m-bar"><div id="m-exp-bar" class="m-bar-fill m-bar-exp"></div></div>
+    </div>
+    <div class="m-score">
+        <div class="m-timer" id="m-timer">00:00</div>
+        <div class="m-kills">斩妖: <span id="m-kills">0</span></div>
+    </div>
+</div>
+
+<!-- 暂停按钮 -->
+<div id="m-pause-btn">⏸</div>
+
+<!-- 触控提示 -->
+<div class="m-touch-hint" id="touch-hint">滑动屏幕移动 · 双指缩放</div>
+
+<!-- 遮罩层 -->
+<div id="m-overlay">
+    <!-- 开始菜单 -->
+    <div id="m-start-menu">
+        <div class="m-title">灵剑 • 绝世仙缘</div>
+        <div class="m-subtitle">移动版</div>
+        
+        <div class="m-role-grid" id="m-role-grid">
+            <!-- JS 生成 -->
+        </div>
+        
+        <div class="m-stage-label">— 选择试炼之地 —</div>
+        <div class="m-stage-grid" id="m-stage-grid">
+            <button class="m-stage-btn" data-stage="0">密林</button>
+            <button class="m-stage-btn" data-stage="1">埋骨</button>
+            <button class="m-stage-btn" data-stage="2">炼狱</button>
+            <button class="m-stage-btn" data-stage="3">冰原</button>
+            <button class="m-stage-btn sand" data-stage="4">古战场</button>
+            <button class="m-stage-btn gold" data-stage="5">仙境</button>
+        </div>
+        
+        <button class="m-start-btn" id="m-start-btn">开宗立派</button>
+    </div>
+    
+    <!-- 升级菜单 -->
+    <div id="m-levelup-menu" class="m-hidden">
+        <div class="m-levelup-title">顿悟机缘</div>
+        <div class="m-card-list" id="m-card-list">
+            <!-- JS 生成 -->
+        </div>
+    </div>
+    
+    <!-- 暂停菜单 -->
+    <div id="m-pause-menu" class="m-hidden">
+        <div class="m-pause-title">修行暂止</div>
+        <div class="m-pause-btns">
+            <button class="m-pause-btn resume" id="m-resume-btn">继续修行</button>
+            <button class="m-pause-btn quit" id="m-quit-btn">返回山门</button>
+        </div>
+    </div>
+    
+    <!-- 游戏结束 -->
+    <div id="m-gameover-menu" class="m-hidden">
+        <div class="m-gameover-title">道消身殒</div>
+        <div class="m-gameover-score" id="m-final-score"></div>
+        <button class="m-restart-btn" id="m-restart-btn">重入轮回</button>
+    </div>
+</div>
+
+<script type="module" src="js/mobile-main.js"></script>
+</body>
+</html>
+

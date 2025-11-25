@@ -47,10 +47,17 @@ export class Player extends Entity {
         this.dashTime -= dt;
 
         let dx=0, dy=0;
+        // 键盘输入
         if(window.Game.keys['KeyW']||window.Game.keys['ArrowUp']) dy=-1;
         if(window.Game.keys['KeyS']||window.Game.keys['ArrowDown']) dy=1;
         if(window.Game.keys['KeyA']||window.Game.keys['ArrowLeft']) dx=-1;
         if(window.Game.keys['KeyD']||window.Game.keys['ArrowRight']) dx=1;
+        
+        // 触屏输入（移动端）
+        if (window.Game.touch && window.Game.touch.active) {
+            dx = window.Game.touch.dx;
+            dy = window.Game.touch.dy;
+        }
         
         if (window.Game.keys['Space'] && this.dashCd <= 0 && (dx!==0 || dy!==0)) {
             this.dashCd = this.dashMaxCd;
