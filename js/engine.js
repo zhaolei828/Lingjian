@@ -327,28 +327,32 @@ export class GameEngine {
     }
 
     initMagma() {
+        // 边缘的熔岩石（装饰，无眼睛）
         for(let i=0; i<30; i++) {
              const a = Math.random() * Math.PI * 2;
              const r = 500 + Math.random() * 100; 
-             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'magma_rock'));
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'magma_rock_deco'));
         }
+        // 场内的石头（装饰）
         for(let i=0; i<20; i++) {
              const a = Math.random() * Math.PI * 2;
              const r = Math.random() * 500;
-             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, Math.random()>0.5?'magma_rock':'stone_s'));
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, Math.random()>0.5?'magma_rock_deco':'stone_s'));
         }
     }
 
     initIce() {
+        // 边缘的水晶（装饰，无眼睛）
         for(let i=0; i<40; i++) {
              const a = Math.random() * Math.PI * 2;
              const r = 450 + Math.random() * 150; 
-             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'crystal'));
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, 'crystal_deco'));
         }
+        // 场内的石头（装饰）
         for(let i=0; i<20; i++) {
              const a = Math.random() * Math.PI * 2;
              const r = Math.random() * 500;
-             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, Math.random()>0.6?'crystal':'stone_s'));
+             this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, Math.random()>0.6?'crystal_deco':'stone_s'));
         }
     }
     

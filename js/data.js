@@ -248,11 +248,119 @@ export const SVG_LIB = {
     
     rock_b: `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M10 30 L5 20 L15 5 L30 8 L35 25 L25 35 Z" fill="#795548" stroke="#5d4037" stroke-width="2"/></svg>`,
 
-    bat: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M32 40 Q60 10 60 30 L32 50 L4 30 Q4 10 32 40" fill="#c0392b"/><circle cx="25" cy="35" r="2" fill="#ffeb3b"/><circle cx="39" cy="35" r="2" fill="#ffeb3b"/></svg>`,
-    bat_fire: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M32 40 Q60 10 60 30 L32 50 L4 30 Q4 10 32 40" fill="#ff5722"/><circle cx="25" cy="35" r="2" fill="#ffeb3b"/><circle cx="39" cy="35" r="2" fill="#ffeb3b"/></svg>`,
-    ghost: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="30" r="20" fill="#009688" opacity="0.6"/><path d="M12 30 Q32 60 52 30" fill="none" stroke="#004d40" stroke-width="2"/><circle cx="25" cy="25" r="3" fill="#000"/><circle cx="39" cy="25" r="3" fill="#000"/></svg>`,
-    ghost_ice: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="30" r="20" fill="#03a9f4" opacity="0.6"/><path d="M12 30 Q32 60 52 30" fill="none" stroke="#0277bd" stroke-width="2"/><circle cx="25" cy="25" r="3" fill="#000"/><circle cx="39" cy="25" r="3" fill="#000"/></svg>`,
-    rock: `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M20 60 L10 40 L30 10 L60 15 L70 50 L50 70 Z" fill="#5d4037"/><rect x="25" y="35" width="10" height="10" fill="#ff5722"/></svg>`,
+    // Q萌怪物
+    bat: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- 翅膀 -->
+        <path d="M8 28 Q2 18 8 12 Q14 8 20 15 L24 28" fill="#8e44ad" stroke="#6c3483" stroke-width="1"/>
+        <path d="M56 28 Q62 18 56 12 Q50 8 44 15 L40 28" fill="#8e44ad" stroke="#6c3483" stroke-width="1"/>
+        <!-- 圆身体 -->
+        <ellipse cx="32" cy="35" rx="16" ry="14" fill="#9b59b6"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="26" cy="32" rx="6" ry="7" fill="#fff"/>
+        <ellipse cx="38" cy="32" rx="6" ry="7" fill="#fff"/>
+        <circle cx="27" cy="33" r="3" fill="#2c3e50"/>
+        <circle cx="39" cy="33" r="3" fill="#2c3e50"/>
+        <circle cx="28" cy="32" r="1" fill="#fff"/>
+        <circle cx="40" cy="32" r="1" fill="#fff"/>
+        <!-- 小尖牙 -->
+        <path d="M28 42 L30 46 L32 42" fill="#fff"/>
+        <path d="M32 42 L34 46 L36 42" fill="#fff"/>
+        <!-- 小耳朵 -->
+        <path d="M22 22 L20 12 L28 20" fill="#8e44ad"/>
+        <path d="M42 22 L44 12 L36 20" fill="#8e44ad"/>
+        <!-- 腮红 -->
+        <ellipse cx="20" cy="38" rx="4" ry="2" fill="#e91e63" opacity="0.4"/>
+        <ellipse cx="44" cy="38" rx="4" ry="2" fill="#e91e63" opacity="0.4"/>
+    </svg>`,
+    bat_fire: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- 火焰光环 -->
+        <ellipse cx="32" cy="35" rx="22" ry="18" fill="#ff5722" opacity="0.3"/>
+        <!-- 翅膀 -->
+        <path d="M8 28 Q2 18 8 12 Q14 8 20 15 L24 28" fill="#e65100" stroke="#bf360c" stroke-width="1"/>
+        <path d="M56 28 Q62 18 56 12 Q50 8 44 15 L40 28" fill="#e65100" stroke="#bf360c" stroke-width="1"/>
+        <!-- 圆身体 -->
+        <ellipse cx="32" cy="35" rx="16" ry="14" fill="#ff5722"/>
+        <!-- 火焰纹 -->
+        <path d="M24 40 Q28 35 26 30" stroke="#ffeb3b" stroke-width="2" fill="none" opacity="0.6"/>
+        <path d="M40 40 Q36 35 38 30" stroke="#ffeb3b" stroke-width="2" fill="none" opacity="0.6"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="26" cy="32" rx="6" ry="7" fill="#fff"/>
+        <ellipse cx="38" cy="32" rx="6" ry="7" fill="#fff"/>
+        <circle cx="27" cy="33" r="3" fill="#c62828"/>
+        <circle cx="39" cy="33" r="3" fill="#c62828"/>
+        <circle cx="28" cy="32" r="1" fill="#ffeb3b"/>
+        <circle cx="40" cy="32" r="1" fill="#ffeb3b"/>
+        <!-- 小尖牙 -->
+        <path d="M28 42 L30 46 L32 42" fill="#fff"/>
+        <path d="M32 42 L34 46 L36 42" fill="#fff"/>
+        <!-- 小耳朵（带火焰） -->
+        <path d="M22 22 L20 10 L28 20" fill="#ff5722"/>
+        <path d="M42 22 L44 10 L36 20" fill="#ff5722"/>
+        <circle cx="20" cy="10" r="3" fill="#ffeb3b" opacity="0.8"/>
+        <circle cx="44" cy="10" r="3" fill="#ffeb3b" opacity="0.8"/>
+    </svg>`,
+    ghost: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- 飘动的身体 -->
+        <path d="M16 25 Q16 8 32 8 Q48 8 48 25 L48 45 Q44 50 40 45 Q36 50 32 45 Q28 50 24 45 Q20 50 16 45 Z" fill="#26a69a" opacity="0.8"/>
+        <!-- 内部高光 -->
+        <ellipse cx="32" cy="25" rx="10" ry="8" fill="#80cbc4" opacity="0.5"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="25" cy="25" rx="6" ry="7" fill="#fff"/>
+        <ellipse cx="39" cy="25" rx="6" ry="7" fill="#fff"/>
+        <circle cx="26" cy="26" r="3" fill="#004d40"/>
+        <circle cx="40" cy="26" r="3" fill="#004d40"/>
+        <circle cx="27" cy="25" r="1" fill="#fff"/>
+        <circle cx="41" cy="25" r="1" fill="#fff"/>
+        <!-- 小嘴（惊讶） -->
+        <ellipse cx="32" cy="36" rx="4" ry="3" fill="#004d40" opacity="0.6"/>
+        <!-- 腮红 -->
+        <ellipse cx="18" cy="30" rx="3" ry="2" fill="#e91e63" opacity="0.3"/>
+        <ellipse cx="46" cy="30" rx="3" ry="2" fill="#e91e63" opacity="0.3"/>
+    </svg>`,
+    ghost_ice: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- 冰霜光环 -->
+        <ellipse cx="32" cy="30" rx="26" ry="22" fill="#e1f5fe" opacity="0.3"/>
+        <!-- 飘动的身体 -->
+        <path d="M16 25 Q16 8 32 8 Q48 8 48 25 L48 45 Q44 50 40 45 Q36 50 32 45 Q28 50 24 45 Q20 50 16 45 Z" fill="#4fc3f7" opacity="0.8"/>
+        <!-- 冰晶纹理 -->
+        <path d="M32 12 L32 20 M28 16 L36 16" stroke="#e1f5fe" stroke-width="2"/>
+        <path d="M22 35 L22 40 M20 37 L24 37" stroke="#e1f5fe" stroke-width="1"/>
+        <path d="M42 35 L42 40 M40 37 L44 37" stroke="#e1f5fe" stroke-width="1"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="25" cy="25" rx="6" ry="7" fill="#fff"/>
+        <ellipse cx="39" cy="25" rx="6" ry="7" fill="#fff"/>
+        <circle cx="26" cy="26" r="3" fill="#0277bd"/>
+        <circle cx="40" cy="26" r="3" fill="#0277bd"/>
+        <circle cx="27" cy="25" r="1" fill="#e1f5fe"/>
+        <circle cx="41" cy="25" r="1" fill="#e1f5fe"/>
+        <!-- 小嘴（冷） -->
+        <path d="M28 36 Q32 34 36 36" fill="none" stroke="#0277bd" stroke-width="2"/>
+        <!-- 腮红（冰蓝） -->
+        <ellipse cx="18" cy="30" rx="3" ry="2" fill="#81d4fa" opacity="0.5"/>
+        <ellipse cx="46" cy="30" rx="3" ry="2" fill="#81d4fa" opacity="0.5"/>
+    </svg>`,
+    rock: `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <!-- 圆润石头身体 -->
+        <ellipse cx="40" cy="45" rx="28" ry="25" fill="#795548"/>
+        <ellipse cx="40" cy="42" rx="24" ry="20" fill="#8d6e63"/>
+        <!-- 石纹 -->
+        <path d="M25 50 Q30 45 28 40" stroke="#5d4037" stroke-width="2" fill="none"/>
+        <path d="M55 50 Q50 45 52 40" stroke="#5d4037" stroke-width="2" fill="none"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="30" cy="38" rx="8" ry="9" fill="#fff"/>
+        <ellipse cx="50" cy="38" rx="8" ry="9" fill="#fff"/>
+        <circle cx="32" cy="40" r="4" fill="#3e2723"/>
+        <circle cx="52" cy="40" r="4" fill="#3e2723"/>
+        <circle cx="33" cy="39" r="1.5" fill="#fff"/>
+        <circle cx="53" cy="39" r="1.5" fill="#fff"/>
+        <!-- 粗眉（凶萌） -->
+        <path d="M22 30 L36 34" stroke="#3e2723" stroke-width="3" stroke-linecap="round"/>
+        <path d="M58 30 L44 34" stroke="#3e2723" stroke-width="3" stroke-linecap="round"/>
+        <!-- 嘴巴（呲牙） -->
+        <path d="M32 52 Q40 58 48 52" fill="none" stroke="#3e2723" stroke-width="2"/>
+        <rect x="36" y="52" width="4" height="5" fill="#fff" rx="1"/>
+        <rect x="42" y="52" width="4" height="5" fill="#fff" rx="1"/>
+    </svg>`,
     chest: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="24" width="40" height="28" rx="4" fill="#f39c12" stroke="#e67e22" stroke-width="2"/><path d="M12 24 L20 12 L44 12 L52 24" fill="#f1c40f" stroke="#f39c12" stroke-width="2"/><rect x="28" y="32" width="8" height="10" fill="#e74c3c" rx="1"/><circle cx="32" cy="37" r="2" fill="#f1c40f"/></svg>`,
     
     pavilion: `<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M60 10 L10 40 L20 40 L15 55 L105 55 L100 40 L110 40 Z" fill="#c0392b" stroke="#a93226" stroke-width="2"/><rect x="25" y="55" width="10" height="45" fill="#8e44ad"/><rect x="85" y="55" width="10" height="45" fill="#8e44ad"/><rect x="35" y="90" width="50" height="10" fill="#d35400"/><path d="M10 100 L110 100 L100 110 L20 110 Z" fill="#bdc3c7"/></svg>`,
@@ -262,14 +370,70 @@ export const SVG_LIB = {
     bush: `<svg width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><circle cx="15" cy="25" r="15" fill="#2e7d32"/><circle cx="45" cy="25" r="15" fill="#2e7d32"/><circle cx="30" cy="15" r="18" fill="#388e3c"/></svg>`,
     stone_s: `<svg width="60" height="50" viewBox="0 0 60 50" xmlns="http://www.w3.org/2000/svg"><path d="M10 50 L0 30 L20 10 L40 5 L60 30 L50 50 Z" fill="#7f8c8d"/><path d="M20 10 L40 5 L50 20 L10 20 Z" fill="#fff" opacity="0.9"/></svg>`,
     
+    // 装饰用岩石（无眼睛）
+    magma_rock_deco: `<svg width="70" height="70" viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg"><path d="M35 5 L65 35 L50 65 L20 65 L5 35 Z" fill="#3e2723"/><path d="M35 5 L35 35 L65 35" fill="none" stroke="#ff5722" stroke-width="3"/><path d="M20 55 L35 35 L50 65" fill="none" stroke="#ff5722" stroke-width="3"/></svg>`,
+    
+    // 装饰用水晶（无眼睛）
+    crystal_deco: `<svg width="50" height="80" viewBox="0 0 50 80" xmlns="http://www.w3.org/2000/svg"><path d="M25 0 L50 30 L25 80 L0 30 Z" fill="#4fc3f7" opacity="0.8"/><path d="M25 0 L25 80" stroke="#e1f5fe" stroke-width="2"/><path d="M0 30 L50 30" stroke="#e1f5fe" stroke-width="1" opacity="0.5"/><path d="M10 20 L20 10 L20 30" fill="#e1f5fe" opacity="0.6"/></svg>`,
+    
     // Chinese Tomb Assets
     grave_mound: `<svg width="100" height="60" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg"><path d="M10 60 Q50 -20 90 60 Z" fill="#5d4037"/><path d="M20 50 Q50 0 80 50" fill="none" stroke="#795548" stroke-width="2"/><circle cx="30" cy="55" r="2" fill="#3e2723"/><circle cx="70" cy="55" r="2" fill="#3e2723"/><path d="M40 60 L40 45 L45 40 L50 45 L50 60 Z" fill="#7f8c8d" opacity="0.8"/></svg>`,
     stele_c: `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M5 40 L5 15 Q20 0 35 15 L35 40 Z" fill="#757575" stroke="#424242"/><rect x="12" y="20" width="16" height="20" fill="#424242"/><path d="M15 25 L25 25 M15 35 L25 35" stroke="#9e9e9e" stroke-width="2"/></svg>`,
     paper_money_r: `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#ecf0f1" stroke="#bdc3c7"/><rect x="8" y="8" width="4" height="4" fill="#bdc3c7"/></svg>`,
     paper_money_s: `<svg width="20" height="25" viewBox="0 0 20 25" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="16" height="21" fill="#f1c40f" stroke="#f39c12"/><circle cx="10" cy="12" r="4" fill="none" stroke="#e67e22"/></svg>`,
     
-    crystal: `<svg width="50" height="80" viewBox="0 0 50 80" xmlns="http://www.w3.org/2000/svg"><path d="M25 0 L50 30 L25 80 L0 30 Z" fill="#4fc3f7" opacity="0.8"/><path d="M25 0 L25 80" stroke="#e1f5fe" stroke-width="2"/><path d="M0 30 L50 30" stroke="#e1f5fe" stroke-width="1" opacity="0.5"/></svg>`,
-    magma_rock: `<svg width="70" height="70" viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg"><path d="M35 5 L65 35 L50 65 L20 65 L5 35 Z" fill="#3e2723"/><path d="M35 5 L35 35 L65 35" fill="none" stroke="#ff5722" stroke-width="3"/><path d="M20 55 L35 35 L50 65" fill="none" stroke="#ff5722" stroke-width="3"/></svg>`,
+    crystal: `<svg width="64" height="80" viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg">
+        <!-- 光晕 -->
+        <ellipse cx="32" cy="50" rx="28" ry="24" fill="#e1f5fe" opacity="0.3"/>
+        <!-- 水晶身体 -->
+        <path d="M32 5 L55 35 L45 75 L19 75 L9 35 Z" fill="#4fc3f7" opacity="0.9"/>
+        <path d="M32 5 L45 35 L38 75 L26 75 L19 35 Z" fill="#81d4fa" opacity="0.6"/>
+        <!-- 高光 -->
+        <path d="M20 30 L28 20 L28 40" fill="#e1f5fe" opacity="0.8"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="24" cy="42" rx="7" ry="8" fill="#fff"/>
+        <ellipse cx="40" cy="42" rx="7" ry="8" fill="#fff"/>
+        <circle cx="25" cy="43" r="4" fill="#0288d1"/>
+        <circle cx="41" cy="43" r="4" fill="#0288d1"/>
+        <circle cx="26" cy="42" r="1.5" fill="#e1f5fe"/>
+        <circle cx="42" cy="42" r="1.5" fill="#e1f5fe"/>
+        <!-- 小嘴（微笑） -->
+        <path d="M28 55 Q32 58 36 55" fill="none" stroke="#0277bd" stroke-width="2" stroke-linecap="round"/>
+        <!-- 腮红 -->
+        <ellipse cx="18" cy="48" rx="4" ry="2" fill="#f8bbd9" opacity="0.5"/>
+        <ellipse cx="46" cy="48" rx="4" ry="2" fill="#f8bbd9" opacity="0.5"/>
+        <!-- 闪光点 -->
+        <circle cx="15" cy="25" r="2" fill="#fff"/>
+        <circle cx="48" cy="30" r="1.5" fill="#fff"/>
+    </svg>`,
+    magma_rock: `<svg width="70" height="70" viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg">
+        <!-- 岩浆光环 -->
+        <ellipse cx="35" cy="40" rx="32" ry="28" fill="#ff5722" opacity="0.2"/>
+        <!-- 圆润岩石身体 -->
+        <ellipse cx="35" cy="42" rx="26" ry="24" fill="#3e2723"/>
+        <ellipse cx="35" cy="40" rx="22" ry="20" fill="#4e342e"/>
+        <!-- 岩浆裂纹 -->
+        <path d="M20 35 Q25 45 22 55" stroke="#ff5722" stroke-width="3" fill="none"/>
+        <path d="M50 35 Q45 45 48 55" stroke="#ff5722" stroke-width="3" fill="none"/>
+        <path d="M32 25 L35 35 L38 28" stroke="#ff5722" stroke-width="2" fill="none"/>
+        <!-- 大眼睛（火焰色） -->
+        <ellipse cx="26" cy="38" rx="8" ry="9" fill="#fff"/>
+        <ellipse cx="44" cy="38" rx="8" ry="9" fill="#fff"/>
+        <circle cx="27" cy="39" r="4" fill="#d84315"/>
+        <circle cx="45" cy="39" r="4" fill="#d84315"/>
+        <circle cx="28" cy="38" r="1.5" fill="#ffeb3b"/>
+        <circle cx="46" cy="38" r="1.5" fill="#ffeb3b"/>
+        <!-- 粗眉（愤怒萌） -->
+        <path d="M18 28 L32 33" stroke="#2d1b12" stroke-width="4" stroke-linecap="round"/>
+        <path d="M52 28 L38 33" stroke="#2d1b12" stroke-width="4" stroke-linecap="round"/>
+        <!-- 嘴巴（咆哮） -->
+        <ellipse cx="35" cy="52" rx="8" ry="5" fill="#1a1a1a"/>
+        <path d="M30 50 L32 54 L34 50" fill="#ff5722"/>
+        <path d="M36 50 L38 54 L40 50" fill="#ff5722"/>
+        <!-- 火焰头顶 -->
+        <path d="M30 18 Q35 8 40 18 Q38 12 35 15 Q32 12 30 18" fill="#ff5722"/>
+        <path d="M32 20 Q35 14 38 20" fill="#ffeb3b"/>
+    </svg>`,
     
     dead_tree: `<svg width="80" height="100" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg"><path d="M40 100 L40 40" stroke="#2d3436" stroke-width="8"/><path d="M40 70 L20 50 M40 60 L60 40 M40 40 L20 20 M40 45 L50 25" stroke="#2d3436" stroke-width="4" stroke-linecap="round"/></svg>`,
     broken_sword: `<svg width="60" height="100" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="blade" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#bdc3c7"/><stop offset="50%" stop-color="#ecf0f1"/><stop offset="100%" stop-color="#95a5a6"/></linearGradient></defs><!-- 剑身 --><path d="M22 50 L38 50 L35 95 L25 95 Z" fill="url(#blade)"/><!-- 护手 --><path d="M15 50 Q30 55 45 50 L45 45 Q30 50 15 45 Z" fill="#546e7a" stroke="#37474f" stroke-width="1"/><!-- 剑柄 --><rect x="26" y="15" width="8" height="30" fill="#3e2723"/><path d="M26 20 L34 22 M26 26 L34 28 M26 32 L34 34 M26 38 L34 40" stroke="#5d4037" stroke-width="1"/><!-- 剑首 --><circle cx="30" cy="15" r="6" fill="#546e7a" stroke="#37474f" stroke-width="1"/><circle cx="30" cy="15" r="2" fill="#f1c40f"/></svg>`,
