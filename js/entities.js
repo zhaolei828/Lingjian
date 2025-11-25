@@ -71,8 +71,12 @@ export class Player extends Entity {
             let moveSpeed = this.speed;
             if (this.dashTime > 0) moveSpeed *= 3.0; 
 
-            this.x += (dx/l)*moveSpeed*dt; this.y += (dy/l)*moveSpeed*dt;
-            if(dx) this.facing = dx;
+            // 保存移动速度（用于伪3D效果）
+            this.vx = (dx/l)*moveSpeed;
+            this.vy = (dy/l)*moveSpeed;
+            
+            this.x += this.vx*dt; this.y += this.vy*dt;
+            if(dx) this.facing = dx > 0 ? 1 : -1;
             
             // Footprints
             this.footprintTimer -= dt;
@@ -82,6 +86,10 @@ export class Player extends Entity {
                     this.footprintTimer = 0.2;
                 }
             }
+        } else {
+            // 不移动时逐渐归零（平滑过渡）
+            this.vx = (this.vx || 0) * 0.85;
+            this.vy = (this.vy || 0) * 0.85;
         }
         this.cdTimer-=dt;
         if(this.cdTimer<=0) {
@@ -132,11 +140,19 @@ export class Player extends Entity {
 
         const t = window.Game.playTime;
         
-        // Shadow
+        // 计算移动方向的倾斜度（用于伪3D效果）
+        const moveX = this.vx || 0;
+        const moveY = this.vy || 0;
+        const tiltX = Math.max(-1, Math.min(1, moveX / 150)); // 归一化到 -1 ~ 1
+        const tiltY = Math.max(-1, Math.min(1, moveY / 150));
+        
+        // Shadow (根据移动方向调整阴影位置)
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath(); ctx.ellipse(0, 10, 20, 8, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); 
+        ctx.ellipse(tiltX * 5, 10 + Math.abs(tiltY) * 3, 20 + Math.abs(tiltX) * 5, 8, 0, 0, Math.PI*2); 
+        ctx.fill();
         ctx.restore();
 
         if (this.dashTime > 0) {
@@ -162,8 +178,33 @@ export class Player extends Entity {
         ctx.strokeStyle = auraColor; ctx.globalAlpha=0.3; ctx.lineWidth=2; ctx.setLineDash([15,25]); ctx.stroke();
         ctx.restore();
         
-        ctx.save(); ctx.translate(this.x, this.y);
+        // 伪3D厚度效果：根据移动方向绘制多层剪影
+        const thickness = 4; // 厚度层数
+        const depthOffset = 3; // 每层偏移量
+        
+        // 绘制厚度层（在主体后面）
+        if (Math.abs(tiltX) > 0.1 || Math.abs(tiltY) > 0.1) {
+            for (let i = thickness; i > 0; i--) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                // 根据移动方向偏移
+                ctx.translate(-tiltX * depthOffset * i, tiltY * depthOffset * i * 0.5);
+                ctx.scale(this.facing, 1);
+                // 越深的层越暗
+                ctx.globalAlpha = 0.15 - i * 0.03;
+                ctx.drawImage(Assets[this.role.svg], -32, -32, 64, 64);
+                ctx.restore();
+            }
+        }
+        
+        // 绘制主体（带轻微倾斜变形）
+        ctx.save(); 
+        ctx.translate(this.x, this.y);
         ctx.scale(this.facing, 1);
+        // 轻微的透视变形（移动时稍微压扁/拉伸）
+        const scaleX = 1 - Math.abs(tiltX) * 0.1;
+        const skewY = tiltY * 0.05;
+        ctx.transform(scaleX, skewY, 0, 1, 0, 0);
         ctx.drawImage(Assets[this.role.svg], -32, -32, 64, 64);
         ctx.restore();
         
