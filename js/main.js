@@ -89,6 +89,8 @@ window.selectRole = function(roleId) {
         el.classList.remove('selected');
         if(el.dataset.id === roleId) el.classList.add('selected');
     });
+    // Update avatar
+    initAvatar('player_' + roleId);
 };
 
 window.startGame = function(stageIdx) {
@@ -97,6 +99,6 @@ window.startGame = function(stageIdx) {
 
 // Initialize Avatar with a slight delay to ensure Assets are ready
 setTimeout(() => {
-    initAvatar();
+    initAvatar('player_' + window.currentRole);
     initRoleSelection();
-}, 100);
+}, 200);
