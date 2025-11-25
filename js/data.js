@@ -3,12 +3,231 @@ export const SVG_LIB = {
     player: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><defs><filter id="g"><feGaussianBlur stdDeviation="2"/></filter></defs><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M30 80 Q10 90 20 110" stroke="#3498db" stroke-width="4" fill="none"/><path d="M98 80 Q118 90 108 110" stroke="#3498db" stroke-width="4" fill="none"/><path d="M44 70 Q64 120 84 70 L 84 50 L 44 50 Z" fill="#ecf0f1"/><rect x="44" y="50" width="40" height="30" fill="#ecf0f1"/><path d="M44 50 L44 100 L64 90 L84 100 L84 50" fill="none" stroke="#2c3e50" stroke-width="2"/><path d="M64 50 L64 100" stroke="#3498db" stroke-width="4"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M40 30 Q64 10 88 30 Q90 50 86 60 Q64 65 42 60 Q38 50 40 30" fill="#2c3e50"/><circle cx="64" cy="15" r="10" fill="#2c3e50"/><rect x="59" y="10" width="10" height="5" fill="#f1c40f"/><circle cx="56" cy="42" r="2" fill="#000"/><circle cx="72" cy="42" r="2" fill="#000"/></svg>`,
     
     // New Role SVGs
-    player_sword: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L44 100 L64 90 L84 100 L84 50" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M40 30 Q64 10 88 30 Q90 50 86 60 Q64 65 42 60 Q38 50 40 30" fill="#1565c0"/><rect x="59" y="10" width="10" height="5" fill="#f1c40f"/><path d="M20 60 L40 70 L30 90 Z" fill="#90caf9"/><path d="M108 60 L88 70 L98 90 Z" fill="#90caf9"/></svg>`,
-    player_mage: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 110 L88 110 L84 50" fill="#ffecb3" stroke="#ff6f00" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M35 35 Q64 0 93 35 Q95 55 64 60 Q33 55 35 35" fill="#d84315"/><circle cx="64" cy="20" r="8" fill="#ffeb3b"/><path d="M20 50 Q10 70 30 80" fill="none" stroke="#ff6f00" stroke-width="3"/><path d="M108 50 Q118 70 98 80" fill="none" stroke="#ff6f00" stroke-width="3"/></svg>`,
-    player_body: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M34 50 L44 100 L64 90 L84 100 L94 50" fill="#795548" stroke="#3e2723" stroke-width="2"/><rect x="34" y="50" width="60" height="40" fill="#5d4037"/><circle cx="64" cy="40" r="20" fill="#ffe0b2"/><path d="M44 30 L84 30" stroke="#000" stroke-width="5"/><circle cx="44" cy="30" r="10" fill="#3e2723"/><circle cx="84" cy="30" r="10" fill="#3e2723"/><path d="M20 60 L34 60 L30 80" fill="#ffe0b2" stroke="#3e2723"/><path d="M108 60 L94 60 L98 80" fill="#ffe0b2" stroke="#3e2723"/></svg>`,
+    player_sword: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+        <!-- 阴影 -->
+        <ellipse cx="64" cy="120" rx="25" ry="8" fill="rgba(0,0,0,0.3)"/>
+        <!-- 背后的剑 -->
+        <rect x="85" y="25" width="6" height="70" rx="2" fill="#b0bec5" transform="rotate(15 88 60)"/>
+        <path d="M88 20 L85 30 L91 30 Z" fill="#eceff1" transform="rotate(15 88 25)"/>
+        <rect x="83" y="90" width="10" height="12" rx="2" fill="#5d4037" transform="rotate(15 88 96)"/>
+        <!-- 身体/道袍 -->
+        <path d="M44 75 Q44 120 64 115 Q84 120 84 75 L80 65 L48 65 Z" fill="#e3f2fd" stroke="#90caf9" stroke-width="1"/>
+        <!-- 道袍领口 -->
+        <path d="M52 65 L64 80 L76 65" fill="none" stroke="#1976d2" stroke-width="2"/>
+        <!-- 腰带 -->
+        <rect x="48" y="85" width="32" height="6" rx="2" fill="#1976d2"/>
+        <!-- 小手 -->
+        <circle cx="40" cy="85" r="8" fill="#ffcc80"/>
+        <circle cx="88" cy="85" r="8" fill="#ffcc80"/>
+        <!-- 袖子 -->
+        <path d="M48 65 Q35 75 40 85" fill="#bbdefb" stroke="#90caf9"/>
+        <path d="M80 65 Q93 75 88 85" fill="#bbdefb" stroke="#90caf9"/>
+        <!-- 大头 -->
+        <circle cx="64" cy="40" r="28" fill="#ffe0b2"/>
+        <!-- 头发 -->
+        <path d="M36 35 Q40 10 64 8 Q88 10 92 35 Q90 45 85 50 L80 35 Q64 40 48 35 L43 50 Q38 45 36 35" fill="#2c3e50"/>
+        <!-- 发髻 -->
+        <ellipse cx="64" cy="8" rx="10" ry="8" fill="#2c3e50"/>
+        <rect x="62" y="2" width="4" height="12" fill="#f1c40f"/>
+        <!-- 眼睛 -->
+        <ellipse cx="54" cy="42" rx="5" ry="6" fill="#fff"/>
+        <ellipse cx="74" cy="42" rx="5" ry="6" fill="#fff"/>
+        <circle cx="55" cy="43" r="3" fill="#1a237e"/>
+        <circle cx="75" cy="43" r="3" fill="#1a237e"/>
+        <circle cx="56" cy="42" r="1" fill="#fff"/>
+        <circle cx="76" cy="42" r="1" fill="#fff"/>
+        <!-- 眉毛 -->
+        <path d="M48 36 L60 38" stroke="#2c3e50" stroke-width="2" stroke-linecap="round"/>
+        <path d="M68 38 L80 36" stroke="#2c3e50" stroke-width="2" stroke-linecap="round"/>
+        <!-- 小嘴 -->
+        <path d="M60 52 Q64 55 68 52" fill="none" stroke="#d7ccc8" stroke-width="2" stroke-linecap="round"/>
+        <!-- 腮红 -->
+        <ellipse cx="45" cy="48" rx="5" ry="3" fill="#ffcdd2" opacity="0.6"/>
+        <ellipse cx="83" cy="48" rx="5" ry="3" fill="#ffcdd2" opacity="0.6"/>
+    </svg>`,
+    player_mage: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+        <!-- 阴影 -->
+        <ellipse cx="64" cy="120" rx="25" ry="8" fill="rgba(0,0,0,0.3)"/>
+        <!-- 身体/道袍 -->
+        <path d="M42 75 Q40 120 64 115 Q88 120 86 75 L82 65 L46 65 Z" fill="#fff3e0" stroke="#ffb74d" stroke-width="1"/>
+        <!-- 道袍火焰纹 -->
+        <path d="M50 100 Q55 90 50 85 Q55 80 52 75" fill="none" stroke="#ff5722" stroke-width="2" opacity="0.6"/>
+        <path d="M78 100 Q73 90 78 85 Q73 80 76 75" fill="none" stroke="#ff5722" stroke-width="2" opacity="0.6"/>
+        <!-- 道袍领口 -->
+        <path d="M52 65 L64 78 L76 65" fill="none" stroke="#e65100" stroke-width="2"/>
+        <!-- 腰带 -->
+        <rect x="46" y="85" width="36" height="6" rx="2" fill="#e65100"/>
+        <circle cx="64" cy="88" r="4" fill="#ffc107"/>
+        <!-- 小手 -->
+        <circle cx="38" cy="82" r="8" fill="#ffcc80"/>
+        <circle cx="90" cy="82" r="8" fill="#ffcc80"/>
+        <!-- 袖子 -->
+        <path d="M46 65 Q30 72 38 82" fill="#ffe0b2" stroke="#ffb74d"/>
+        <path d="M82 65 Q98 72 90 82" fill="#ffe0b2" stroke="#ffb74d"/>
+        <!-- 法印光效 -->
+        <circle cx="38" cy="82" r="12" fill="none" stroke="#ff9800" stroke-width="2" opacity="0.5"/>
+        <!-- 大头 -->
+        <circle cx="64" cy="40" r="28" fill="#ffe0b2"/>
+        <!-- 道冠 -->
+        <path d="M40 30 Q64 5 88 30 L85 38 Q64 28 43 38 Z" fill="#bf360c"/>
+        <ellipse cx="64" cy="18" rx="12" ry="8" fill="#d84315"/>
+        <circle cx="64" cy="12" r="6" fill="#ffc107"/>
+        <!-- 眼睛 -->
+        <ellipse cx="54" cy="42" rx="5" ry="6" fill="#fff"/>
+        <ellipse cx="74" cy="42" rx="5" ry="6" fill="#fff"/>
+        <circle cx="55" cy="43" r="3" fill="#4a148c"/>
+        <circle cx="75" cy="43" r="3" fill="#4a148c"/>
+        <circle cx="56" cy="42" r="1" fill="#fff"/>
+        <circle cx="76" cy="42" r="1" fill="#fff"/>
+        <!-- 眉毛 -->
+        <path d="M48 36 L60 37" stroke="#5d4037" stroke-width="2" stroke-linecap="round"/>
+        <path d="M68 37 L80 36" stroke="#5d4037" stroke-width="2" stroke-linecap="round"/>
+        <!-- 小嘴 -->
+        <ellipse cx="64" cy="54" rx="3" ry="2" fill="#d7ccc8"/>
+        <!-- 腮红 -->
+        <ellipse cx="45" cy="48" rx="5" ry="3" fill="#ffcdd2" opacity="0.6"/>
+        <ellipse cx="83" cy="48" rx="5" ry="3" fill="#ffcdd2" opacity="0.6"/>
+        <!-- 胡须 -->
+        <path d="M58 56 Q54 65 50 70" fill="none" stroke="#8d6e63" stroke-width="1" opacity="0.6"/>
+        <path d="M70 56 Q74 65 78 70" fill="none" stroke="#8d6e63" stroke-width="1" opacity="0.6"/>
+    </svg>`,
+    player_body: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+        <!-- 阴影 -->
+        <ellipse cx="64" cy="120" rx="28" ry="8" fill="rgba(0,0,0,0.3)"/>
+        <!-- 身体/短打 -->
+        <path d="M38 70 Q35 120 64 115 Q93 120 90 70 L85 62 L43 62 Z" fill="#5d4037" stroke="#3e2723" stroke-width="1"/>
+        <!-- 腰带 -->
+        <rect x="42" y="82" width="44" height="8" rx="2" fill="#ffb300"/>
+        <rect x="58" y="80" width="12" height="12" rx="2" fill="#ff8f00"/>
+        <!-- 胸肌纹理 -->
+        <path d="M50 70 Q64 75 78 70" fill="none" stroke="#4e342e" stroke-width="2" opacity="0.5"/>
+        <!-- 大手臂 -->
+        <ellipse cx="32" cy="80" rx="14" ry="18" fill="#ffcc80"/>
+        <ellipse cx="96" cy="80" rx="14" ry="18" fill="#ffcc80"/>
+        <!-- 拳头 -->
+        <circle cx="28" cy="95" r="12" fill="#ffcc80" stroke="#ffb74d" stroke-width="1"/>
+        <circle cx="100" cy="95" r="12" fill="#ffcc80" stroke="#ffb74d" stroke-width="1"/>
+        <!-- 袖口 -->
+        <ellipse cx="35" cy="65" rx="12" ry="8" fill="#4e342e"/>
+        <ellipse cx="93" cy="65" rx="12" ry="8" fill="#4e342e"/>
+        <!-- 大头 -->
+        <circle cx="64" cy="38" r="30" fill="#ffcc80"/>
+        <!-- 头发（光头+鬓角） -->
+        <path d="M34 30 Q64 15 94 30 Q95 25 64 18 Q33 25 34 30" fill="#3e2723"/>
+        <!-- 粗眉 -->
+        <path d="M42 30 L58 32" stroke="#3e2723" stroke-width="4" stroke-linecap="round"/>
+        <path d="M70 32 L86 30" stroke="#3e2723" stroke-width="4" stroke-linecap="round"/>
+        <!-- 眼睛（凶悍） -->
+        <ellipse cx="52" cy="40" rx="6" ry="5" fill="#fff"/>
+        <ellipse cx="76" cy="40" rx="6" ry="5" fill="#fff"/>
+        <circle cx="53" cy="41" r="3" fill="#4e342e"/>
+        <circle cx="77" cy="41" r="3" fill="#4e342e"/>
+        <circle cx="54" cy="40" r="1" fill="#fff"/>
+        <circle cx="78" cy="40" r="1" fill="#fff"/>
+        <!-- 鼻子 -->
+        <ellipse cx="64" cy="48" rx="4" ry="3" fill="#ffb74d"/>
+        <!-- 大嘴 -->
+        <path d="M54 56 Q64 62 74 56" fill="none" stroke="#5d4037" stroke-width="3" stroke-linecap="round"/>
+        <!-- 胡茬 -->
+        <rect x="55" y="58" width="18" height="6" rx="2" fill="#5d4037" opacity="0.3"/>
+        <!-- 伤疤 -->
+        <path d="M78 35 L85 45" stroke="#d7ccc8" stroke-width="2"/>
+    </svg>`,
     
-    player_ghost: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 110 L88 110 L84 50" fill="#4a148c" stroke="#311b92" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#e1bee7"/><path d="M35 30 Q64 5 93 30 Q95 55 64 60 Q33 55 35 30" fill="#212121"/><path d="M25 50 L35 60 L25 80" stroke="#9c27b0" stroke-width="2" fill="none"/><path d="M103 50 L93 60 L103 80" stroke="#9c27b0" stroke-width="2" fill="none"/><circle cx="50" cy="50" r="5" fill="#ab47bc" opacity="0.8"/><circle cx="78" cy="50" r="5" fill="#ab47bc" opacity="0.8"/></svg>`,
-    player_formation: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="110" rx="30" ry="10" fill="rgba(0,0,0,0.5)"/><path d="M44 50 L40 110 L88 110 L84 50" fill="#eceff1" stroke="#607d8b" stroke-width="2"/><circle cx="64" cy="40" r="22" fill="#ffe0b2"/><path d="M40 30 Q64 10 88 30 Q90 50 86 60 Q64 65 42 60 Q38 50 40 30" fill="#37474f"/><path d="M20 50 L40 60 L20 80 Z" fill="#cfd8dc"/><path d="M108 50 L88 60 L108 80 Z" fill="#cfd8dc"/><circle cx="64" cy="80" r="15" stroke="#3498db" stroke-width="2" fill="none"/><path d="M64 65 L64 95 M49 80 L79 80" stroke="#3498db"/></svg>`,
+    player_ghost: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+        <!-- 阴影（紫色） -->
+        <ellipse cx="64" cy="120" rx="25" ry="8" fill="rgba(74,20,140,0.4)"/>
+        <!-- 阴气缭绕 -->
+        <ellipse cx="50" cy="115" rx="15" ry="6" fill="#7b1fa2" opacity="0.3"/>
+        <ellipse cx="78" cy="118" rx="12" ry="5" fill="#9c27b0" opacity="0.2"/>
+        <!-- 身体/鬼袍 -->
+        <path d="M40 72 Q35 125 64 118 Q93 125 88 72 L82 62 L46 62 Z" fill="#311b92" stroke="#4a148c" stroke-width="1"/>
+        <!-- 袍子飘带 -->
+        <path d="M40 90 Q30 100 35 115" fill="none" stroke="#7c4dff" stroke-width="2" opacity="0.6"/>
+        <path d="M88 90 Q98 100 93 115" fill="none" stroke="#7c4dff" stroke-width="2" opacity="0.6"/>
+        <!-- 领口 -->
+        <path d="M52 62 L64 75 L76 62" fill="none" stroke="#7c4dff" stroke-width="2"/>
+        <!-- 腰带 -->
+        <rect x="45" y="82" width="38" height="5" rx="2" fill="#7c4dff"/>
+        <!-- 幽魂小手 -->
+        <circle cx="35" cy="85" r="7" fill="#e1bee7"/>
+        <circle cx="93" cy="85" r="7" fill="#e1bee7"/>
+        <!-- 袖子 -->
+        <path d="M46 62 Q28 72 35 85" fill="#4527a0" stroke="#311b92"/>
+        <path d="M82 62 Q100 72 93 85" fill="#4527a0" stroke="#311b92"/>
+        <!-- 大头（苍白） -->
+        <circle cx="64" cy="38" r="28" fill="#e1bee7"/>
+        <!-- 长发 -->
+        <path d="M36 32 Q64 8 92 32 L95 55 Q90 50 85 55 L80 45 Q64 52 48 45 L43 55 Q38 50 33 55 L36 32" fill="#212121"/>
+        <!-- 发丝飘动 -->
+        <path d="M33 55 Q25 70 30 85" fill="none" stroke="#212121" stroke-width="3"/>
+        <path d="M95 55 Q103 70 98 85" fill="none" stroke="#212121" stroke-width="3"/>
+        <!-- 眼睛（幽光） -->
+        <ellipse cx="54" cy="40" rx="6" ry="7" fill="#e8eaf6"/>
+        <ellipse cx="74" cy="40" rx="6" ry="7" fill="#e8eaf6"/>
+        <circle cx="54" cy="41" r="4" fill="#7c4dff"/>
+        <circle cx="74" cy="41" r="4" fill="#7c4dff"/>
+        <circle cx="55" cy="40" r="1.5" fill="#fff"/>
+        <circle cx="75" cy="40" r="1.5" fill="#fff"/>
+        <!-- 眉毛 -->
+        <path d="M46 33 L58 36" stroke="#37474f" stroke-width="2" stroke-linecap="round"/>
+        <path d="M70 36 L82 33" stroke="#37474f" stroke-width="2" stroke-linecap="round"/>
+        <!-- 小嘴（无表情） -->
+        <path d="M60 52 L68 52" stroke="#9575cd" stroke-width="2" stroke-linecap="round"/>
+        <!-- 阴气符文 -->
+        <text x="58" y="95" font-size="12" fill="#b388ff" opacity="0.7">鬼</text>
+    </svg>`,
+    player_formation: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+        <!-- 阴影 -->
+        <ellipse cx="64" cy="120" rx="25" ry="8" fill="rgba(0,0,0,0.3)"/>
+        <!-- 阵法光环 -->
+        <circle cx="64" cy="100" r="20" fill="none" stroke="#00bcd4" stroke-width="1" opacity="0.4"/>
+        <circle cx="64" cy="100" r="28" fill="none" stroke="#00bcd4" stroke-width="1" opacity="0.2" stroke-dasharray="4,4"/>
+        <!-- 身体/儒袍 -->
+        <path d="M42 72 Q40 120 64 115 Q88 120 86 72 L80 62 L48 62 Z" fill="#eceff1" stroke="#b0bec5" stroke-width="1"/>
+        <!-- 袍子纹理 -->
+        <path d="M55 75 L55 110" stroke="#cfd8dc" stroke-width="1"/>
+        <path d="M73 75 L73 110" stroke="#cfd8dc" stroke-width="1"/>
+        <!-- 领口 -->
+        <path d="M52 62 L64 76 L76 62" fill="none" stroke="#546e7a" stroke-width="2"/>
+        <!-- 腰带 -->
+        <rect x="46" y="84" width="36" height="5" rx="2" fill="#546e7a"/>
+        <!-- 玉佩 -->
+        <circle cx="64" cy="95" r="5" fill="#80deea" stroke="#00bcd4"/>
+        <!-- 小手（持罗盘） -->
+        <circle cx="38" cy="85" r="7" fill="#ffcc80"/>
+        <circle cx="90" cy="85" r="7" fill="#ffcc80"/>
+        <!-- 罗盘 -->
+        <circle cx="38" cy="85" r="10" fill="#37474f" stroke="#546e7a"/>
+        <circle cx="38" cy="85" r="6" fill="#263238"/>
+        <path d="M38 79 L38 91 M32 85 L44 85" stroke="#00bcd4" stroke-width="1"/>
+        <!-- 袖子 -->
+        <path d="M48 62 Q32 70 38 85" fill="#cfd8dc" stroke="#b0bec5"/>
+        <path d="M80 62 Q96 70 90 85" fill="#cfd8dc" stroke="#b0bec5"/>
+        <!-- 大头 -->
+        <circle cx="64" cy="38" r="28" fill="#ffe0b2"/>
+        <!-- 头发（儒冠） -->
+        <path d="M38 32 Q64 12 90 32 L88 42 Q64 35 40 42 Z" fill="#37474f"/>
+        <!-- 儒冠 -->
+        <rect x="52" y="8" width="24" height="18" rx="3" fill="#455a64"/>
+        <rect x="56" y="5" width="16" height="6" rx="2" fill="#546e7a"/>
+        <rect x="62" y="2" width="4" height="8" fill="#78909c"/>
+        <!-- 眼睛（睿智） -->
+        <ellipse cx="54" cy="42" rx="5" ry="6" fill="#fff"/>
+        <ellipse cx="74" cy="42" rx="5" ry="6" fill="#fff"/>
+        <circle cx="55" cy="43" r="3" fill="#263238"/>
+        <circle cx="75" cy="43" r="3" fill="#263238"/>
+        <circle cx="56" cy="42" r="1" fill="#fff"/>
+        <circle cx="76" cy="42" r="1" fill="#fff"/>
+        <!-- 眉毛（细长） -->
+        <path d="M46 36 L60 38" stroke="#455a64" stroke-width="2" stroke-linecap="round"/>
+        <path d="M68 38 L82 36" stroke="#455a64" stroke-width="2" stroke-linecap="round"/>
+        <!-- 小嘴（淡定） -->
+        <path d="M60 53 Q64 55 68 53" fill="none" stroke="#bcaaa4" stroke-width="2" stroke-linecap="round"/>
+        <!-- 腮红 -->
+        <ellipse cx="45" cy="48" rx="4" ry="2" fill="#ffcdd2" opacity="0.5"/>
+        <ellipse cx="83" cy="48" rx="4" ry="2" fill="#ffcdd2" opacity="0.5"/>
+    </svg>`,
 
     // Artifacts
     fantian_seal: `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="60" height="60" fill="#f1c40f" stroke="#f39c12" stroke-width="4"/><path d="M10 10 L70 70 M70 10 L10 70" stroke="#e67e22" stroke-width="2"/><rect x="25" y="25" width="30" height="30" fill="#e74c3c" stroke="#c0392b" stroke-width="3"/><circle cx="40" cy="40" r="8" fill="#f1c40f"/></svg>`,
