@@ -295,28 +295,30 @@ export class GameEngine {
              
              this.staticObjects.push(new StaticObject(Math.cos(a)*r, Math.sin(a)*r, type));
         }
-        for(let i=0; i<40; i++) {
+        for(let i=0; i<35; i++) {
              const a = Math.random() * Math.PI * 2;
              const r = Math.random() * 500;
              const x = Math.cos(a)*r;
              const y = Math.sin(a)*r;
              
              if(Math.random() < 0.3) {
+                 // 坟冢组合
                  const m = new StaticObject(x, y, 'grave_mound');
                  this.staticObjects.push(m);
                  this.staticObjects.push(new StaticObject(x, y+15, 'stele_c'));
                  if(Math.random()<0.4) this.staticObjects.push(new StaticObject(x+40, y+10, 'spirit_banner'));
              } else {
+                 // 墓地装饰（无断剑！）
                  let type = 'stele_c';
                  const rand = Math.random();
-                 if(rand < 0.3) type = 'broken_sword';
-                 else if(rand < 0.5) type = 'ruin_pillar';
-                 else if(rand < 0.7) type = 'stele_c';
-                 else type = 'grave_mound';
+                 if(rand < 0.4) type = 'stele_c';
+                 else if(rand < 0.7) type = 'grave_mound';
+                 else type = 'dead_tree';
                  this.staticObjects.push(new StaticObject(x, y, type));
              }
         }
-        for(let i=0; i<150; i++) {
+        // 纸钱点缀（少量）
+        for(let i=0; i<30; i++) {
             const a = Math.random() * Math.PI * 2;
             const r = Math.random() * 550;
             const type = Math.random()>0.5 ? 'paper_money_r' : 'paper_money_s';
