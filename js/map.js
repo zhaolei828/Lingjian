@@ -398,3 +398,195 @@ function drawVoid(ctx, size) {
     ctx.globalAlpha = 1.0;
 }
 
+// ========== 血煞秘境地图 ==========
+export function generateBloodArenaPattern() {
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // 基底 - 暗红色
+    ctx.fillStyle = '#1a0808';
+    ctx.fillRect(0, 0, size, size);
+
+    drawBloodArena(ctx, size);
+
+    return canvas;
+}
+
+function drawBloodArena(ctx, size) {
+    // ===== 血色地表层 =====
+    
+    // 暗红色岩石地面
+    ctx.fillStyle = '#2a0a0a';
+    ctx.globalAlpha = 0.6;
+    for(let i=0; i<15; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const w = 60 + Math.random() * 100;
+        const h = 40 + Math.random() * 60;
+        ctx.beginPath();
+        ctx.ellipse(x, y, w, h, Math.random() * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // 血色纹路/裂痕
+    ctx.strokeStyle = '#5c1010';
+    ctx.lineWidth = 3;
+    ctx.globalAlpha = 0.5;
+    for(let i=0; i<12; i++) {
+        let x = Math.random() * size;
+        let y = Math.random() * size;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        for(let j=0; j<4; j++) {
+            x += (Math.random() - 0.5) * 100;
+            y += (Math.random() - 0.5) * 100;
+            ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // 血池（发光效果）
+    for(let i=0; i<6; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = 20 + Math.random() * 40;
+        
+        // 光晕
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, r * 1.5);
+        gradient.addColorStop(0, 'rgba(139, 0, 0, 0.4)');
+        gradient.addColorStop(0.5, 'rgba(139, 0, 0, 0.2)');
+        gradient.addColorStop(1, 'rgba(139, 0, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 血池本体
+        ctx.fillStyle = '#5c0000';
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+    }
+
+    // 血色岩石块
+    ctx.fillStyle = '#3d1515';
+    for(let i=0; i<20; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = 8 + Math.random() * 15;
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        for(let j=0; j<6; j++) {
+            const angle = (j / 6) * Math.PI * 2;
+            const rr = r * (0.7 + Math.random() * 0.3);
+            ctx.lineTo(x + Math.cos(angle) * rr, y + Math.sin(angle) * rr);
+        }
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // ===== 装饰层 =====
+    
+    // 枯骨散落
+    ctx.fillStyle = '#8b7355';
+    ctx.globalAlpha = 0.5;
+    for(let i=0; i<10; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.random() * Math.PI * 2);
+        // 骨头
+        ctx.fillRect(-10, -2, 20, 4);
+        ctx.beginPath();
+        ctx.arc(-10, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(10, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // 血色植物/藤蔓
+    ctx.strokeStyle = '#4a1010';
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.6;
+    for(let i=0; i<8; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        let cx = x, cy = y;
+        for(let j=0; j<5; j++) {
+            cx += (Math.random() - 0.5) * 30;
+            cy -= 10 + Math.random() * 15;
+            ctx.lineTo(cx, cy);
+        }
+        ctx.stroke();
+        // 叶子/刺
+        ctx.fillStyle = '#6b1a1a';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // 血雾粒子
+    ctx.fillStyle = '#8b0000';
+    ctx.globalAlpha = 0.15;
+    for(let i=0; i<30; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = 15 + Math.random() * 30;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // 诡异符文（地面刻痕）
+    ctx.strokeStyle = '#5c1515';
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.3;
+    for(let i=0; i<3; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = 30 + Math.random() * 40;
+        // 圆形
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.stroke();
+        // 内部线条
+        ctx.beginPath();
+        ctx.moveTo(x - r, y);
+        ctx.lineTo(x + r, y);
+        ctx.moveTo(x, y - r);
+        ctx.lineTo(x, y + r);
+        ctx.stroke();
+        // 小圆
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // 小石子
+    ctx.fillStyle = '#2d1010';
+    for(let i=0; i<40; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = 1 + Math.random() * 3;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+

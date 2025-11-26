@@ -97,6 +97,12 @@ window.startGame = function(stageIdx) {
     window.Game.start(stageIdx, window.currentRole);
 };
 
+window.enterBloodArena = function() {
+    // 保存当前角色到 localStorage
+    localStorage.setItem('arenaRole', window.currentRole);
+    window.location.href = 'arena.html';
+};
+
 // Initialize Avatar with a slight delay to ensure Assets are ready
 setTimeout(() => {
     initAvatar('player_' + window.currentRole);

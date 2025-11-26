@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>血煞秘境 • 灵剑</title>
+    <link rel="stylesheet" href="css/arena.css">
+    <style>
+        /* 移动端专属样式覆盖 */
+        
+        /* 遮罩层 - 完全居中 */
+        #overlay {
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
+        
+        /* 菜单盒子 - 禁用浮动动画，绝对定位居中 */
+        .menu-box {
+            animation: none !important;
+            width: 90vw !important;
+            max-width: 340px !important;
+            padding: 20px 15px !important;
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+        }
+        
+        /* hidden菜单完全隐藏 */
+        .menu-box.hidden {
+            display: none !important;
+        }
+        
+        /* 顶部HUD */
+        .hud-top {
+            padding: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .avatar-frame {
+            width: 45px;
+            height: 45px;
+        }
+        
+        .bars {
+            flex: 1;
+            min-width: 120px;
+            max-width: 180px;
+        }
+        
+        .rank-info {
+            font-size: 12px;
+        }
+        
+        .bar-wrap {
+            height: 10px;
+        }
+        
+        .bar-text {
+            font-size: 9px;
+            line-height: 10px;
+        }
+        
+        .arena-info {
+            padding: 6px 10px;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .wave-number {
+            font-size: 24px;
+        }
+        
+        .wave-label {
+            font-size: 11px;
+        }
+        
+        .enemy-count {
+            font-size: 11px;
+        }
+        
+        .gold-counter {
+            top: 10px;
+            right: 10px;
+            padding: 4px 8px;
+        }
+        
+        .gold-icon {
+            font-size: 16px;
+        }
+        
+        .gold-value {
+            font-size: 16px;
+            min-width: 35px;
+        }
+        
+        /* 道具卡槽 - 移动端底部 */
+        .item-slots {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            gap: 6px;
+        }
+        
+        .item-slot {
+            width: 45px;
+            height: 50px;
+        }
+        
+        .slot-content {
+            width: 32px;
+            height: 32px;
+            font-size: 20px;
+        }
+        
+        .slot-key {
+            display: none;
+        }
+        
+        /* BOSS血条 */
+        .boss-hud {
+            bottom: 80px;
+            width: 85%;
+        }
+        
+        .boss-name {
+            font-size: 16px;
+        }
+        
+        .boss-hp-wrap {
+            height: 12px;
+        }
+        
+        /* ========== 开始菜单 ========== */
+        #start-menu {
+            text-align: center;
+        }
+        
+        .arena-title {
+            font-size: 36px !important;
+            letter-spacing: 3px !important;
+            margin-bottom: 5px !important;
+        }
+        
+        .arena-subtitle {
+            font-size: 13px !important;
+            margin-bottom: 15px !important;
+        }
+        
+        .arena-desc {
+            padding: 12px 15px !important;
+            margin-bottom: 15px !important;
+            text-align: left;
+        }
+        
+        .arena-desc p {
+            font-size: 13px !important;
+            margin: 6px 0 !important;
+            white-space: nowrap;
+        }
+        
+        /* 当前角色显示 */
+        .current-role {
+            margin: 12px 0 !important;
+            padding: 10px !important;
+        }
+        
+        /* 按钮 */
+        .btn {
+            padding: 10px 25px !important;
+            font-size: 16px !important;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .btn-group {
+            flex-direction: column !important;
+            gap: 12px !important;
+            width: 100%;
+        }
+        
+        .arena-btn {
+            font-size: 18px !important;
+        }
+        
+        .back-btn {
+            font-size: 14px !important;
+            padding: 8px 20px !important;
+        }
+        
+        /* ========== 结算界面 ========== */
+        .result-title {
+            font-size: 28px !important;
+            margin-bottom: 15px !important;
+        }
+        
+        .result-box {
+            padding: 15px 20px !important;
+            margin-bottom: 15px !important;
+        }
+        
+        .result-row {
+            font-size: 14px !important;
+            padding: 6px 0 !important;
+        }
+        
+        .defeat-quote {
+            font-size: 13px !important;
+        }
+        
+        /* ========== 倒计时 ========== */
+        .countdown-number {
+            font-size: 100px !important;
+        }
+        
+        .countdown-text {
+            font-size: 20px !important;
+        }
+        
+        /* ========== 升级菜单 ========== */
+        .levelup-title {
+            font-size: 28px !important;
+        }
+        
+        .card-container {
+            flex-direction: column !important;
+            gap: 15px !important;
+        }
+        
+        .card {
+            width: 100% !important;
+            height: auto !important;
+            min-height: 100px !important;
+            padding: 15px !important;
+        }
+        
+        .card-icon {
+            font-size: 36px !important;
+            margin-bottom: 8px !important;
+        }
+        
+        .card h3 {
+            font-size: 16px !important;
+        }
+        
+        .card p {
+            font-size: 12px !important;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="ui-layer">
+    <!-- 顶部HUD -->
+    <div class="hud-top">
+        <div class="avatar-frame" id="avatar-container"></div>
+        <div class="bars">
+            <div class="rank-info">
+                <span id="rank-name">练气期</span> <span id="rank-lvl">1层</span>
+            </div>
+            <div class="bar-wrap"><div id="hp-bar" class="bar-fill hp"></div><div class="bar-text">气血</div></div>
+            <div class="bar-wrap"><div id="exp-bar" class="bar-fill exp"></div><div class="bar-text">修为</div></div>
+        </div>
+        <div class="arena-info">
+            <div class="wave-display">
+                <span class="wave-label">第</span>
+                <span class="wave-number" id="wave-num">1</span>
+                <span class="wave-label">/10 波</span>
+            </div>
+            <div class="enemy-count">
+                剩余: <span id="enemy-count">0</span>
+            </div>
+        </div>
+        <div class="gold-counter">
+            <span class="gold-icon">💰</span>
+            <span class="gold-value" id="gold-count">0</span>
+        </div>
+    </div>
+
+    <!-- 道具卡槽 -->
+    <div class="item-slots" id="item-slots">
+        <div class="item-slot" data-slot="0" onclick="useItemCard(0)">
+            <div class="slot-content"></div>
+        </div>
+        <div class="item-slot" data-slot="1" onclick="useItemCard(1)">
+            <div class="slot-content"></div>
+        </div>
+        <div class="item-slot" data-slot="2" onclick="useItemCard(2)">
+            <div class="slot-content"></div>
+        </div>
+        <div class="item-slot" data-slot="3" onclick="useItemCard(3)">
+            <div class="slot-content"></div>
+        </div>
+        <div class="item-slot" data-slot="4" onclick="useItemCard(4)">
+            <div class="slot-content"></div>
+        </div>
+        <div class="item-slot" data-slot="5" onclick="useItemCard(5)">
+            <div class="slot-content"></div>
+        </div>
+    </div>
+
+    <!-- BOSS血条 -->
+    <div class="boss-hud hidden" id="boss-hud">
+        <div class="boss-name" id="boss-name">赤玉蛛王</div>
+        <div class="boss-hp-wrap">
+            <div class="boss-hp-bar" id="boss-hp-bar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 遮罩层 -->
+<div id="overlay">
+    <!-- 开始菜单 -->
+    <div id="start-menu" class="menu-box">
+        <div class="arena-title">血煞秘境</div>
+        <p class="arena-subtitle">妖兽横行的血色禁地</p>
+        
+        <div class="arena-desc">
+            <p>📜 十波妖潮，层层递进</p>
+            <p>🕷️ 第五波：小BOSS</p>
+            <p>🦂 第十波：大BOSS</p>
+        </div>
+
+        <div class="current-role" id="current-role-display" style="margin: 15px 0; padding: 12px; background: rgba(139,0,0,0.2); border: 1px solid #5a2020; border-radius: 10px;">
+            <div style="color: #888; font-size: 12px; margin-bottom: 5px;">当前角色</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <div class="role-icon" id="current-role-icon" style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #c0392b;"></div>
+                <div id="current-role-name" style="font-size: 20px; color: #c0392b;">天剑宗</div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn arena-btn" onclick="enterArena()">
+                ⚔️ 进入秘境 ⚔️
+            </button>
+            <button class="btn back-btn" onclick="backToMain()">
+                返回山门
+            </button>
+        </div>
+    </div>
+
+    <!-- BOSS倒计时 -->
+    <div id="boss-countdown" class="menu-box hidden">
+        <div class="countdown-number" id="countdown-num">3</div>
+        <div class="countdown-text" id="countdown-text">BOSS 来袭</div>
+    </div>
+
+    <!-- 升级菜单 -->
+    <div id="levelup-menu" class="menu-box hidden">
+        <h2 class="levelup-title">顿悟机缘</h2>
+        <div class="card-container" id="card-container"></div>
+    </div>
+
+    <!-- 胜利结算 -->
+    <div id="victory-menu" class="menu-box hidden">
+        <div class="result-title victory">✨ 通关 ✨</div>
+        <div class="result-box">
+            <div class="result-row">
+                <span class="result-label">击杀:</span>
+                <span class="result-value" id="result-kills">0</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">金币:</span>
+                <span class="result-value gold" id="result-gold">0</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">用时:</span>
+                <span class="result-value" id="result-time">00:00</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">评价:</span>
+                <span class="result-value stars" id="result-stars">⭐⭐⭐</span>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="btn arena-btn" onclick="restartArena()">再次挑战</button>
+            <button class="btn back-btn" onclick="backToMain()">返回山门</button>
+        </div>
+    </div>
+
+    <!-- 失败结算 -->
+    <div id="defeat-menu" class="menu-box hidden">
+        <div class="result-title defeat">💀 试炼失败 💀</div>
+        <div class="result-box">
+            <div class="result-row">
+                <span class="result-label">坚持到:</span>
+                <span class="result-value">第 <span id="defeat-wave">1</span> 波</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">击杀:</span>
+                <span class="result-value" id="defeat-kills">0</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">金币:</span>
+                <span class="result-value gold" id="defeat-gold">0</span>
+            </div>
+            <div class="defeat-quote">"来日再战"</div>
+        </div>
+        <div class="btn-group">
+            <button class="btn arena-btn" onclick="restartArena()">再次挑战</button>
+            <button class="btn back-btn" onclick="backToMain()">返回山门</button>
+        </div>
+    </div>
+</div>
+
+<!-- 金币飞行容器 -->
+<div id="flying-coins"></div>
+
+<script type="module" src="js/arena-mobile-main.js"></script>
+</body>
+</html>
+

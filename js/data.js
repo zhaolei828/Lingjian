@@ -446,7 +446,288 @@ export const SVG_LIB = {
     
     chariot_wreck: `<svg width="100" height="80" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg"><path d="M10 50 L90 50 L80 20 L20 20 Z" fill="#4e342e" stroke="#3e2723" stroke-width="2"/><circle cx="25" cy="50" r="20" fill="none" stroke="#3e2723" stroke-width="4"/><path d="M25 30 L25 70 M5 50 L45 50" stroke="#3e2723" stroke-width="2"/><circle cx="25" cy="50" r="4" fill="#3e2723"/><path d="M60 20 L70 0 L80 20" fill="none" stroke="#3e2723" stroke-width="3"/><rect x="50" y="30" width="40" height="15" fill="#3e2723" opacity="0.8"/><path d="M10 50 L0 70" stroke="#3e2723" stroke-width="3" stroke-dasharray="5,5"/></svg>`,
     
-    ruin_pillar: `<svg width="50" height="80" viewBox="0 0 50 80" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="30" height="60" fill="#555"/><path d="M10 20 L40 30 L40 40 L10 30 Z" fill="#444"/><path d="M15 50 L35 50 M15 60 L35 60" stroke="#333" stroke-width="2"/></svg>`
+    ruin_pillar: `<svg width="50" height="80" viewBox="0 0 50 80" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="30" height="60" fill="#555"/><path d="M10 20 L40 30 L40 40 L10 30 Z" fill="#444"/><path d="M15 50 L35 50 M15 60 L35 60" stroke="#333" stroke-width="2"/></svg>`,
+
+    // ========== 血煞秘境妖兽 ==========
+    
+    // 赤翼蝠 - 血红色蝙蝠
+    blood_bat: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- 血雾光环 -->
+        <ellipse cx="32" cy="35" rx="20" ry="16" fill="#8b0000" opacity="0.2"/>
+        <!-- 翅膀 -->
+        <path d="M8 28 Q2 18 8 12 Q14 8 20 15 L24 28" fill="#8b0000" stroke="#5c0000" stroke-width="1"/>
+        <path d="M56 28 Q62 18 56 12 Q50 8 44 15 L40 28" fill="#8b0000" stroke="#5c0000" stroke-width="1"/>
+        <!-- 圆身体 -->
+        <ellipse cx="32" cy="35" rx="16" ry="14" fill="#b71c1c"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="26" cy="32" rx="6" ry="7" fill="#fff"/>
+        <ellipse cx="38" cy="32" rx="6" ry="7" fill="#fff"/>
+        <circle cx="27" cy="33" r="3" fill="#4a0000"/>
+        <circle cx="39" cy="33" r="3" fill="#4a0000"/>
+        <circle cx="28" cy="32" r="1" fill="#ff5252"/>
+        <circle cx="40" cy="32" r="1" fill="#ff5252"/>
+        <!-- 小尖牙 -->
+        <path d="M28 42 L30 47 L32 42" fill="#fff"/>
+        <path d="M32 42 L34 47 L36 42" fill="#fff"/>
+        <!-- 小耳朵 -->
+        <path d="M22 22 L20 12 L28 20" fill="#8b0000"/>
+        <path d="M42 22 L44 12 L36 20" fill="#8b0000"/>
+        <!-- 血丝 -->
+        <path d="M20 38 Q18 42 20 46" stroke="#ff5252" stroke-width="1" fill="none" opacity="0.5"/>
+        <path d="M44 38 Q46 42 44 46" stroke="#ff5252" stroke-width="1" fill="none" opacity="0.5"/>
+    </svg>`,
+
+    // 血丝蛛 - Q版小蜘蛛
+    blood_spider: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- 八条腿 -->
+        <path d="M18 30 Q5 20 2 30 Q5 35 18 35" fill="none" stroke="#5c0000" stroke-width="3"/>
+        <path d="M18 35 Q5 40 2 50 Q8 52 20 40" fill="none" stroke="#5c0000" stroke-width="3"/>
+        <path d="M46 30 Q59 20 62 30 Q59 35 46 35" fill="none" stroke="#5c0000" stroke-width="3"/>
+        <path d="M46 35 Q59 40 62 50 Q56 52 44 40" fill="none" stroke="#5c0000" stroke-width="3"/>
+        <path d="M20 28 Q10 15 5 18" fill="none" stroke="#5c0000" stroke-width="2"/>
+        <path d="M44 28 Q54 15 59 18" fill="none" stroke="#5c0000" stroke-width="2"/>
+        <path d="M22 42 Q12 55 8 52" fill="none" stroke="#5c0000" stroke-width="2"/>
+        <path d="M42 42 Q52 55 56 52" fill="none" stroke="#5c0000" stroke-width="2"/>
+        <!-- 圆润身体 -->
+        <ellipse cx="32" cy="35" rx="18" ry="16" fill="#8b0000"/>
+        <ellipse cx="32" cy="33" rx="14" ry="12" fill="#b71c1c"/>
+        <!-- 腹部花纹 -->
+        <ellipse cx="32" cy="42" rx="6" ry="4" fill="#ff5252" opacity="0.5"/>
+        <!-- 大眼睛（8只小眼） -->
+        <circle cx="25" cy="28" r="5" fill="#fff"/>
+        <circle cx="39" cy="28" r="5" fill="#fff"/>
+        <circle cx="26" cy="29" r="2.5" fill="#4a0000"/>
+        <circle cx="40" cy="29" r="2.5" fill="#4a0000"/>
+        <circle cx="27" cy="28" r="1" fill="#ff5252"/>
+        <circle cx="41" cy="28" r="1" fill="#ff5252"/>
+        <!-- 额头小眼 -->
+        <circle cx="29" cy="23" r="2" fill="#ffcdd2"/>
+        <circle cx="35" cy="23" r="2" fill="#ffcdd2"/>
+        <!-- 嘴巴（獠牙） -->
+        <path d="M28 40 L30 45" stroke="#fff" stroke-width="2"/>
+        <path d="M36 40 L34 45" stroke="#fff" stroke-width="2"/>
+    </svg>`,
+
+    // 赤煞狼 - Q版血狼
+    blood_wolf: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- 身体 -->
+        <ellipse cx="32" cy="42" rx="22" ry="16" fill="#8b0000"/>
+        <!-- 大头 -->
+        <circle cx="32" cy="28" r="18" fill="#b71c1c"/>
+        <!-- 耳朵 -->
+        <path d="M18 18 L14 2 L26 14" fill="#8b0000"/>
+        <path d="M46 18 L50 2 L38 14" fill="#8b0000"/>
+        <path d="M20 16 L17 6 L25 14" fill="#ff5252" opacity="0.5"/>
+        <path d="M44 16 L47 6 L39 14" fill="#ff5252" opacity="0.5"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="24" cy="26" rx="6" ry="7" fill="#fff"/>
+        <ellipse cx="40" cy="26" rx="6" ry="7" fill="#fff"/>
+        <circle cx="25" cy="27" r="3.5" fill="#4a0000"/>
+        <circle cx="41" cy="27" r="3.5" fill="#4a0000"/>
+        <circle cx="26" cy="26" r="1.5" fill="#ff5252"/>
+        <circle cx="42" cy="26" r="1.5" fill="#ff5252"/>
+        <!-- 凶狠眉毛 -->
+        <path d="M16 20 L28 24" stroke="#4a0000" stroke-width="3" stroke-linecap="round"/>
+        <path d="M48 20 L36 24" stroke="#4a0000" stroke-width="3" stroke-linecap="round"/>
+        <!-- 鼻子 -->
+        <ellipse cx="32" cy="34" rx="4" ry="3" fill="#4a0000"/>
+        <!-- 嘴巴（露齿） -->
+        <path d="M24 40 Q32 46 40 40" fill="none" stroke="#4a0000" stroke-width="2"/>
+        <path d="M26 40 L28 44" stroke="#fff" stroke-width="2"/>
+        <path d="M38 40 L36 44" stroke="#fff" stroke-width="2"/>
+        <!-- 尾巴 -->
+        <path d="M52 45 Q62 40 58 55" fill="#8b0000" stroke="#5c0000"/>
+        <!-- 腮红 -->
+        <ellipse cx="16" cy="32" rx="4" ry="2" fill="#ff5252" opacity="0.4"/>
+        <ellipse cx="48" cy="32" rx="4" ry="2" fill="#ff5252" opacity="0.4"/>
+    </svg>`,
+
+    // 血鳞蟒 - Q版大蛇
+    blood_serpent: `<svg width="80" height="64" viewBox="0 0 80 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- 蛇身 -->
+        <path d="M65 50 Q75 40 70 30 Q60 20 50 30 Q40 40 30 35 Q20 30 15 40" fill="none" stroke="#8b0000" stroke-width="12" stroke-linecap="round"/>
+        <path d="M65 50 Q75 40 70 30 Q60 20 50 30 Q40 40 30 35 Q20 30 15 40" fill="none" stroke="#b71c1c" stroke-width="8" stroke-linecap="round"/>
+        <!-- 鳞片纹 -->
+        <path d="M60 35 L62 40 M50 32 L52 37 M40 36 L42 41 M30 38 L32 43" stroke="#ff5252" stroke-width="2" opacity="0.5"/>
+        <!-- 大头 -->
+        <ellipse cx="20" cy="32" rx="16" ry="14" fill="#b71c1c"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="14" cy="28" rx="5" ry="6" fill="#fff"/>
+        <ellipse cx="26" cy="28" rx="5" ry="6" fill="#fff"/>
+        <ellipse cx="15" cy="29" r="3" fill="#4a0000"/>
+        <ellipse cx="27" cy="29" r="3" fill="#4a0000"/>
+        <circle cx="16" cy="28" r="1" fill="#ffeb3b"/>
+        <circle cx="28" cy="28" r="1" fill="#ffeb3b"/>
+        <!-- 信子 -->
+        <path d="M8 38 L2 36 M8 38 L2 42" stroke="#ff5252" stroke-width="2" stroke-linecap="round"/>
+        <!-- 尾巴尖 -->
+        <path d="M65 50 L72 55 L70 48" fill="#ff5252"/>
+        <!-- 腮红 -->
+        <ellipse cx="10" cy="36" rx="3" ry="2" fill="#ff5252" opacity="0.4"/>
+    </svg>`,
+
+    // 血魂鬼 - 血红色幽灵
+    blood_ghost: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- 血雾 -->
+        <ellipse cx="32" cy="35" rx="24" ry="20" fill="#8b0000" opacity="0.2"/>
+        <!-- 飘动的身体 -->
+        <path d="M16 25 Q16 8 32 8 Q48 8 48 25 L48 45 Q44 50 40 45 Q36 50 32 45 Q28 50 24 45 Q20 50 16 45 Z" fill="#b71c1c" opacity="0.85"/>
+        <!-- 内部高光 -->
+        <ellipse cx="32" cy="25" rx="10" ry="8" fill="#ff5252" opacity="0.3"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="25" cy="25" rx="6" ry="7" fill="#fff"/>
+        <ellipse cx="39" cy="25" rx="6" ry="7" fill="#fff"/>
+        <circle cx="26" cy="26" r="3" fill="#4a0000"/>
+        <circle cx="40" cy="26" r="3" fill="#4a0000"/>
+        <circle cx="27" cy="25" r="1" fill="#ff5252"/>
+        <circle cx="41" cy="25" r="1" fill="#ff5252"/>
+        <!-- 小嘴（惊恐） -->
+        <ellipse cx="32" cy="36" rx="5" ry="4" fill="#4a0000" opacity="0.7"/>
+        <!-- 血泪 -->
+        <path d="M20 30 L18 38" stroke="#ff5252" stroke-width="2" opacity="0.6"/>
+        <path d="M44 30 L46 38" stroke="#ff5252" stroke-width="2" opacity="0.6"/>
+    </svg>`,
+
+    // 赤甲蝎 - Q版小蝎子
+    blood_scorpion: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- 尾巴 -->
+        <path d="M32 35 Q32 20 38 12 Q42 8 45 15" fill="none" stroke="#8b0000" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="45" cy="15" r="4" fill="#ff5252"/>
+        <!-- 身体 -->
+        <ellipse cx="32" cy="42" rx="18" ry="12" fill="#8b0000"/>
+        <ellipse cx="32" cy="40" rx="14" ry="9" fill="#b71c1c"/>
+        <!-- 钳子 -->
+        <path d="M14 38 Q5 35 8 28 Q12 25 18 32" fill="#8b0000" stroke="#5c0000"/>
+        <path d="M50 38 Q59 35 56 28 Q52 25 46 32" fill="#8b0000" stroke="#5c0000"/>
+        <!-- 腿 -->
+        <path d="M18 45 L8 55 M22 48 L14 58 M42 48 L50 58 M46 45 L56 55" stroke="#5c0000" stroke-width="2"/>
+        <!-- 大头 -->
+        <circle cx="32" cy="35" r="10" fill="#b71c1c"/>
+        <!-- 大眼睛 -->
+        <ellipse cx="28" cy="33" rx="4" ry="5" fill="#fff"/>
+        <ellipse cx="36" cy="33" rx="4" ry="5" fill="#fff"/>
+        <circle cx="29" cy="34" r="2" fill="#4a0000"/>
+        <circle cx="37" cy="34" r="2" fill="#4a0000"/>
+        <circle cx="29.5" cy="33" r="0.8" fill="#ff5252"/>
+        <circle cx="37.5" cy="33" r="0.8" fill="#ff5252"/>
+        <!-- 嘴巴 -->
+        <path d="M30 40 Q32 42 34 40" fill="none" stroke="#4a0000" stroke-width="1"/>
+    </svg>`,
+
+    // ========== 血煞秘境 BOSS ==========
+
+    // 赤玉蛛王 - 小BOSS
+    boss_spider: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+        <!-- 血雾光环 -->
+        <ellipse cx="64" cy="70" rx="55" ry="45" fill="#8b0000" opacity="0.15"/>
+        <!-- 八条大腿 -->
+        <path d="M30 55 Q5 35 0 50 Q5 60 30 65" fill="none" stroke="#5c0000" stroke-width="6"/>
+        <path d="M30 70 Q0 75 0 95 Q10 100 35 80" fill="none" stroke="#5c0000" stroke-width="6"/>
+        <path d="M98 55 Q123 35 128 50 Q123 60 98 65" fill="none" stroke="#5c0000" stroke-width="6"/>
+        <path d="M98 70 Q128 75 128 95 Q118 100 93 80" fill="none" stroke="#5c0000" stroke-width="6"/>
+        <path d="M35 50 Q15 25 8 35" fill="none" stroke="#5c0000" stroke-width="5"/>
+        <path d="M93 50 Q113 25 120 35" fill="none" stroke="#5c0000" stroke-width="5"/>
+        <path d="M40 85 Q20 110 12 105" fill="none" stroke="#5c0000" stroke-width="5"/>
+        <path d="M88 85 Q108 110 116 105" fill="none" stroke="#5c0000" stroke-width="5"/>
+        <!-- 大身体 -->
+        <ellipse cx="64" cy="70" rx="38" ry="32" fill="#8b0000"/>
+        <ellipse cx="64" cy="66" rx="32" ry="26" fill="#b71c1c"/>
+        <!-- 血玉晶体效果 -->
+        <ellipse cx="64" cy="66" rx="28" ry="22" fill="url(#jade_gradient)" opacity="0.6"/>
+        <defs>
+            <radialGradient id="jade_gradient">
+                <stop offset="0%" stop-color="#ff5252"/>
+                <stop offset="100%" stop-color="#8b0000"/>
+            </radialGradient>
+        </defs>
+        <!-- 背部血玉 -->
+        <ellipse cx="64" cy="75" rx="12" ry="8" fill="#ff1744" opacity="0.8"/>
+        <ellipse cx="50" cy="72" rx="6" ry="4" fill="#ff5252" opacity="0.6"/>
+        <ellipse cx="78" cy="72" rx="6" ry="4" fill="#ff5252" opacity="0.6"/>
+        <!-- 大眼睛（邪恶） -->
+        <ellipse cx="50" cy="55" rx="12" ry="14" fill="#fff"/>
+        <ellipse cx="78" cy="55" rx="12" ry="14" fill="#fff"/>
+        <ellipse cx="52" cy="57" rx="7" ry="8" fill="#4a0000"/>
+        <ellipse cx="80" cy="57" rx="7" ry="8" fill="#4a0000"/>
+        <circle cx="54" cy="55" r="3" fill="#ff1744"/>
+        <circle cx="82" cy="55" r="3" fill="#ff1744"/>
+        <!-- 邪恶眼神（瞳孔发光） -->
+        <ellipse cx="52" cy="57" rx="4" ry="5" fill="#ff1744" opacity="0.3"/>
+        <ellipse cx="80" cy="57" rx="4" ry="5" fill="#ff1744" opacity="0.3"/>
+        <!-- 额头小眼 -->
+        <circle cx="58" cy="45" r="4" fill="#ffcdd2"/>
+        <circle cx="70" cy="45" r="4" fill="#ffcdd2"/>
+        <circle cx="58" cy="45" r="2" fill="#8b0000"/>
+        <circle cx="70" cy="45" r="2" fill="#8b0000"/>
+        <!-- 獠牙 -->
+        <path d="M52 78 L48 92" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+        <path d="M76 78 L80 92" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+        <!-- 血滴 -->
+        <ellipse cx="48" cy="95" rx="3" ry="4" fill="#ff1744"/>
+        <ellipse cx="80" cy="95" rx="3" ry="4" fill="#ff1744"/>
+    </svg>`,
+
+    // 炎煞蝎皇 - 大BOSS
+    boss_scorpion: `<svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <!-- 火焰光环 -->
+        <ellipse cx="80" cy="100" rx="70" ry="50" fill="#ff5722" opacity="0.15"/>
+        <!-- 大尾巴 -->
+        <path d="M80 85 Q80 50 90 30 Q95 15 105 25 Q115 35 110 50" fill="none" stroke="#5c0000" stroke-width="12" stroke-linecap="round"/>
+        <path d="M80 85 Q80 50 90 30 Q95 15 105 25 Q115 35 110 50" fill="none" stroke="#8b0000" stroke-width="8" stroke-linecap="round"/>
+        <!-- 毒针（发光） -->
+        <path d="M110 50 L120 35 L115 55 Z" fill="#ff5722"/>
+        <ellipse cx="117" cy="42" rx="8" ry="6" fill="#ffeb3b" opacity="0.6"/>
+        <!-- 大身体 -->
+        <ellipse cx="80" cy="105" rx="50" ry="35" fill="#5c0000"/>
+        <ellipse cx="80" cy="100" rx="45" ry="30" fill="#8b0000"/>
+        <!-- 身体裂纹（岩浆效果） -->
+        <path d="M50 95 Q60 105 55 115" stroke="#ff5722" stroke-width="3" fill="none"/>
+        <path d="M110 95 Q100 105 105 115" stroke="#ff5722" stroke-width="3" fill="none"/>
+        <path d="M75 88 L80 100 L85 90" stroke="#ff5722" stroke-width="2" fill="none"/>
+        <!-- 巨钳（带火焰） -->
+        <path d="M25 90 Q5 75 15 55 Q25 45 40 60 L45 80" fill="#8b0000" stroke="#5c0000" stroke-width="2"/>
+        <path d="M15 55 Q10 50 18 45 M15 55 Q25 52 30 58" stroke="#5c0000" stroke-width="3"/>
+        <path d="M135 90 Q155 75 145 55 Q135 45 120 60 L115 80" fill="#8b0000" stroke="#5c0000" stroke-width="2"/>
+        <path d="M145 55 Q150 50 142 45 M145 55 Q135 52 130 58" stroke="#5c0000" stroke-width="3"/>
+        <!-- 钳子火焰 -->
+        <ellipse cx="17" cy="50" rx="8" ry="6" fill="#ff5722" opacity="0.7"/>
+        <ellipse cx="143" cy="50" rx="8" ry="6" fill="#ff5722" opacity="0.7"/>
+        <!-- 腿 -->
+        <path d="M45 115 L25 140 M55 120 L40 145 M105 120 L120 145 M115 115 L135 140" stroke="#5c0000" stroke-width="4"/>
+        <!-- 大头 -->
+        <ellipse cx="80" cy="85" rx="28" ry="22" fill="#b71c1c"/>
+        <!-- 护甲纹 -->
+        <path d="M60 80 Q80 70 100 80" fill="none" stroke="#5c0000" stroke-width="2"/>
+        <!-- 大眼睛（霸气） -->
+        <ellipse cx="68" cy="80" rx="10" ry="12" fill="#fff"/>
+        <ellipse cx="92" cy="80" rx="10" ry="12" fill="#fff"/>
+        <ellipse cx="70" cy="82" rx="6" ry="7" fill="#4a0000"/>
+        <ellipse cx="94" cy="82" rx="6" ry="7" fill="#4a0000"/>
+        <circle cx="72" cy="80" r="2.5" fill="#ff5722"/>
+        <circle cx="96" cy="80" r="2.5" fill="#ff5722"/>
+        <!-- 瞳孔火焰 -->
+        <ellipse cx="70" cy="82" rx="3" ry="4" fill="#ff5722" opacity="0.4"/>
+        <ellipse cx="94" cy="82" rx="3" ry="4" fill="#ff5722" opacity="0.4"/>
+        <!-- 凶狠眉毛 -->
+        <path d="M54 70 L74 76" stroke="#4a0000" stroke-width="4" stroke-linecap="round"/>
+        <path d="M106 70 L86 76" stroke="#4a0000" stroke-width="4" stroke-linecap="round"/>
+        <!-- 嘴巴（咆哮） -->
+        <ellipse cx="80" cy="98" rx="10" ry="6" fill="#1a0000"/>
+        <path d="M74 96 L76 102" stroke="#ff5722" stroke-width="2"/>
+        <path d="M86 96 L84 102" stroke="#ff5722" stroke-width="2"/>
+        <!-- 王冠/角 -->
+        <path d="M65 62 L60 50 L70 58" fill="#ff5722"/>
+        <path d="M95 62 L100 50 L90 58" fill="#ff5722"/>
+        <path d="M80 58 L80 45" stroke="#ffeb3b" stroke-width="3"/>
+        <circle cx="80" cy="42" r="5" fill="#ffeb3b"/>
+    </svg>`,
+
+    // 金币
+    gold_coin: `<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" fill="#f1c40f" stroke="#d4a00a" stroke-width="2"/>
+        <circle cx="16" cy="16" r="10" fill="none" stroke="#d4a00a" stroke-width="1"/>
+        <text x="16" y="21" font-size="14" fill="#d4a00a" text-anchor="middle" font-weight="bold">$</text>
+    </svg>`
 };
 
 export const ROLES = [
@@ -503,3 +784,73 @@ export const SKILLS = {
         { id:'form_stun', name:'画地为牢', desc:'阵法附带强力减速', icon:'🛑', effect:s=>s.stun=true }
     ]
 };
+
+// ========== 血煞秘境配置 ==========
+
+// 波次配置
+export const ARENA_CONFIG = {
+    totalWaves: 10,
+    bossWaves: [5, 10], // 第5波和第10波是BOSS波
+    waves: [
+        { wave: 1, count: 8, mobs: ['blood_bat'], levelMult: 0.5 },
+        { wave: 2, count: 10, mobs: ['blood_bat', 'blood_spider'], levelMult: 0.6 },
+        { wave: 3, count: 12, mobs: ['blood_spider'], levelMult: 0.7 },
+        { wave: 4, count: 10, mobs: ['blood_wolf'], levelMult: 0.8 },
+        { wave: 5, count: 1, mobs: ['boss_spider'], levelMult: 1.2, isBoss: true, bossName: '赤玉蛛王' },
+        { wave: 6, count: 12, mobs: ['blood_wolf', 'blood_serpent'], levelMult: 0.9 },
+        { wave: 7, count: 10, mobs: ['blood_serpent'], levelMult: 1.0 },
+        { wave: 8, count: 14, mobs: ['blood_ghost'], levelMult: 1.1 },
+        { wave: 9, count: 16, mobs: ['blood_bat', 'blood_wolf', 'blood_ghost'], levelMult: 1.2 },
+        { wave: 10, count: 1, mobs: ['boss_scorpion'], levelMult: 2.0, isBoss: true, bossName: '炎煞蝎皇' }
+    ]
+};
+
+// 血煞秘境妖兽属性
+export const ARENA_MOBS = {
+    blood_bat: { name: '赤翼蝠', hp: 30, dmg: 8, speed: 100, svg: 'blood_bat', goldDrop: [1, 3] },
+    blood_spider: { name: '血丝蛛', hp: 45, dmg: 10, speed: 70, svg: 'blood_spider', goldDrop: [2, 4] },
+    blood_wolf: { name: '赤煞狼', hp: 60, dmg: 15, speed: 120, svg: 'blood_wolf', goldDrop: [3, 5] },
+    blood_serpent: { name: '血鳞蟒', hp: 80, dmg: 12, speed: 60, svg: 'blood_serpent', goldDrop: [3, 6] },
+    blood_ghost: { name: '血魂鬼', hp: 50, dmg: 18, speed: 90, svg: 'blood_ghost', goldDrop: [2, 5] },
+    blood_scorpion: { name: '赤甲蝎', hp: 40, dmg: 12, speed: 85, svg: 'blood_scorpion', goldDrop: [2, 4] }
+};
+
+// BOSS配置
+export const ARENA_BOSSES = {
+    boss_spider: {
+        name: '赤玉蛛王',
+        hp: 2000,
+        dmg: 25,
+        speed: 50,
+        size: 3.0,
+        svg: 'boss_spider',
+        goldDrop: [15, 25],
+        cardDrop: 1,
+        skills: ['poison_spray', 'web_trap', 'jade_armor']
+    },
+    boss_scorpion: {
+        name: '炎煞蝎皇',
+        hp: 5000,
+        dmg: 40,
+        speed: 40,
+        size: 4.0,
+        svg: 'boss_scorpion',
+        goldDrop: [50, 80],
+        cardDrop: 3,
+        skills: ['claw_sweep', 'tail_strike', 'summon_scorpions', 'rage_mode'],
+        phases: [
+            { hpPercent: 100, name: '普通' },
+            { hpPercent: 50, name: '狂暴', speedMult: 1.3, dmgMult: 1.5 }
+        ]
+    }
+};
+
+// 道具卡配置
+export const ITEM_CARDS = [
+    { id: 'fire_storm', name: '焚天诀', icon: '🔥', desc: '全屏火焰伤害', effect: 'screen_damage', value: 200, dropRate: 0.08, maxStack: 5 },
+    { id: 'thunder_wrath', name: '雷罚术', icon: '⚡', desc: '随机5敌人连锁闪电', effect: 'chain_lightning', value: 5, dropRate: 0.08, maxStack: 5 },
+    { id: 'diamond_body', name: '金刚咒', icon: '💎', desc: '3秒无敌', effect: 'invincible', value: 3, dropRate: 0.10, maxStack: 3 },
+    { id: 'heal_talisman', name: '回春符', icon: '🩹', desc: '回复40%血量', effect: 'heal', value: 0.4, dropRate: 0.12, maxStack: 5 },
+    { id: 'ice_prison', name: '冰封咒', icon: '❄️', desc: '全场敌人冻结3秒', effect: 'freeze_all', value: 3, dropRate: 0.06, maxStack: 3 },
+    { id: 'slay_evil', name: '诛邪符', icon: '💀', desc: '秒杀屏幕内所有普通怪', effect: 'instant_kill', value: 1, dropRate: 0.03, maxStack: 2 }
+];
