@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>血煞秘境 • 灵剑</title>
     <link rel="stylesheet" href="css/arena.css">
+    <!-- Nipple.js 虚拟摇杆库 -->
+    <script src="https://unpkg.com/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
     <style>
         /* 移动端专属样式覆盖 */
         
@@ -224,6 +226,55 @@
             font-size: 20px !important;
         }
         
+        /* ========== 虚拟摇杆区域 ========== */
+        #joystick-zone {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 50%;
+            height: 45%;
+            z-index: 100;
+            touch-action: none;
+        }
+        
+        /* 摇杆样式覆盖 */
+        .joystick-base {
+            background: radial-gradient(circle, rgba(139, 0, 0, 0.4) 0%, rgba(60, 10, 10, 0.6) 100%) !important;
+            border: 3px solid rgba(200, 50, 50, 0.5) !important;
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        .joystick-stick {
+            background: radial-gradient(circle, rgba(200, 60, 60, 0.9) 0%, rgba(139, 0, 0, 0.8) 100%) !important;
+            border: 2px solid rgba(255, 100, 100, 0.6) !important;
+            box-shadow: 0 0 10px rgba(255, 50, 50, 0.6), inset 0 2px 5px rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        /* 右侧攻击区域指示 */
+        #attack-zone {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            width: 50%;
+            height: 45%;
+            z-index: 99;
+            pointer-events: none;
+        }
+        
+        /* 操作提示 */
+        .control-hint {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 11px;
+            z-index: 50;
+            pointer-events: none;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
         /* ========== 升级菜单 ========== */
         .levelup-title {
             font-size: 28px !important;
@@ -414,6 +465,15 @@
 
 <!-- 金币飞行容器 -->
 <div id="flying-coins"></div>
+
+<!-- 虚拟摇杆区域 -->
+<div id="joystick-zone"></div>
+
+<!-- 攻击区域（自动攻击，仅作视觉参考） -->
+<div id="attack-zone"></div>
+
+<!-- 操作提示（游戏中隐藏） -->
+<div class="control-hint" id="control-hint">← 左侧滑动移动 | 自动攻击 →</div>
 
 <script type="module" src="js/arena-mobile-main.js"></script>
 </body>

@@ -2,127 +2,157 @@ import { ArenaEngine } from './arena-engine.js';
 import { ROLES, SVG_LIB } from './data.js';
 import { initAvatar, loadAssets } from './assets.js';
 
-// 移动端血煞秘境引擎
+// 移动端血煞秘境引擎 - 使用 Nipple.js 虚拟摇杆
 class MobileArenaEngine extends ArenaEngine {
     constructor() {
         super();
         
-        // 触摸状态
-        this.touchStartX = 0;
-        this.touchStartY = 0;
-        this.isTouching = false;
-        this.touchMoveX = 0;
-        this.touchMoveY = 0;
+        // 摇杆状态
+        this.joystickInput = {
+            active: false,
+            dx: 0,
+            dy: 0
+        };
         
-        // 双指缩放
-        this.pinchStartDist = 0;
-        this.currentZoom = 1;
+        // nipple.js 实例
+        this.joystick = null;
         
-        // 设置触摸事件
-        this.setupTouchControls();
+        // 初始化摇杆（延迟到游戏开始）
+        this.joystickInitialized = false;
     }
     
-    setupTouchControls() {
-        const canvas = this.canvas;
+    // 初始化虚拟摇杆
+    initJoystick() {
+        if (this.joystickInitialized) return;
         
-        // 触摸开始
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            
-            if (e.touches.length === 1) {
-                // 单指 - 移动
-                this.isTouching = true;
-                this.touchStartX = e.touches[0].clientX;
-                this.touchStartY = e.touches[0].clientY;
-                this.touchMoveX = 0;
-                this.touchMoveY = 0;
-            } else if (e.touches.length === 2) {
-                // 双指 - 缩放
-                const dx = e.touches[0].clientX - e.touches[1].clientX;
-                const dy = e.touches[0].clientY - e.touches[1].clientY;
-                this.pinchStartDist = Math.hypot(dx, dy);
-            }
-        }, { passive: false });
-        
-        // 触摸移动
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            
-            if (e.touches.length === 1 && this.isTouching) {
-                // 单指移动
-                const dx = e.touches[0].clientX - this.touchStartX;
-                const dy = e.touches[0].clientY - this.touchStartY;
-                
-                this.touchMoveX = dx * 0.5;
-                this.touchMoveY = dy * 0.5;
-                
-                // 更新起点实现连续移动
-                this.touchStartX = e.touches[0].clientX;
-                this.touchStartY = e.touches[0].clientY;
-            } else if (e.touches.length === 2) {
-                // 双指缩放
-                const dx = e.touches[0].clientX - e.touches[1].clientX;
-                const dy = e.touches[0].clientY - e.touches[1].clientY;
-                const dist = Math.hypot(dx, dy);
-                
-                if (this.pinchStartDist > 0) {
-                    const scale = dist / this.pinchStartDist;
-                    this.currentZoom = Math.max(0.5, Math.min(2, this.currentZoom * scale));
-                }
-                this.pinchStartDist = dist;
-            }
-        }, { passive: false });
-        
-        // 触摸结束
-        canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            
-            if (e.touches.length === 0) {
-                this.isTouching = false;
-                this.touchMoveX = 0;
-                this.touchMoveY = 0;
-            }
-            
-            if (e.touches.length < 2) {
-                this.pinchStartDist = 0;
-            }
-        }, { passive: false });
-    }
-    
-    update(dt) {
-        // 更新 touch 状态供 Player.update 使用
-        if (this.isTouching && (Math.abs(this.touchMoveX) > 0.1 || Math.abs(this.touchMoveY) > 0.1)) {
-            this.touch.active = true;
-            // 归一化方向
-            const len = Math.hypot(this.touchMoveX, this.touchMoveY);
-            if (len > 0) {
-                this.touch.dx = this.touchMoveX / len;
-                this.touch.dy = this.touchMoveY / len;
-            }
-        } else {
-            this.touch.active = false;
-            this.touch.dx = 0;
-            this.touch.dy = 0;
+        const zone = document.getElementById('joystick-zone');
+        if (!zone || typeof nipplejs === 'undefined') {
+            console.warn('摇杆区域或 nipplejs 未找到');
+            return;
         }
         
-        // 衰减
-        this.touchMoveX *= 0.8;
-        this.touchMoveY *= 0.8;
+        // 创建摇杆
+        this.joystick = nipplejs.create({
+            zone: zone,
+            mode: 'dynamic',        // 动态模式：在触摸位置创建摇杆
+            position: { left: '50%', top: '50%' },
+            color: 'rgba(200, 50, 50, 0.6)',
+            size: 120,
+            threshold: 0.1,         // 死区阈值
+            fadeTime: 250,          // 淡出时间
+            multitouch: false,      // 单摇杆
+            maxNumberOfNipples: 1,
+            lockX: false,
+            lockY: false,
+            catchDistance: 150,     // 可激活距离
+            shape: 'circle',
+            dynamicPage: true,
+            follow: true            // 跟随手指
+        });
+        
+        // 摇杆移动事件
+        this.joystick.on('move', (evt, data) => {
+            if (data.force > 0.1) {
+                this.joystickInput.active = true;
+                // 使用弧度直接计算方向向量
+                const angle = data.angle.radian;
+                this.joystickInput.dx = Math.cos(angle);
+                this.joystickInput.dy = -Math.sin(angle); // 屏幕Y轴向下，取反
+            } else {
+                this.joystickInput.active = false;
+                this.joystickInput.dx = 0;
+                this.joystickInput.dy = 0;
+            }
+        });
+        
+        // 摇杆释放事件
+        this.joystick.on('end', () => {
+            this.joystickInput.active = false;
+            this.joystickInput.dx = 0;
+            this.joystickInput.dy = 0;
+        });
+        
+        // 自定义摇杆样式
+        this.styleJoystick();
+        
+        this.joystickInitialized = true;
+        console.log('虚拟摇杆初始化完成');
+    }
+    
+    // 自定义摇杆外观
+    styleJoystick() {
+        // 等待DOM更新后添加样式
+        setTimeout(() => {
+            const backs = document.querySelectorAll('.back');
+            const fronts = document.querySelectorAll('.front');
+            
+            backs.forEach(el => {
+                el.classList.add('joystick-base');
+            });
+            
+            fronts.forEach(el => {
+                el.classList.add('joystick-stick');
+            });
+        }, 100);
+    }
+    
+    // 销毁摇杆
+    destroyJoystick() {
+        if (this.joystick) {
+            this.joystick.destroy();
+            this.joystick = null;
+            this.joystickInitialized = false;
+        }
+    }
+    
+    // 开始游戏
+    start(roleId) {
+        // 先调用父类的 start
+        super.start(roleId);
+        
+        // 初始化摇杆
+        this.initJoystick();
+        
+        // 隐藏操作提示
+        const hint = document.getElementById('control-hint');
+        if (hint) hint.style.display = 'none';
+        
+        // 显示摇杆区域
+        const zone = document.getElementById('joystick-zone');
+        if (zone) zone.style.display = 'block';
+    }
+    
+    // 游戏结束
+    gameOver(victory = false) {
+        super.gameOver(victory);
+        
+        // 隐藏摇杆区域
+        const zone = document.getElementById('joystick-zone');
+        if (zone) zone.style.display = 'none';
+        
+        // 重置摇杆输入
+        this.joystickInput.active = false;
+        this.joystickInput.dx = 0;
+        this.joystickInput.dy = 0;
+    }
+    
+    // 更新
+    update(dt) {
+        // 将摇杆输入传递给 touch 状态供 Player.update 使用
+        this.touch.active = this.joystickInput.active;
+        this.touch.dx = this.joystickInput.dx;
+        this.touch.dy = this.joystickInput.dy;
         
         // 调用父类更新
         super.update(dt);
     }
     
+    // 重写绘制方法
     draw() {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.width, this.height);
         
         ctx.save();
-        
-        // 应用缩放
-        ctx.translate(this.width / 2, this.height / 2);
-        ctx.scale(this.currentZoom, this.currentZoom);
-        ctx.translate(-this.width / 2, -this.height / 2);
         
         // 震屏效果
         if (this.shake > 0) {
@@ -177,6 +207,9 @@ let currentRole = 'sword';
 document.addEventListener('DOMContentLoaded', () => {
     engine = new MobileArenaEngine();
     
+    // 暴露给全局
+    window.engine = engine;
+    
     // 从 localStorage 读取主游戏选择的角色
     const savedRole = localStorage.getItem('arenaRole');
     if (savedRole && ROLES.find(r => r.id === savedRole)) {
@@ -189,7 +222,33 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         initAvatar('player_' + currentRole);
     }, 500);
+    
+    // 阻止页面滚动和缩放
+    preventDefaultBehaviors();
 });
+
+// 阻止默认行为（缩放、滚动等）
+function preventDefaultBehaviors() {
+    // 阻止双指缩放
+    document.addEventListener('gesturestart', (e) => e.preventDefault());
+    document.addEventListener('gesturechange', (e) => e.preventDefault());
+    document.addEventListener('gestureend', (e) => e.preventDefault());
+    
+    // 阻止触摸滚动（仅在游戏区域）
+    document.getElementById('gameCanvas')?.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+    }, { passive: false });
+    
+    // 阻止双击缩放
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, { passive: false });
+}
 
 // 显示当前角色
 function displayCurrentRole() {
@@ -238,4 +297,3 @@ window.useItemCard = function(slot) {
 
 // 暴露给全局
 window.engine = engine;
-
