@@ -257,6 +257,9 @@ export class ArenaEngine {
         // 更新金币
         this.coins.forEach(c => c.update(dt, this.player));
         
+        // 更新道具卡特殊实体（陷阱、炸弹、分身等）
+        this.itemCards.update(dt);
+        
         // 碰撞检测
         this.checkCollisions();
         
@@ -289,10 +292,31 @@ export class ArenaEngine {
             const dist = Math.hypot(e.x - this.player.x, e.y - this.player.y);
             const hitRadius = e.isBoss ? 60 : 30;
             if (dist < hitRadius) {
-                // 伤害玩家
+                // 伤害玩家（持续接触伤害，绕过无敌帧但保留减伤）
                 if (!this.player.invincible) {
-                    this.player.hp -= e.dmg * 0.016; // 每帧伤害
+                    let damage = e.dmg * 0.016; // 每帧伤害
+                    
+                    // 玄武盾减伤效果
+                    if (this.player.damageReduction) {
+                        damage *= (1 - this.player.damageReduction);
+                    }
+                    
+                    this.player.hp -= damage;
                     this.player.hp = Math.max(0, this.player.hp);
+                    
+                    // 玄武盾反弹效果（每秒触发一次，避免频繁反弹）
+                    if (this.player.damageReflect) {
+                        if (!e.lastReflectTime) e.lastReflectTime = 0;
+                        if (this.playTime - e.lastReflectTime > 1.0) {
+                            e.lastReflectTime = this.playTime;
+                            const reflectDamage = e.dmg * this.player.damageReflect;
+                            e.hp -= reflectDamage;
+                            this.texts.push(new FloatText(e.x, e.y, "-"+Math.floor(reflectDamage), '#3498db'));
+                            if (e.hp <= 0 && !e.dead) {
+                                this.onEnemyKilled(e);
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -672,6 +696,9 @@ export class ArenaEngine {
         
         // 绘制子弹
         this.drawBullets(ctx);
+        
+        // 绘制道具卡特殊实体（陷阱、炸弹、分身等）
+        this.itemCards.draw(ctx);
         
         // 绘制玩家
         if (this.player) {

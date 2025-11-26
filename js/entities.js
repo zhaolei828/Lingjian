@@ -221,13 +221,43 @@ export class Player extends Entity {
             ctx.strokeStyle = `rgba(255,255,255,${this.lvlUpFx})`; ctx.lineWidth=5; ctx.stroke();
         }
     }
-    gainExp(v){ this.exp+=v; if(this.exp>=this.maxExp) this.levelUp(); window.Game.updateUI(); }
+    gainExp(v){ 
+        // 聚灵阵经验加成
+        const actualExp = v * (this.expBoost || 1);
+        this.exp += actualExp; 
+        if(this.exp>=this.maxExp) this.levelUp(); 
+        window.Game.updateUI(); 
+    }
     levelUp(){ this.lvl++; this.exp=0; this.maxExp=Math.floor(this.maxExp*1.4); this.hp=this.maxHp; this.lvlUpFx=1.0; window.showUpgradeMenu(); }
-    hit(d){ 
+    hit(d, attacker = null){ 
         if(this.invulnTimer > 0) return;
-        this.hp-=d; 
+        if(this.invincible) return; // 金身符无敌
+        
+        // 玄武盾减伤效果
+        let actualDamage = d;
+        if (this.damageReduction) {
+            actualDamage = d * (1 - this.damageReduction);
+        }
+        
+        this.hp -= actualDamage; 
         this.invulnTimer = 0.3; // 0.3s i-frame
-        window.Game.texts.push(new FloatText(this.x,this.y,"-"+Math.floor(d),'#e74c3c', true)); 
+        window.Game.texts.push(new FloatText(this.x, this.y, "-"+Math.floor(actualDamage), '#e74c3c', true)); 
+        
+        // 玄武盾反弹效果
+        if (this.damageReflect && attacker && !attacker.dead) {
+            const reflectDamage = d * this.damageReflect;
+            attacker.hp -= reflectDamage;
+            window.Game.texts.push(new FloatText(attacker.x, attacker.y, "-"+Math.floor(reflectDamage), '#3498db'));
+            window.Game.particles.push(new Particle(attacker.x, attacker.y, '#3498db', 0.3, 4));
+            if (attacker.hp <= 0 && !attacker.dead) {
+                if (window.Game.onEnemyKilled) {
+                    window.Game.onEnemyKilled(attacker);
+                } else {
+                    attacker.dead = true;
+                }
+            }
+        }
+        
         window.Game.updateUI(); 
         window.Game.screenShake(0.3);
         if(this.hp<=0) window.Game.gameOver(); 
@@ -652,11 +682,34 @@ export class Artifact extends Entity {
         this.cd = 0;
         this.maxCd = this.data.cd;
         this.angle = 0;
+        
+        // 诛仙剑阵专用
+        this.swordAngles = [0, Math.PI/2, Math.PI, Math.PI*1.5];
+        this.swordTargets = [null, null, null, null];
+        this.swordCooldowns = [0, 0, 0, 0];
+        
+        // 风火轮专用
+        this.fireTrailTimer = 0;
+        this.fireTrails = [];
+        
+        // 乾坤圈专用
+        this.knockbackTimer = 0;
+        
+        // 被动效果是否已应用
+        this.passiveApplied = false;
     }
+    
     update(dt, player) {
         this.x = player.x;
         this.y = player.y;
         
+        // 应用被动效果（只执行一次）
+        if (!this.passiveApplied) {
+            this.applyPassiveEffects(player);
+            this.passiveApplied = true;
+        }
+        
+        // 主动CD效果
         if (this.maxCd > 0) {
             this.cd -= dt;
             if (this.cd <= 0) {
@@ -665,81 +718,445 @@ export class Artifact extends Entity {
             }
         }
         
-        if (this.id === 'mirror') {
-            this.angle += dt * 2; 
-            for (let e of window.Game.enemies) {
-                const d = this.dist(e);
-                if (d < 150) { 
-                    const angToEnemy = Math.atan2(e.y - this.y, e.x - this.x);
-                    let diff = angToEnemy - this.angle;
-                    while (diff > Math.PI) diff -= Math.PI*2;
-                    while (diff < -Math.PI) diff += Math.PI*2;
-                    
-                    if (Math.abs(diff) < Math.PI/2) {
-                        // Continuous damage logic improved:
-                        // Instead of random tiny damage, use a timer to tick damage
-                        // Fire Aura (Front)
-                        if (!e.burnTick) e.burnTick = 0;
-                        e.burnTick -= dt;
-                        if (e.burnTick <= 0) {
-                             e.takeDamage(10, 0, 0, 'fire'); // Fixed integer damage
-                             window.Game.particles.push(new Particle(e.x, e.y, '#e74c3c', 0.3, 2));
-                             e.burnTick = 0.2; // 5 ticks per second
-                        }
-                    } else {
-                        // Ice Aura (Back) - Slow
-                        e.slowTimer = 0.2;
-                        if (Math.random() < dt * 5) { // Visuals can be random
-                            window.Game.particles.push(new Particle(e.x, e.y, '#3498db', 0.3, 2));
-                        }
-                        // Also deal some small ice damage occasionally?
-                        // Let's keep it just slow for now as per description, or small damage
+        // 根据法宝类型执行特殊逻辑
+        switch (this.id) {
+            case 'zhuxian_array':
+                this.updateZhuxianArray(dt, player);
+                break;
+            case 'mirror':
+                this.updateMirror(dt, player);
+                break;
+            case 'qiankun_quan':
+                this.updateQiankunQuan(dt, player);
+                break;
+            case 'fenghuo_lun':
+                this.updateFenghuoLun(dt, player);
+                break;
+            case 'dinghai_zhu':
+                this.updateDinghaiZhu(dt, player);
+                break;
+        }
+    }
+    
+    // ========== 被动效果应用 ==========
+    applyPassiveEffects(player) {
+        switch (this.id) {
+            case 'jinjiao_jian':
+                // 金蛟剪 - 穿透+2，伤害+20%
+                player.stats.pierce = (player.stats.pierce || 0) + 2;
+                player.stats.dmg *= 1.2;
+                window.Game.texts.push(new FloatText(player.x, player.y - 60, "金蛟剪·穿透强化!", "#f1c40f"));
+                break;
+                
+            case 'xuanwu_dun':
+                // 玄武盾 - 减伤30%（通过标记实现，在Player.hit中处理）
+                player.damageReduction = 0.3;
+                player.damageReflect = 0.1;
+                window.Game.texts.push(new FloatText(player.x, player.y - 60, "玄武盾·防御强化!", "#3498db"));
+                break;
+                
+            case 'fenghuo_lun':
+                // 风火轮 - 移速+50%
+                player.speed *= 1.5;
+                window.Game.texts.push(new FloatText(player.x, player.y - 60, "风火轮·移速强化!", "#e74c3c"));
+                break;
+                
+            case 'jubao_pen':
+                // 聚宝盆 - 掉落+50%，拾取范围+100%
+                player.dropBonus = 1.5;
+                player.stats.area *= 2;
+                window.Game.texts.push(new FloatText(player.x, player.y - 60, "聚宝盆·财运加持!", "#f1c40f"));
+                break;
+        }
+    }
+    
+    // ========== 诛仙剑阵 - 4剑环绕自动攻击 ==========
+    updateZhuxianArray(dt, player) {
+        // 4把剑环绕
+        for (let i = 0; i < 4; i++) {
+            this.swordAngles[i] += dt * 2; // 旋转速度
+            this.swordCooldowns[i] -= dt;
+            
+            // 寻找并攻击目标
+            if (this.swordCooldowns[i] <= 0) {
+                const swordX = this.x + Math.cos(this.swordAngles[i]) * 60;
+                const swordY = this.y + Math.sin(this.swordAngles[i]) * 60;
+                
+                // 找最近的敌人
+                let nearest = null;
+                let minDist = 150;
+                for (const e of window.Game.enemies) {
+                    if (e.dead) continue;
+                    const d = Math.hypot(e.x - swordX, e.y - swordY);
+                    if (d < minDist) {
+                        minDist = d;
+                        nearest = e;
+                    }
+                }
+                
+                if (nearest) {
+                    // 剑气攻击
+                    nearest.takeDamage(5, 0, 0, 'sword');
+                    window.Game.particles.push(new Particle(nearest.x, nearest.y, '#00bcd4', 0.3, 4));
+                    this.swordCooldowns[i] = 0.5; // 攻击间隔
+                }
+            }
+        }
+    }
+    
+    // ========== 乾蓝冰焰 - 前方烧伤，后方冻结 ==========
+    updateMirror(dt, player) {
+        this.angle += dt * 2; 
+        for (let e of window.Game.enemies) {
+            const d = this.dist(e);
+            if (d < 150) { 
+                const angToEnemy = Math.atan2(e.y - this.y, e.x - this.x);
+                let diff = angToEnemy - this.angle;
+                while (diff > Math.PI) diff -= Math.PI*2;
+                while (diff < -Math.PI) diff += Math.PI*2;
+                
+                if (Math.abs(diff) < Math.PI/2) {
+                    // 前方 - 火焰灼烧
+                    if (!e.burnTick) e.burnTick = 0;
+                    e.burnTick -= dt;
+                    if (e.burnTick <= 0) {
+                        e.takeDamage(10, 0, 0, 'fire');
+                        window.Game.particles.push(new Particle(e.x, e.y, '#e74c3c', 0.3, 2));
+                        e.burnTick = 0.2;
+                    }
+                } else {
+                    // 后方 - 冰霜减速
+                    e.slowTimer = 0.2;
+                    if (Math.random() < dt * 5) {
+                        window.Game.particles.push(new Particle(e.x, e.y, '#3498db', 0.3, 2));
                     }
                 }
             }
         }
     }
-    trigger(player) {
-        if (this.id === 'fantian') {
-            window.Game.screenShake(2.0);
-            window.Game.enemies.forEach(e => {
-                e.takeDamage(50, 0, 0, 'earth', 2.0);
-                e.slowTimer = 3.0; 
-            });
-            window.Game.texts.push(new FloatText(player.x, player.y - 100, "翻天印!", "#f1c40f", true));
-        } else if (this.id === 'gourd') {
-            const elites = window.Game.enemies.filter(e => e.isElite);
-            const target = elites.length > 0 ? elites[0] : null;
-            if (target) {
-                window.Game.texts.push(new FloatText(player.x, player.y - 80, "请宝贝转身!", "#fff", true));
-                window.Game.particles.push(new Beam(player.x, player.y, target.x, target.y));
-                target.takeDamage(500, 0, 0, 'sword'); 
-            } else {
-                this.cd = 1.0;
+    
+    // ========== 乾坤圈 - 结界击退敌人 ==========
+    updateQiankunQuan(dt, player) {
+        this.knockbackTimer -= dt;
+        this.angle += dt * 3;
+        
+        if (this.knockbackTimer <= 0) {
+            this.knockbackTimer = 0.5;
+            
+            // 击退靠近的敌人
+            for (const e of window.Game.enemies) {
+                if (e.dead) continue;
+                const d = this.dist(e);
+                if (d < 80) {
+                    const angle = Math.atan2(e.y - this.y, e.x - this.x);
+                    const force = 200;
+                    e.pushX = Math.cos(angle) * force;
+                    e.pushY = Math.sin(angle) * force;
+                    
+                    // 击退粒子
+                    window.Game.particles.push(new Particle(e.x, e.y, '#f1c40f', 0.3, 4));
+                }
             }
         }
     }
+    
+    // ========== 风火轮 - 移动留下火焰轨迹 ==========
+    updateFenghuoLun(dt, player) {
+        this.fireTrailTimer -= dt;
+        
+        // 清理过期火焰
+        this.fireTrails = this.fireTrails.filter(t => t.life > 0);
+        this.fireTrails.forEach(t => {
+            t.life -= dt;
+            // 火焰伤害
+            t.dmgTimer -= dt;
+            if (t.dmgTimer <= 0) {
+                t.dmgTimer = 0.3;
+                for (const e of window.Game.enemies) {
+                    if (e.dead) continue;
+                    const d = Math.hypot(e.x - t.x, e.y - t.y);
+                    if (d < 30) {
+                        e.takeDamage(3, 0, 0, 'fire');
+                    }
+                }
+            }
+        });
+        
+        // 移动时留下火焰
+        const isMoving = Math.abs(player.vx || 0) > 10 || Math.abs(player.vy || 0) > 10;
+        if (isMoving && this.fireTrailTimer <= 0) {
+            this.fireTrailTimer = 0.1;
+            this.fireTrails.push({
+                x: player.x,
+                y: player.y + 20,
+                life: 2.0,
+                dmgTimer: 0
+            });
+        }
+    }
+    
+    // ========== 定海神珠 - 敌人减速光环 ==========
+    updateDinghaiZhu(dt, player) {
+        const slowRadius = 200;
+        const slowAmount = 0.3;
+        
+        for (const e of window.Game.enemies) {
+            if (e.dead) continue;
+            const d = this.dist(e);
+            if (d < slowRadius) {
+                e.slowTimer = 0.2;
+                // 偶尔显示减速粒子
+                if (Math.random() < dt * 2) {
+                    window.Game.particles.push(new Particle(e.x, e.y, '#2196f3', 0.3, 3));
+                }
+            }
+        }
+    }
+    
+    // ========== 主动触发效果 ==========
+    trigger(player) {
+        switch (this.id) {
+            case 'fantian':
+                // 虚天鼎 - 震晕全场
+                window.Game.screenShake(2.0);
+                window.Game.enemies.forEach(e => {
+                    e.takeDamage(50, 0, 0, 'earth', 2.0);
+                    e.slowTimer = 3.0; 
+                });
+                window.Game.texts.push(new FloatText(player.x, player.y - 100, "虚天鼎!", "#f1c40f", true));
+                break;
+                
+            case 'gourd':
+                // 玄天斩灵 - 斩杀精英
+                const elites = window.Game.enemies.filter(e => e.isElite);
+                const target = elites.length > 0 ? elites[0] : null;
+                if (target) {
+                    window.Game.texts.push(new FloatText(player.x, player.y - 80, "玄天斩灵!", "#fff", true));
+                    window.Game.particles.push(new Beam(player.x, player.y, target.x, target.y));
+                    target.takeDamage(500, 0, 0, 'sword'); 
+                } else {
+                    this.cd = 1.0; // 没有目标时缩短CD
+                }
+                break;
+        }
+    }
+    
+    // ========== 绘制 ==========
     draw(ctx) {
         const img = Assets[this.data.svg];
-        if (!img) return;
         
         ctx.save();
         ctx.translate(this.x, this.y);
         
-        if (this.id === 'mirror') {
-            ctx.rotate(this.angle);
-            ctx.translate(60, 0); 
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
-            ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, 100, -Math.PI/2, Math.PI/2); ctx.fill();
-            ctx.fillStyle = 'rgba(0, 0, 255, 0.1)';
-            ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, 100, Math.PI/2, 3*Math.PI/2); ctx.fill();
-        } else {
-            const hover = Math.sin(window.Game.playTime * 2) * 10;
-            ctx.translate(40, -60 + hover);
+        switch (this.id) {
+            case 'zhuxian_array':
+                this.drawZhuxianArray(ctx);
+                break;
+                
+            case 'mirror':
+                this.drawMirror(ctx, img);
+                break;
+                
+            case 'qiankun_quan':
+                this.drawQiankunQuan(ctx, img);
+                break;
+                
+            case 'fenghuo_lun':
+                this.drawFenghuoLun(ctx, img);
+                break;
+                
+            case 'dinghai_zhu':
+                this.drawDinghaiZhu(ctx, img);
+                break;
+                
+            default:
+                // 默认绘制（悬浮在玩家旁边）
+                if (img) {
+                    const hover = Math.sin(window.Game.playTime * 2) * 10;
+                    ctx.translate(40, -60 + hover);
+                    ctx.drawImage(img, -20, -20, 40, 40);
+                }
+                break;
         }
         
-        ctx.drawImage(img, -20, -20, 40, 40);
         ctx.restore();
+    }
+    
+    // 诛仙剑阵绘制
+    drawZhuxianArray(ctx) {
+        // 4把环绕的剑
+        for (let i = 0; i < 4; i++) {
+            ctx.save();
+            ctx.rotate(this.swordAngles[i]);
+            ctx.translate(60, 0);
+            ctx.rotate(Math.PI / 2);
+            
+            // 剑身
+            ctx.fillStyle = '#00bcd4';
+            ctx.fillRect(-3, -20, 6, 40);
+            ctx.fillStyle = '#e1f5fe';
+            ctx.fillRect(-1, -18, 2, 36);
+            
+            // 剑光
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = '#00bcd4';
+            ctx.beginPath();
+            ctx.arc(0, 0, 15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            ctx.restore();
+        }
+        
+        // 中心阵法
+        ctx.strokeStyle = '#00bcd4';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 50, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+    }
+    
+    // 乾蓝冰焰绘制
+    drawMirror(ctx, img) {
+        ctx.rotate(this.angle);
+        ctx.translate(60, 0); 
+        
+        // 前方火焰区域
+        ctx.fillStyle = 'rgba(255, 87, 34, 0.15)';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, 100, -Math.PI/2, Math.PI/2);
+        ctx.fill();
+        
+        // 后方冰霜区域
+        ctx.fillStyle = 'rgba(33, 150, 243, 0.15)';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, 100, Math.PI/2, 3*Math.PI/2);
+        ctx.fill();
+        
+        if (img) {
+            ctx.drawImage(img, -20, -20, 40, 40);
+        }
+    }
+    
+    // 乾坤圈绘制
+    drawQiankunQuan(ctx, img) {
+        // 旋转的金圈
+        ctx.rotate(this.angle);
+        
+        // 外圈
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, 70, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // 内圈光晕
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.arc(0, 0, 65, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        
+        // 法宝图标
+        if (img) {
+            ctx.drawImage(img, -15, -15, 30, 30);
+        }
+    }
+    
+    // 风火轮绘制
+    drawFenghuoLun(ctx, img) {
+        // 绘制火焰轨迹
+        this.fireTrails.forEach(t => {
+            ctx.save();
+            ctx.translate(t.x - this.x, t.y - this.y);
+            ctx.globalAlpha = t.life / 2.0;
+            ctx.fillStyle = '#ff5722';
+            ctx.beginPath();
+            ctx.arc(0, 0, 15 * (t.life / 2.0), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffeb3b';
+            ctx.beginPath();
+            ctx.arc(0, 0, 8 * (t.life / 2.0), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+        
+        // 脚下的风火轮
+        ctx.translate(0, 30);
+        ctx.rotate(window.Game.playTime * 10);
+        
+        // 轮子
+        ctx.strokeStyle = '#ff5722';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // 火焰
+        for (let i = 0; i < 8; i++) {
+            ctx.save();
+            ctx.rotate(i * Math.PI / 4);
+            ctx.fillStyle = i % 2 === 0 ? '#ff5722' : '#ffeb3b';
+            ctx.beginPath();
+            ctx.moveTo(20, -5);
+            ctx.lineTo(35, 0);
+            ctx.lineTo(20, 5);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+    
+    // 定海神珠绘制
+    drawDinghaiZhu(ctx, img) {
+        // 减速光环
+        ctx.globalAlpha = 0.1 + Math.sin(window.Game.playTime * 3) * 0.05;
+        ctx.fillStyle = '#2196f3';
+        ctx.beginPath();
+        ctx.arc(0, 0, 200, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = '#2196f3';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 5]);
+        ctx.beginPath();
+        ctx.arc(0, 0, 200, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+        
+        // 悬浮的神珠
+        const hover = Math.sin(window.Game.playTime * 2) * 10;
+        ctx.translate(0, -50 + hover);
+        
+        // 珠子光晕
+        ctx.fillStyle = '#2196f3';
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        
+        // 珠子
+        const grad = ctx.createRadialGradient(-5, -5, 0, 0, 0, 20);
+        grad.addColorStop(0, '#e1f5fe');
+        grad.addColorStop(0.5, '#2196f3');
+        grad.addColorStop(1, '#0d47a1');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 高光
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.beginPath();
+        ctx.arc(-6, -6, 5, 0, Math.PI * 2);
+        ctx.fill();
     }
 }
 
