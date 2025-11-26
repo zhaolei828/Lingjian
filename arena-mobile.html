@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>血煞秘境 • 灵剑</title>
     <link rel="stylesheet" href="css/arena.css">
-    <!-- Nipple.js 虚拟摇杆库 -->
-    <script src="https://unpkg.com/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
     <style>
         /* 移动端专属样式覆盖 */
         
@@ -475,6 +473,16 @@
 <!-- 操作提示（游戏中隐藏） -->
 <div class="control-hint" id="control-hint">← 左侧滑动移动 | 自动攻击 →</div>
 
+<!-- Nipple.js 虚拟摇杆库 - 必须在模块脚本之前加载 -->
+<script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
+<script>
+    // 确保 nipplejs 已加载
+    if (typeof nipplejs === 'undefined') {
+        console.error('nipplejs 加载失败');
+    } else {
+        console.log('nipplejs 加载成功', nipplejs);
+    }
+</script>
 <script type="module" src="js/arena-mobile-main.js"></script>
 </body>
 </html>
