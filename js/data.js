@@ -739,9 +739,22 @@ export const ROLES = [
 ];
 
 export const ARTIFACTS = [
-    { id: 'fantian', name: '虚天鼎', desc: '每10秒震晕全场敌人', cd: 10, svg: 'fantian_seal' },
-    { id: 'mirror', name: '乾蓝冰焰', desc: '光环: 前方焚烧 后方冰冻', cd: 0, svg: 'yinyang_mirror' },
-    { id: 'gourd', name: '玄天斩灵', desc: '针对精英怪的必杀一击', cd: 5, svg: 'slaying_gourd' }
+    // 攻击型
+    { id: 'zhuxian_array', name: '诛仙剑阵', desc: '4剑环绕自动攻击', type: 'attack', cd: 0, svg: 'fantian_seal' },
+    { id: 'jinjiao_jian', name: '金蛟剪', desc: '穿透+2，伤害+20%', type: 'attack', cd: 0, svg: 'slaying_gourd' },
+    // 防御型
+    { id: 'xuanwu_dun', name: '玄武盾', desc: '减伤30%，反弹10%', type: 'defense', cd: 0, svg: 'fantian_seal' },
+    { id: 'qiankun_quan', name: '乾坤圈', desc: '结界击退敌人', type: 'defense', cd: 0, svg: 'yinyang_mirror' },
+    // 移速型
+    { id: 'fenghuo_lun', name: '风火轮', desc: '移速+50%，火焰轨迹', type: 'speed', cd: 0, svg: 'yinyang_mirror' },
+    // 控制型
+    { id: 'dinghai_zhu', name: '定海神珠', desc: '敌人减速30%光环', type: 'control', cd: 0, svg: 'fantian_seal' },
+    // 收益型
+    { id: 'jubao_pen', name: '聚宝盆', desc: '掉落+50%，拾取+100%', type: 'utility', cd: 0, svg: 'slaying_gourd' },
+    // 特效型（原有）
+    { id: 'fantian', name: '虚天鼎', desc: '每10秒震晕全场', type: 'special', cd: 10, svg: 'fantian_seal' },
+    { id: 'mirror', name: '乾蓝冰焰', desc: '前方烧后方冻', type: 'special', cd: 0, svg: 'yinyang_mirror' },
+    { id: 'gourd', name: '玄天斩灵', desc: '每5秒斩杀精英', type: 'special', cd: 5, svg: 'slaying_gourd' }
 ];
 
 export const STAGES = [
@@ -847,10 +860,26 @@ export const ARENA_BOSSES = {
 
 // 道具卡配置
 export const ITEM_CARDS = [
-    { id: 'fire_storm', name: '焚天诀', icon: '🔥', desc: '全屏火焰伤害', effect: 'screen_damage', value: 200, dropRate: 0.08, maxStack: 5 },
-    { id: 'thunder_wrath', name: '雷罚术', icon: '⚡', desc: '随机5敌人连锁闪电', effect: 'chain_lightning', value: 5, dropRate: 0.08, maxStack: 5 },
-    { id: 'diamond_body', name: '金刚咒', icon: '💎', desc: '3秒无敌', effect: 'invincible', value: 3, dropRate: 0.10, maxStack: 3 },
-    { id: 'heal_talisman', name: '回春符', icon: '🩹', desc: '回复40%血量', effect: 'heal', value: 0.4, dropRate: 0.12, maxStack: 5 },
-    { id: 'ice_prison', name: '冰封咒', icon: '❄️', desc: '全场敌人冻结3秒', effect: 'freeze_all', value: 3, dropRate: 0.06, maxStack: 3 },
-    { id: 'slay_evil', name: '诛邪符', icon: '💀', desc: '秒杀屏幕内所有普通怪', effect: 'instant_kill', value: 1, dropRate: 0.03, maxStack: 2 }
+    // 攻击类
+    { id: 'leijie_zhu', name: '雷劫珠', icon: '⚡', desc: '天雷连轰3次', effect: 'thunder_strike', value: 150, rarity: 'epic', dropRate: 0.05 },
+    { id: 'fantian_yin', name: '翻天印', icon: '🔱', desc: '全场震击200伤害', effect: 'screen_damage', value: 200, rarity: 'epic', dropRate: 0.05 },
+    // 控制类
+    { id: 'bingpo_zhu', name: '冰魄珠', icon: '🔮', desc: '全场冻结3秒', effect: 'freeze_all', value: 3, rarity: 'rare', dropRate: 0.08 },
+    { id: 'dingshen_fu', name: '定身符', icon: '📜', desc: '定住5敌人10秒', effect: 'stun_random', value: 5, rarity: 'rare', dropRate: 0.08 },
+    { id: 'hundun_ling', name: '混沌铃', icon: '🔔', desc: '敌人互攻5秒', effect: 'chaos', value: 5, rarity: 'legendary', dropRate: 0.02 },
+    // 陷阱类
+    { id: 'jingji_zhong', name: '荆棘种', icon: '🌿', desc: '地面荆棘伤害', effect: 'thorn_trap', value: 10, rarity: 'common', dropRate: 0.15 },
+    { id: 'baoyan_shi', name: '爆炎石', icon: '💎', desc: '定时炸弹', effect: 'time_bomb', value: 300, rarity: 'rare', dropRate: 0.08 },
+    // 位移类
+    { id: 'suodi_fu', name: '缩地符', icon: '🌀', desc: '瞬移逃命', effect: 'teleport', value: 1, rarity: 'rare', dropRate: 0.08 },
+    { id: 'fenshen_fu', name: '分身符', icon: '👥', desc: '分身吸引仇恨', effect: 'decoy', value: 5, rarity: 'epic', dropRate: 0.05 },
+    // 增益类
+    { id: 'jifeng_fu', name: '疾风符', icon: '💨', desc: '移速x2持续10秒', effect: 'speed_boost', value: 10, rarity: 'common', dropRate: 0.15 },
+    { id: 'jinshen_fu', name: '金身符', icon: '🛡️', desc: '无敌3秒', effect: 'invincible', value: 3, rarity: 'rare', dropRate: 0.08 },
+    { id: 'kuangbao_dan', name: '狂暴丹', icon: '💊', desc: '攻击x2持续10秒', effect: 'damage_boost', value: 10, rarity: 'rare', dropRate: 0.08 },
+    // 回复类
+    { id: 'huiqi_dan', name: '回气丹', icon: '💚', desc: '回复40%血量', effect: 'heal', value: 0.4, rarity: 'common', dropRate: 0.15 },
+    { id: 'juling_zhen', name: '聚灵阵', icon: '⭐', desc: '经验x2持续10秒', effect: 'exp_boost', value: 10, rarity: 'rare', dropRate: 0.08 },
+    // 特殊类
+    { id: 'qiankun_dai', name: '乾坤袋', icon: '👝', desc: '吸走5只怪物', effect: 'absorb_enemy', value: 5, rarity: 'legendary', dropRate: 0.02 }
 ];
