@@ -346,7 +346,7 @@ setTimeout(() => {
     initMobileRoleSelection();
 }, 200);
 
-// 进入血煞秘境
+// 进入血色秘境
 window.enterBloodArena = function() {
     localStorage.setItem('arenaRole', window.currentRole);
     window.location.href = 'arena-mobile.html';

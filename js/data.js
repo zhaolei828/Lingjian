@@ -546,7 +546,7 @@ export const SVG_LIB = {
     
     ruin_pillar: `<svg width="50" height="80" viewBox="0 0 50 80" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="30" height="60" fill="#555"/><path d="M10 20 L40 30 L40 40 L10 30 Z" fill="#444"/><path d="M15 50 L35 50 M15 60 L35 60" stroke="#333" stroke-width="2"/></svg>`,
 
-    // ========== 血煞秘境妖兽 ==========
+    // ========== 血色秘境妖兽 ==========
     
     // 赤翼蝠 - 血红色蝙蝠
     blood_bat: `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
@@ -712,7 +712,7 @@ export const SVG_LIB = {
         <path d="M30 40 Q32 42 34 40" fill="none" stroke="#4a0000" stroke-width="1"/>
     </svg>`,
 
-    // ========== 血煞秘境 BOSS ==========
+    // ========== 血色秘境 BOSS ==========
 
     // 赤玉蛛王 - 小BOSS
     boss_spider: `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
@@ -896,7 +896,7 @@ export const SKILLS = {
     ]
 };
 
-// ========== 血煞秘境配置 ==========
+// ========== 血色秘境配置 ==========
 
 // 波次配置
 export const ARENA_CONFIG = {
@@ -916,7 +916,7 @@ export const ARENA_CONFIG = {
     ]
 };
 
-// 血煞秘境妖兽属性
+// 血色秘境妖兽属性
 export const ARENA_MOBS = {
     blood_bat: { name: '赤翼蝠', hp: 30, dmg: 8, speed: 100, svg: 'blood_bat', goldDrop: [1, 3] },
     blood_spider: { name: '血丝蛛', hp: 45, dmg: 10, speed: 70, svg: 'blood_spider', goldDrop: [2, 4] },

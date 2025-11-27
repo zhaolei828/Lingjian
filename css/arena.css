@@ -297,7 +297,7 @@ canvas { display: block; }
     50% { transform: translateY(-10px); }
 }
 
-/* === 血煞秘境标题 === */
+/* === 血色秘境标题 === */
 .arena-title {
     font-size: 72px;
     background: linear-gradient(to bottom, #ff6b6b, #c0392b, #8b0000);

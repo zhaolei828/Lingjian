@@ -7,7 +7,7 @@ import { ItemCardManager } from './item-card.js';
 import { Config, isMobile, limitArray, isInView, perfMonitor } from './performance.js';
 import { collisionManager } from './spatial-hash.js';
 
-// 血煞秘境专属敌人类
+// 血色秘境专属敌人类
 class ArenaEnemy extends Enemy {
     constructor(type, x, y, levelMult, playerLevel) {
         // 计算实际属性
@@ -34,7 +34,7 @@ class ArenaEnemy extends Enemy {
         }
     }
     
-    // 覆盖 takeDamage，使用血煞秘境的击杀逻辑
+    // 覆盖 takeDamage，使用血色秘境的击杀逻辑
     takeDamage(v, kx, ky, type, knockback) {
         if (this.dead) return;
         
@@ -63,23 +63,67 @@ class ArenaEnemy extends Enemy {
         ctx.translate(this.x, this.y);
         
         // BOSS 放大
-        if (this.isBoss) {
-            ctx.scale(this.bossSize, this.bossSize);
+        const scale = this.isBoss ? this.bossSize : 1.0;
+        ctx.scale(scale, scale);
+        
+        // 阴影
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath();
+        ctx.ellipse(0, 20, 20, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 面向玩家
+        if (window.Game.player && window.Game.player.x < this.x) {
+            ctx.scale(-1, 1);
         }
         
+        // 绘制怪物图像
         const img = assets[this.type];
-        if (img) {
-            const size = this.isBoss ? 64 : 32;
+        if (img && img.complete && img.naturalWidth > 0) {
+            const size = this.isBoss ? 64 : 48;
             ctx.drawImage(img, -size/2, -size/2, size, size);
         } else {
-            // 后备绘制
+            // 后备绘制 - 使用 SVG_LIB 中的颜色主题
+            const mobData = ARENA_MOBS[this.type] || ARENA_BOSSES[this.type];
             ctx.fillStyle = this.isBoss ? '#c0392b' : '#8b0000';
             ctx.beginPath();
-            ctx.arc(0, 0, this.isBoss ? 40 : 20, 0, Math.PI * 2);
+            ctx.arc(0, 0, this.isBoss ? 30 : 18, 0, Math.PI * 2);
             ctx.fill();
+            
+            // 眼睛
+            ctx.fillStyle = '#ff0';
+            ctx.beginPath();
+            ctx.arc(-6, -5, 3, 0, Math.PI * 2);
+            ctx.arc(6, -5, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 名字（调试用）
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(mobData?.name || this.type, 0, 30);
         }
         
         ctx.restore();
+        
+        // 血条（BOSS 在 HUD 显示，普通怪在头上）
+        if (!this.isBoss && this.hp < this.maxHp) {
+            ctx.save();
+            ctx.translate(this.x, this.y - 30 * scale);
+            const barWidth = 40;
+            const barHeight = 4;
+            const hpRatio = this.hp / this.maxHp;
+            
+            // 背景
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(-barWidth/2, 0, barWidth, barHeight);
+            
+            // 血量
+            ctx.fillStyle = hpRatio > 0.5 ? '#4caf50' : hpRatio > 0.25 ? '#ff9800' : '#f44336';
+            ctx.fillRect(-barWidth/2, 0, barWidth * hpRatio, barHeight);
+            
+            ctx.restore();
+        }
     }
 }
 
@@ -96,7 +140,7 @@ export class ArenaEngine {
         this.lastTime = 0;
         this.playTime = 0;
         
-        // 血煞秘境专属
+        // 血色秘境专属
         this.currentWave = 0;
         this.waveEnemies = [];
         this.waveCleared = false;
@@ -193,7 +237,7 @@ export class ArenaEngine {
         this.bgPattern = this.ctx.createPattern(generateBloodArenaPattern(), 'repeat');
         
         this.updateUI();
-        this.showWaveTitle('血煞秘境', '妖兽试炼开始');
+        this.showWaveTitle('血色秘境', '妖兽试炼开始');
         
         // 延迟开始第一波
         setTimeout(() => this.startNextWave(), 2000);
@@ -237,7 +281,10 @@ export class ArenaEngine {
         if (this.shake > 0) this.shake -= dt * 10;
         if (this.hitStopCooldown > 0) this.hitStopCooldown -= dt;
         
-        // 更新玩家
+        // 【重要】先重建空间哈希，再更新玩家（确保技能能找到目标）
+        collisionManager.rebuild(this.enemies, this.bullets, this.coins);
+        
+        // 更新玩家（包括自动攻击）
         this.player.update(dt);
         
         // 限制玩家在场地内
@@ -272,9 +319,6 @@ export class ArenaEngine {
         
         // 更新道具卡特殊实体（陷阱、炸弹、分身等）
         this.itemCards.update(dt);
-        
-        // 重建空间哈希（每帧开始）
-        collisionManager.rebuild(this.enemies, this.bullets, this.coins);
         
         // 碰撞检测（使用空间哈希优化）
         this.checkCollisions();

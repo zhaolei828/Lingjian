@@ -2,7 +2,7 @@ import { ArenaEngine } from './arena-engine.js';
 import { ROLES, SVG_LIB } from './data.js';
 import { initAvatar, loadAssets } from './assets.js';
 
-// 移动端血煞秘境引擎 - 使用 Nipple.js 虚拟摇杆
+// 移动端血色秘境引擎 - 使用 Nipple.js 虚拟摇杆
 class MobileArenaEngine extends ArenaEngine {
     constructor() {
         super();

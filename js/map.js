@@ -398,7 +398,7 @@ function drawVoid(ctx, size) {
     ctx.globalAlpha = 1.0;
 }
 
-// ========== 血煞秘境地图 ==========
+// ========== 血色秘境地图 ==========
 export function generateBloodArenaPattern() {
     const size = 512;
     const canvas = document.createElement('canvas');
