@@ -3,6 +3,8 @@ import { loadAssets } from './assets.js';
 import { Player, Enemy, FloatText, Chest, StaticObject, Particle, Artifact, Beam, Footprint } from './entities.js';
 import { generateStagePattern } from './map.js';
 import { WeatherSystem } from './weather.js';
+import { collisionManager } from './spatial-hash.js';
+import { Config, isMobile, limitArray, perfMonitor } from './performance.js';
 
 export class GameEngine {
     constructor() {
@@ -138,6 +140,9 @@ export class GameEngine {
         this.camera.x += (tx - this.camera.x) * 5 * dt;
         this.camera.y += (ty - this.camera.y) * 5 * dt;
         
+        // 【优化】重建空间哈希（供子弹碰撞检测使用）
+        collisionManager.rebuild(this.enemies, this.bullets, this.orbs);
+        
         this.enemies.forEach(e => e.update(dt, this.player));
         this.bullets.forEach(b => b.update(dt));
         this.particles.forEach(p => p.update(dt));
@@ -153,6 +158,12 @@ export class GameEngine {
         this.texts = this.texts.filter(t => !t.dead);
         this.chests = this.chests.filter(c => !c.dead);
         this.footprints = this.footprints.filter(f => !f.dead);
+        
+        // 【优化】限制实体数量（移动端）
+        limitArray(this.particles, Config.maxParticles);
+        limitArray(this.bullets, Config.maxBullets);
+        limitArray(this.texts, Config.maxTexts);
+        limitArray(this.footprints, 50);
         
         this.weather.update(dt, this.stageIdx, this.camera);
 

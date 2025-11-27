@@ -1,5 +1,6 @@
 import { Assets } from './assets.js';
 import { ROLES, ARTIFACTS } from './data.js';
+import { collisionManager } from './spatial-hash.js';
 
 export class Entity { 
     constructor(x,y) { this.x=x; this.y=y; this.dead=false; } 
@@ -98,9 +99,8 @@ export class Player extends Entity {
         }
     }
     findTarget() {
-        let near=null, minD=600;
-        for(let e of window.Game.enemies) { const d=this.dist(e); if(d<minD){minD=d; near=e;} }
-        return near;
+        // 【优化】使用空间哈希快速查找最近敌人
+        return collisionManager.findNearestEnemy(this.x, this.y, 600);
     }
     fire(t) {
         if (this.role.id === 'body') {
@@ -510,8 +510,11 @@ export class Bullet extends Entity {
                      // Visual Pulse
                      window.Game.particles.push(new Particle(this.x, this.y, '#cfd8dc', 0.5, this.area*0.5 || 50));
                      
-                     for (let e of window.Game.enemies) {
-                         if (this.dist(e) < (this.area || 80)) { // Slightly larger effective range
+                     // 【优化】阵法 AOE 使用空间哈希
+                     const trapRange = this.area || 80;
+                     const nearbyEnemies = collisionManager.findEnemiesInRange(this.x, this.y, trapRange);
+                     for (let e of nearbyEnemies) {
+                         if (this.dist(e) < trapRange) {
                              this.hit(e);
                          }
                      }
@@ -550,10 +553,9 @@ export class Bullet extends Entity {
                      this.angle = Math.atan2(this.vy, this.vx);
                  }
              } else {
-                 // Find new target
-                  let near=null, minD=400;
-                  for(let e of window.Game.enemies) { const d=this.dist(e); if(d<minD){minD=d; near=e;} }
-                  if(near) this.target = near;
+                 // Find new target - 【优化】使用空间哈希
+                 const newTarget = collisionManager.findNearestEnemy(this.x, this.y, 400);
+                 if(newTarget) this.target = newTarget;
              }
              this.x += this.vx * dt;
              this.y += this.vy * dt;
@@ -576,7 +578,9 @@ export class Bullet extends Entity {
             if(Math.random()>0.5) window.Game.particles.push(new Particle(this.x,this.y,'#00bcd4',0.3, 3));
         }
 
-        for(let e of window.Game.enemies) {
+        // 【优化】使用空间哈希只检测附近敌人
+        const nearbyEnemies = collisionManager.findEnemiesInRange(this.x, this.y, 80);
+        for(let e of nearbyEnemies) {
             if(this.dist(e)<35 && !this.hitList.includes(e)) {
                 this.hit(e);
                 this.hitList.push(e);
@@ -593,10 +597,12 @@ export class Bullet extends Entity {
         e.takeDamage(this.dmg, Math.cos(this.angle), Math.sin(this.angle), this.type);
         if (this.stun) e.slowTimer = 1.0; 
         
-        // Mage AOE Explosion
+        // Mage AOE Explosion - 【优化】使用空间哈希
         if(this.type === 'fire') {
-            for(let other of window.Game.enemies) {
-                 if (other !== e && this.dist(other) < (this.area || 120)) {
+            const aoeRange = this.area || 120;
+            const nearbyEnemies = collisionManager.findEnemiesInRange(this.x, this.y, aoeRange);
+            for(let other of nearbyEnemies) {
+                 if (other !== e && this.dist(other) < aoeRange) {
                      // Reduced damage for splash
                      other.takeDamage(this.dmg * 0.5, 0, 0, 'fire');
                  }

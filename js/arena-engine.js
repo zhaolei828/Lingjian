@@ -5,6 +5,7 @@ import { generateBloodArenaPattern } from './map.js';
 import { Coin } from './coin.js';
 import { ItemCardManager } from './item-card.js';
 import { Config, isMobile, limitArray, isInView, perfMonitor } from './performance.js';
+import { collisionManager } from './spatial-hash.js';
 
 // 血煞秘境专属敌人类
 class ArenaEnemy extends Enemy {
@@ -272,7 +273,10 @@ export class ArenaEngine {
         // 更新道具卡特殊实体（陷阱、炸弹、分身等）
         this.itemCards.update(dt);
         
-        // 碰撞检测
+        // 重建空间哈希（每帧开始）
+        collisionManager.rebuild(this.enemies, this.bullets, this.coins);
+        
+        // 碰撞检测（使用空间哈希优化）
         this.checkCollisions();
         
         // 清理死亡实体
@@ -303,44 +307,45 @@ export class ArenaEngine {
         // 子弹碰撞由 Bullet.update() 自动处理
         // ArenaEnemy.takeDamage() 会调用 onEnemyKilled()
         
-        // 敌人碰玩家
-        this.enemies.forEach(e => {
-            if (e.dead) return;
-            const dist = Math.hypot(e.x - this.player.x, e.y - this.player.y);
-            const hitRadius = e.isBoss ? 60 : 30;
-            if (dist < hitRadius) {
-                // 伤害玩家（持续接触伤害，绕过无敌帧但保留减伤）
-                if (!this.player.invincible) {
-                    let damage = e.dmg * 0.016; // 每帧伤害
-                    
-                    // 玄武盾减伤效果
-                    if (this.player.damageReduction) {
-                        damage *= (1 - this.player.damageReduction);
-                    }
-                    
-                    this.player.hp -= damage;
-                    this.player.hp = Math.max(0, this.player.hp);
-                    
-                    // 玄武盾反弹效果（每秒触发一次，避免频繁反弹）
-                    if (this.player.damageReflect) {
-                        if (!e.lastReflectTime) e.lastReflectTime = 0;
-                        if (this.playTime - e.lastReflectTime > 1.0) {
-                            e.lastReflectTime = this.playTime;
-                            const reflectDamage = e.dmg * this.player.damageReflect;
-                            e.hp -= reflectDamage;
-                            this.texts.push(new FloatText(e.x, e.y, "-"+Math.floor(reflectDamage), '#3498db'));
-                            if (e.hp <= 0 && !e.dead) {
-                                this.onEnemyKilled(e);
-                            }
+        // 【优化】敌人碰玩家 - 使用空间哈希只检测附近敌人
+        const nearbyEnemies = collisionManager.checkPlayerEnemyCollisions(this.player, 30);
+        
+        for (const e of nearbyEnemies) {
+            if (e.dead) continue;
+            
+            // 伤害玩家（持续接触伤害，绕过无敌帧但保留减伤）
+            if (!this.player.invincible) {
+                let damage = e.dmg * 0.016; // 每帧伤害
+                
+                // 玄武盾减伤效果
+                if (this.player.damageReduction) {
+                    damage *= (1 - this.player.damageReduction);
+                }
+                
+                this.player.hp -= damage;
+                this.player.hp = Math.max(0, this.player.hp);
+                
+                // 玄武盾反弹效果（每秒触发一次）
+                if (this.player.damageReflect) {
+                    if (!e.lastReflectTime) e.lastReflectTime = 0;
+                    if (this.playTime - e.lastReflectTime > 1.0) {
+                        e.lastReflectTime = this.playTime;
+                        const reflectDamage = e.dmg * this.player.damageReflect;
+                        e.hp -= reflectDamage;
+                        this.texts.push(new FloatText(e.x, e.y, "-"+Math.floor(reflectDamage), '#3498db'));
+                        if (e.hp <= 0 && !e.dead) {
+                            this.onEnemyKilled(e);
                         }
                     }
                 }
             }
-        });
+        }
         
-        // 金币收集
-        this.coins.forEach(c => {
-            if (c.dead || c.collected) return;
+        // 【优化】金币收集 - 使用空间哈希只检测附近金币
+        const nearbyCoins = collisionManager.checkCoinPickup(this.player, 150);
+        
+        for (const c of nearbyCoins) {
+            if (c.dead || c.collected) continue;
             const dist = Math.hypot(c.x - this.player.x, c.y - this.player.y);
             if (dist < 100) {
                 c.attractTo(this.player);
@@ -350,7 +355,7 @@ export class ArenaEngine {
                 this.totalGold += c.value;
                 this.flyGoldToCounter(c.x, c.y);
             }
-        });
+        }
     }
     
     onEnemyKilled(enemy) {
@@ -732,6 +737,26 @@ export class ArenaEngine {
         
         // 绘制血雾效果（屏幕空间）
         this.drawBloodMist(ctx);
+        
+        // 更新性能面板（如果存在）
+        this.updatePerfPanel();
+    }
+    
+    updatePerfPanel() {
+        const fpsEl = document.getElementById('perf-fps');
+        if (!fpsEl) return;
+        
+        fpsEl.textContent = perfMonitor.fps;
+        fpsEl.style.color = perfMonitor.fps < 30 ? '#ff5252' : perfMonitor.fps < 50 ? '#ff9800' : '#4caf50';
+        
+        const enemiesEl = document.getElementById('perf-enemies');
+        if (enemiesEl) enemiesEl.textContent = this.enemies.length;
+        
+        const bulletsEl = document.getElementById('perf-bullets');
+        if (bulletsEl) bulletsEl.textContent = this.bullets.length;
+        
+        const particlesEl = document.getElementById('perf-particles');
+        if (particlesEl) particlesEl.textContent = this.particles.length;
     }
     
     drawBackground(ctx) {

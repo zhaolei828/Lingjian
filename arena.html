@@ -178,6 +178,27 @@
 <!-- 金币飞行容器 -->
 <div id="flying-coins"></div>
 
+<!-- 性能监控面板（调试用，按 F3 显示/隐藏）-->
+<div id="perf-panel" style="display:none; position:fixed; top:10px; right:10px; background:rgba(0,0,0,0.8); color:#fff; padding:15px; border-radius:8px; font-family:monospace; font-size:12px; z-index:9999;">
+    <div style="color:#f1c40f; margin-bottom:8px;">📊 性能监控</div>
+    <div>FPS: <span id="perf-fps" style="color:#4caf50;">60</span></div>
+    <div>敌人: <span id="perf-enemies">0</span></div>
+    <div>子弹: <span id="perf-bullets">0</span></div>
+    <div>粒子: <span id="perf-particles">0</span></div>
+    <div>碰撞检测: <span id="perf-collision" style="color:#2196f3;">优化中</span></div>
+</div>
+
+<script>
+// 性能面板快捷键
+document.addEventListener('keydown', e => {
+    if (e.key === 'F3') {
+        const panel = document.getElementById('perf-panel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        e.preventDefault();
+    }
+});
+</script>
+
 <script type="module" src="js/arena-main.js"></script>
 </body>
 </html>
