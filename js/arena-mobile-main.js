@@ -225,6 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 阻止页面滚动和缩放
     preventDefaultBehaviors();
+    
+    // 初始化道具槽触摸事件
+    setupItemSlotTouch();
 });
 
 // 阻止默认行为（缩放、滚动等）
@@ -239,15 +242,42 @@ function preventDefaultBehaviors() {
         e.preventDefault();
     }, { passive: false });
     
-    // 阻止双击缩放
+    // 阻止双击缩放（但不阻止道具槽的双击）
     let lastTouchEnd = 0;
     document.addEventListener('touchend', (e) => {
+        // 如果是道具槽，不阻止
+        if (e.target.closest('.item-slot')) return;
+        
         const now = Date.now();
         if (now - lastTouchEnd <= 300) {
             e.preventDefault();
         }
         lastTouchEnd = now;
     }, { passive: false });
+}
+
+// 初始化道具槽触摸事件
+function setupItemSlotTouch() {
+    const slots = document.querySelectorAll('.item-slot');
+    slots.forEach((slot, index) => {
+        // 触摸开始时立即响应（比 click 更快）
+        slot.addEventListener('touchstart', (e) => {
+            e.stopPropagation(); // 阻止事件冒泡到摇杆区域
+            const slotIndex = parseInt(slot.dataset.slot);
+            useItemCard(slotIndex);
+            
+            // 视觉反馈
+            slot.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                slot.style.transform = '';
+            }, 100);
+        }, { passive: true });
+        
+        // 阻止触摸移动冒泡
+        slot.addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
+    });
 }
 
 // 显示当前角色

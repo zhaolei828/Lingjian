@@ -107,11 +107,15 @@
             left: 50%;
             transform: translateX(-50%);
             gap: 6px;
+            z-index: 200; /* 高于摇杆区域 */
+            touch-action: manipulation; /* 允许点击 */
         }
         
         .item-slot {
             width: 45px;
             height: 50px;
+            touch-action: manipulation; /* 允许点击 */
+            cursor: pointer;
         }
         
         .slot-content {
@@ -228,9 +232,9 @@
         #joystick-zone {
             position: fixed;
             left: 0;
-            bottom: 0;
+            bottom: 80px; /* 避开底部道具栏 */
             width: 50%;
-            height: 45%;
+            height: calc(45% - 40px); /* 减少高度，给道具栏留空间 */
             z-index: 100;
             touch-action: none;
         }
