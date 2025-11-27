@@ -157,6 +157,7 @@ export class ArenaEngine {
         this.artifact = null; // 法宝
         this.enemies = [];
         this.bullets = [];
+        this.minions = [];    // 召唤物
         this.particles = [];
         this.texts = [];
         this.coins = [];
@@ -324,6 +325,9 @@ export class ArenaEngine {
         // 更新敌人
         this.enemies.forEach(e => e.update(dt, this.player));
         
+        // 更新召唤物
+        this.minions.forEach(m => m.update(dt));
+        
         // 更新子弹
         this.bullets.forEach(b => b.update(dt));
         
@@ -344,6 +348,7 @@ export class ArenaEngine {
         
         // 清理死亡实体
         this.enemies = this.enemies.filter(e => !e.dead);
+        this.minions = this.minions.filter(m => !m.dead);
         this.bullets = this.bullets.filter(b => !b.dead);
         this.particles = this.particles.filter(p => !p.dead);
         this.texts = this.texts.filter(t => !t.dead);
@@ -861,6 +866,9 @@ export class ArenaEngine {
         if (this.player) {
             this.player.draw(ctx, ASSETS);
         }
+        
+        // 绘制傀儡（幽冥涧召唤物）
+        this.minions.forEach(m => m.draw(ctx));
         
         // 绘制法宝
         if (this.artifact) {

@@ -1,6 +1,6 @@
 import { STAGES, ARTIFACTS } from './data.js';
 import { loadAssets } from './assets.js';
-import { Player, Enemy, FloatText, Chest, StaticObject, Particle, Artifact, Beam, Footprint } from './entities.js';
+import { Player, Enemy, FloatText, Chest, StaticObject, Particle, Artifact, Beam, Footprint, Puppet } from './entities.js';
 import { generateStagePattern } from './map.js';
 import { WeatherSystem } from './weather.js';
 import { collisionManager } from './spatial-hash.js';
@@ -22,6 +22,7 @@ export class GameEngine {
         this.artifact = null;
         this.enemies = []; this.bullets = []; this.particles = []; this.orbs = []; this.texts = []; this.chests = []; this.staticObjects = [];
         this.footprints = [];
+        this.minions = []; // 幽冥涧傀儡
         this.edgeDecorations = [];
         this.camera = { x: 0, y: 0 };
         this.bgPattern = null;
@@ -49,6 +50,7 @@ export class GameEngine {
         
         this.enemies=[]; this.bullets=[]; this.particles=[]; this.orbs=[]; this.texts=[]; this.chests=[]; this.staticObjects=[];
         this.footprints = [];
+        this.minions = []; // 重置傀儡
         
         this.stageIdx = stageIdx;
         this.playTime = STAGES[stageIdx].time;
@@ -150,9 +152,11 @@ export class GameEngine {
         this.texts.forEach(t => t.update(dt));
         this.chests.forEach(c => c.update(dt, this.player));
         this.footprints.forEach(f => f.update(dt));
+        this.minions.forEach(m => m.update(dt)); // 更新傀儡
         
         this.enemies = this.enemies.filter(e => !e.dead);
         this.bullets = this.bullets.filter(b => !b.dead);
+        this.minions = this.minions.filter(m => !m.dead); // 清理死亡傀儡
         this.particles = this.particles.filter(p => !p.dead);
         this.orbs = this.orbs.filter(o => !o.dead);
         this.texts = this.texts.filter(t => !t.dead);
@@ -789,6 +793,7 @@ export class GameEngine {
         drawBillboard(this.orbs);
         drawBillboard(this.chests);
         drawBillboard(this.enemies);
+        drawBillboard(this.minions); // 绘制傀儡
         
         const py = this.player.y;
         this.player.y *= tilt;

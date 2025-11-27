@@ -10,12 +10,13 @@ export const Assets = {};
 const USE_PNG_PLAYERS = true;
 
 // PNG 角色图片映射
+// 注意：文件名使用 URL 编码以避免中文乱码问题
 const PNG_PLAYERS = {
-    'player_sword': 'img/player/天剑宗角色_透明图.png',
-    'player_mage': 'img/player/玄元道_透明图.png',
-    'player_body': 'img/player/荒古门角色_透明图.png',
-    'player_ghost': 'img/player/幽冥涧角色_透明图.png',
-    'player_formation': 'img/player/天机阁_透明图.png'
+    'player_sword': 'img/player/' + encodeURIComponent('天剑宗角色_透明图') + '.png',
+    'player_mage': 'img/player/' + encodeURIComponent('玄元道_透明图') + '.png',
+    'player_body': 'img/player/' + encodeURIComponent('荒古门角色_透明图') + '.png',
+    'player_ghost': 'img/player/' + encodeURIComponent('幽冥涧角色_透明图') + '.png',
+    'player_formation': 'img/player/' + encodeURIComponent('天机阁_透明图') + '.png'
 };
 
 export function loadAssets() {

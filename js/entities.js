@@ -116,6 +116,22 @@ export class Player extends Entity {
              return;
         }
 
+        // 幽冥涧召唤逻辑
+        if (this.role.id === 'ghost') {
+            // 检查当前傀儡数量
+            const currentPuppets = window.Game.minions.filter(m => m instanceof Puppet && m.owner === this).length;
+            const maxPuppets = this.stats.count || 1;
+            
+            if (currentPuppets < maxPuppets) {
+                window.Game.minions.push(new Puppet(this.x + (Math.random()-0.5)*40, this.y + (Math.random()-0.5)*40, this, this.stats));
+            } else {
+                // 傀儡满时，给傀儡回血或强化？或者发射普通子弹？
+                // 暂时发射普通幽灵弹
+                window.Game.bullets.push(new Bullet(this.x, this.y, t, this.stats));
+            }
+            return;
+        }
+
         for(let i=0; i<this.stats.count; i++) {
             setTimeout(() => {
                 if (this.stats.thunderProb > 0 && Math.random() < this.stats.thunderProb) {
@@ -1270,7 +1286,102 @@ export class Beam extends Entity {
     }
 }
 
-export class Lightning {
+export class Puppet extends Entity {
+    constructor(x, y, owner, stats) {
+        super(x, y);
+        this.owner = owner;
+        this.stats = stats;
+        this.life = (stats.bulletLife || 5) * 2; // 存在时间比子弹长
+        this.speed = (stats.bulletSpeed || 150) * 0.5; // 移动速度
+        this.dmg = stats.dmg || 10;
+        this.dead = false;
+        this.target = null;
+        this.attackTimer = 0;
+        this.attackInterval = 0.5; // 攻击间隔
+    }
+
+    update(dt) {
+        this.life -= dt;
+        if (this.life <= 0) {
+            this.dead = true;
+            return;
+        }
+
+        // 寻找目标
+        if (!this.target || this.target.dead || this.dist(this.target) > 400) {
+            this.target = collisionManager.findNearestEnemy(this.x, this.y, 400);
+        }
+
+        if (this.target) {
+            // 追击
+            const angle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
+            this.x += Math.cos(angle) * this.speed * dt;
+            this.y += Math.sin(angle) * this.speed * dt;
+
+            // 攻击
+            if (this.dist(this.target) < 30) {
+                if (this.attackTimer <= 0) {
+                    this.target.takeDamage(this.dmg, Math.cos(angle), Math.sin(angle), 'ghost');
+                    this.attackTimer = this.attackInterval;
+                    // 攻击特效
+                    window.Game.particles.push(new Particle(this.target.x, this.target.y, '#4a148c', 0.5, 5));
+                }
+            }
+        } else {
+            // 跟随主人
+            const distToOwner = this.dist(this.owner);
+            if (distToOwner > 80) {
+                const angle = Math.atan2(this.owner.y - this.y, this.owner.x - this.x);
+                this.x += Math.cos(angle) * this.speed * 1.5 * dt;
+                this.y += Math.sin(angle) * this.speed * 1.5 * dt;
+            }
+        }
+
+        if (this.attackTimer > 0) this.attackTimer -= dt;
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        // 幽灵浮动效果
+        const floatY = Math.sin(window.Game.playTime * 5) * 5;
+        ctx.translate(0, floatY);
+
+        // 绘制幽灵
+        ctx.globalAlpha = 0.7;
+        
+        // 身体
+        ctx.fillStyle = '#4a148c';
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, Math.PI, 0); // 上半圆
+        ctx.lineTo(10, 15);
+        ctx.lineTo(5, 10);
+        ctx.lineTo(0, 15);
+        ctx.lineTo(-5, 10);
+        ctx.lineTo(-10, 15);
+        ctx.closePath();
+        ctx.fill();
+
+        // 眼睛
+        ctx.fillStyle = '#00e5ff';
+        ctx.beginPath();
+        ctx.arc(-4, -2, 2, 0, Math.PI * 2);
+        ctx.arc(4, -2, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 光环
+        ctx.strokeStyle = '#7c43bd';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 15 + Math.sin(window.Game.playTime * 10) * 2, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+}
+
+export class Lightning extends Entity {
     constructor(x1, y1, x2, y2) {
         this.path = [];
         this.life = 0.2; 
