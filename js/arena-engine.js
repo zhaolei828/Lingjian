@@ -4,6 +4,7 @@ import { Player, Enemy, FloatText, Particle } from './entities.js';
 import { generateBloodArenaPattern } from './map.js';
 import { Coin } from './coin.js';
 import { ItemCardManager } from './item-card.js';
+import { Config, isMobile, limitArray, isInView, perfMonitor } from './performance.js';
 
 // 血煞秘境专属敌人类
 class ArenaEnemy extends Enemy {
@@ -198,8 +199,14 @@ export class ArenaEngine {
     }
     
     loop(now) {
+        // 帧率监控
+        perfMonitor.tick();
+        
         let dt = Math.min((now - this.lastTime) / 1000, 0.1);
         this.lastTime = now;
+        
+        // 移动端帧率限制（可选，默认不启用以保持流畅）
+        // if (isMobile && dt < 1/Config.targetFPS) return requestAnimationFrame(t => this.loop(t));
         
         if (this.freezeTimer > 0) {
             this.freezeTimer -= dt;
@@ -209,6 +216,11 @@ export class ArenaEngine {
         if (this.state === 'PLAY') {
             this.update(dt);
         }
+        
+        // 更新性能监控数据
+        perfMonitor.metrics.particles = this.particles.length;
+        perfMonitor.metrics.bullets = this.bullets.length;
+        perfMonitor.metrics.enemies = this.enemies.length;
         
         this.draw();
         requestAnimationFrame(t => this.loop(t));
@@ -269,6 +281,11 @@ export class ArenaEngine {
         this.particles = this.particles.filter(p => !p.dead);
         this.texts = this.texts.filter(t => !t.dead);
         this.coins = this.coins.filter(c => !c.dead);
+        
+        // 性能优化：限制实体数量（移动端）
+        limitArray(this.particles, Config.maxParticles);
+        limitArray(this.bullets, Config.maxBullets);
+        limitArray(this.texts, Config.maxTexts);
         
         // 检查波次完成
         this.checkWaveComplete();

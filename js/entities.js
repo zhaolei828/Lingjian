@@ -897,17 +897,16 @@ export class Artifact extends Entity {
     
     // ========== 定海神珠 - 敌人减速光环 ==========
     updateDinghaiZhu(dt, player) {
-        const slowRadius = 200;
-        const slowAmount = 0.3;
+        const slowRadius = 120; // 与绘制范围保持一致
         
         for (const e of window.Game.enemies) {
             if (e.dead) continue;
             const d = this.dist(e);
             if (d < slowRadius) {
                 e.slowTimer = 0.2;
-                // 偶尔显示减速粒子
-                if (Math.random() < dt * 2) {
-                    window.Game.particles.push(new Particle(e.x, e.y, '#2196f3', 0.3, 3));
+                // 偶尔显示减速粒子（降低频率）
+                if (Math.random() < dt) {
+                    window.Game.particles.push(new Particle(e.x, e.y, '#2196f3', 0.2, 2));
                 }
             }
         }
@@ -1119,49 +1118,51 @@ export class Artifact extends Entity {
     
     // 定海神珠绘制
     drawDinghaiZhu(ctx, img) {
+        const radius = 120; // 光环半径（从200减小到120）
+        
         // 减速光环
-        ctx.globalAlpha = 0.1 + Math.sin(window.Game.playTime * 3) * 0.05;
+        ctx.globalAlpha = 0.08 + Math.sin(window.Game.playTime * 3) * 0.03;
         ctx.fillStyle = '#2196f3';
         ctx.beginPath();
-        ctx.arc(0, 0, 200, 0, Math.PI * 2);
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
         ctx.fill();
         
-        ctx.globalAlpha = 0.3;
+        ctx.globalAlpha = 0.25;
         ctx.strokeStyle = '#2196f3';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([10, 5]);
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
         ctx.beginPath();
-        ctx.arc(0, 0, 200, 0, Math.PI * 2);
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
         ctx.globalAlpha = 1;
         
-        // 悬浮的神珠
-        const hover = Math.sin(window.Game.playTime * 2) * 10;
-        ctx.translate(0, -50 + hover);
+        // 悬浮的神珠（移到角色旁边）
+        const hover = Math.sin(window.Game.playTime * 2) * 6;
+        ctx.translate(45, -50 + hover);
         
         // 珠子光晕
         ctx.fillStyle = '#2196f3';
-        ctx.globalAlpha = 0.5;
+        ctx.globalAlpha = 0.4;
         ctx.beginPath();
-        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+        ctx.arc(0, 0, 14, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
         
         // 珠子
-        const grad = ctx.createRadialGradient(-5, -5, 0, 0, 0, 20);
+        const grad = ctx.createRadialGradient(-3, -3, 0, 0, 0, 14);
         grad.addColorStop(0, '#e1f5fe');
         grad.addColorStop(0.5, '#2196f3');
         grad.addColorStop(1, '#0d47a1');
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.arc(0, 0, 12, 0, Math.PI * 2);
         ctx.fill();
         
         // 高光
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.beginPath();
-        ctx.arc(-6, -6, 5, 0, Math.PI * 2);
+        ctx.arc(-4, -4, 3, 0, Math.PI * 2);
         ctx.fill();
     }
     
