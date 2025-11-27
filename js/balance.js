@@ -21,10 +21,12 @@ const ENEMIES = [
 const BALANCE_CONFIG = {
     // 权重配置（用于计算综合评分）
     WEIGHTS: {
-        dps: 0.35,           // DPS权重
-        survival: 0.30,      // 生存能力权重
-        aoe: 0.20,           // 范围清场权重
-        mobility: 0.15       // 机动性权重
+        dps: 0.30,           // DPS权重
+        survival: 0.25,      // 生存能力权重
+        aoe: 0.15,           // 范围清场权重
+        mobility: 0.10,      // 机动性权重
+        skillPotential: 0.10,// 技能潜力权重
+        artifactSynergy: 0.10// 法宝契合度权重
     },
     
     // 平衡阈值
@@ -65,6 +67,12 @@ export class RoleAnalyzer {
      * 分析单个角色
      */
     analyzeRole(role) {
+        // 计算技能潜力
+        const skillAnalysis = this.analyzeSkills(role);
+        
+        // 计算法宝契合度
+        const artifactAnalysis = this.analyzeArtifactSynergy(role);
+        
         const stats = {
             id: role.id,
             name: role.name,
@@ -83,19 +91,26 @@ export class RoleAnalyzer {
             mobility: this.calculateMobility(role),
             
             // 技能分析
-            skillBonus: this.analyzeSkills(role),
+            skillPotential: skillAnalysis.potential,
+            skillDetails: skillAnalysis.details,
+            
+            // 法宝契合度
+            artifactSynergy: artifactAnalysis.synergy,
+            bestArtifacts: artifactAnalysis.bestArtifacts,
             
             // 综合评分（初始化，后续计算）
             score: 0,
             normalizedScore: 0
         };
         
-        // 计算原始综合评分
+        // 计算原始综合评分（加入技能和法宝权重）
         stats.rawScore = 
             stats.dps * BALANCE_CONFIG.WEIGHTS.dps +
             stats.survival * BALANCE_CONFIG.WEIGHTS.survival +
             stats.aoe * BALANCE_CONFIG.WEIGHTS.aoe +
-            stats.mobility * BALANCE_CONFIG.WEIGHTS.mobility;
+            stats.mobility * BALANCE_CONFIG.WEIGHTS.mobility +
+            stats.skillPotential * BALANCE_CONFIG.WEIGHTS.skillPotential +
+            stats.artifactSynergy * BALANCE_CONFIG.WEIGHTS.artifactSynergy;
             
         return stats;
     }
@@ -195,21 +210,233 @@ export class RoleAnalyzer {
     }
     
     /**
-     * 分析角色可用技能
+     * 分析角色可用技能（深度分析）
      */
     analyzeSkills(role) {
-        // 如果有 SKILLS 数据，分析角色专属技能
-        if (!SKILLS || !SKILLS[role.id]) {
-            return 1.0;
+        const result = {
+            potential: 50, // 基础潜力值
+            details: []
+        };
+        
+        // 通用技能分析
+        const commonSkills = SKILLS?.common || [];
+        const roleSkills = SKILLS?.[role.id] || [];
+        const allSkills = [...commonSkills, ...roleSkills];
+        
+        if (allSkills.length === 0) {
+            return result;
         }
         
-        const skills = SKILLS[role.id];
-        let bonus = 1.0;
+        // 分析每个技能的价值
+        let totalValue = 0;
         
-        // 根据技能数量和效果计算加成
-        bonus += skills.length * 0.05;
+        for (const skill of allSkills) {
+            const value = this.evaluateSkillValue(skill, role);
+            totalValue += value;
+            result.details.push({
+                name: skill.name,
+                desc: skill.desc,
+                value: Math.round(value)
+            });
+        }
         
-        return bonus;
+        // 技能潜力 = 基础值 + 技能总价值
+        result.potential = 50 + totalValue;
+        
+        // 排序：最有价值的技能在前
+        result.details.sort((a, b) => b.value - a.value);
+        
+        return result;
+    }
+    
+    /**
+     * 评估单个技能的价值
+     */
+    evaluateSkillValue(skill, role) {
+        let value = 10; // 基础价值
+        
+        const desc = skill.desc.toLowerCase();
+        
+        // DPS 相关技能
+        if (desc.includes('伤害') || desc.includes('攻击')) {
+            value += 15;
+            // 对低伤害角色更有价值
+            if (role.dmg < 15) value += 5;
+        }
+        
+        // 数量/穿透技能（AOE 提升）
+        if (desc.includes('数量') || desc.includes('穿透')) {
+            value += 20;
+            // 对 AOE 型角色更有价值
+            if (role.id === 'formation' || role.id === 'mage') value += 10;
+        }
+        
+        // 攻速技能
+        if (desc.includes('攻速') || desc.includes('施法速度')) {
+            value += 15;
+        }
+        
+        // 范围技能
+        if (desc.includes('范围') || desc.includes('阵法')) {
+            value += 12;
+        }
+        
+        // 移速技能
+        if (desc.includes('移动速度') || desc.includes('移速')) {
+            value += 8;
+            // 对慢速角色更有价值
+            if ((role.speed || role.spd || 150) < 150) value += 5;
+        }
+        
+        // 召唤物相关（幽冥涧专属）
+        if (desc.includes('召唤') || desc.includes('存在时间')) {
+            value += 18;
+            if (role.id === 'ghost') value += 10;
+        }
+        
+        // 控制技能
+        if (desc.includes('减速') || desc.includes('击退') || desc.includes('眩晕')) {
+            value += 10;
+        }
+        
+        // 特殊效果
+        if (desc.includes('%') && desc.includes('几率')) {
+            value += 12; // 概率触发效果
+        }
+        
+        return value;
+    }
+    
+    /**
+     * 分析角色与法宝的契合度
+     */
+    analyzeArtifactSynergy(role) {
+        const result = {
+            synergy: 50, // 基础契合度
+            bestArtifacts: [],
+            allSynergies: []
+        };
+        
+        if (!ARTIFACTS || ARTIFACTS.length === 0) {
+            return result;
+        }
+        
+        // 分析每个法宝与角色的契合度
+        for (const artifact of ARTIFACTS) {
+            const synergy = this.calculateArtifactSynergy(artifact, role);
+            result.allSynergies.push({
+                id: artifact.id,
+                name: artifact.name,
+                type: artifact.type,
+                synergy: synergy,
+                reason: this.getSynergyReason(artifact, role)
+            });
+        }
+        
+        // 排序找出最佳法宝
+        result.allSynergies.sort((a, b) => b.synergy - a.synergy);
+        result.bestArtifacts = result.allSynergies.slice(0, 3);
+        
+        // 计算平均契合度（取最佳3个的平均值作为角色的法宝潜力）
+        const topSynergies = result.allSynergies.slice(0, 3);
+        result.synergy = topSynergies.reduce((sum, a) => sum + a.synergy, 0) / topSynergies.length;
+        
+        return result;
+    }
+    
+    /**
+     * 计算单个法宝与角色的契合度
+     */
+    calculateArtifactSynergy(artifact, role) {
+        let synergy = 50; // 基础契合度
+        
+        // 根据法宝类型和角色特点计算契合度
+        switch (artifact.type) {
+            case 'attack':
+                // 攻击型法宝 - 与低伤害角色更契合
+                if (role.dmg < 15) synergy += 20;
+                if (role.id === 'sword') synergy += 15; // 天剑宗 + 攻击
+                if (artifact.id === 'jinjiao_jian' && role.id === 'formation') synergy += 25; // 穿透加成
+                break;
+                
+            case 'defense':
+                // 防御型法宝 - 与低血量角色更契合
+                if (role.hp < 100) synergy += 25;
+                if (role.id === 'mage') synergy += 20; // 玄元道脆皮需要防御
+                if (role.id === 'body') synergy -= 10; // 荒古门已经很肉
+                break;
+                
+            case 'speed':
+                // 移速型法宝 - 与慢速角色更契合
+                const speed = role.speed || role.spd || 150;
+                if (speed < 150) synergy += 20;
+                if (role.id === 'body') synergy += 15; // 荒古门需要机动性
+                break;
+                
+            case 'control':
+                // 控制型法宝 - 与 AOE 角色更契合
+                if (role.id === 'mage' || role.id === 'formation') synergy += 20;
+                break;
+                
+            case 'utility':
+                // 收益型法宝 - 通用契合
+                synergy += 10;
+                break;
+                
+            case 'special':
+                // 特效型法宝 - 根据具体效果判断
+                if (artifact.id === 'fantian') {
+                    // 虚天鼎 - 与近战角色更契合
+                    if (role.id === 'body') synergy += 25;
+                }
+                if (artifact.id === 'gourd') {
+                    // 玄天斩灵 - 通用
+                    synergy += 15;
+                }
+                if (artifact.id === 'mirror') {
+                    // 乾蓝冰焰 - 与远程角色更契合
+                    if (role.id === 'mage' || role.id === 'formation') synergy += 20;
+                }
+                break;
+        }
+        
+        // 特殊组合加成
+        // 幽冥涧 + 诛仙剑阵 = 双重召唤
+        if (role.id === 'ghost' && artifact.id === 'zhuxian_array') {
+            synergy += 30;
+        }
+        
+        // 天机阁 + 定海神珠 = 控制叠加
+        if (role.id === 'formation' && artifact.id === 'dinghai_zhu') {
+            synergy += 25;
+        }
+        
+        return Math.min(100, Math.max(0, synergy));
+    }
+    
+    /**
+     * 获取契合度原因说明
+     */
+    getSynergyReason(artifact, role) {
+        const reasons = [];
+        
+        if (artifact.type === 'attack' && role.dmg < 15) {
+            reasons.push('弥补伤害不足');
+        }
+        if (artifact.type === 'defense' && role.hp < 100) {
+            reasons.push('提升生存能力');
+        }
+        if (artifact.type === 'speed' && (role.speed || role.spd || 150) < 150) {
+            reasons.push('提升机动性');
+        }
+        if (role.id === 'ghost' && artifact.id === 'zhuxian_array') {
+            reasons.push('双重召唤流');
+        }
+        if (role.id === 'formation' && artifact.id === 'dinghai_zhu') {
+            reasons.push('控制叠加');
+        }
+        
+        return reasons.length > 0 ? reasons.join('，') : '通用搭配';
     }
     
     /**
@@ -610,9 +837,19 @@ export class BalanceReporter {
         
         // 角色排名
         console.log('【角色评分排名】');
-        console.log('-'.repeat(40));
+        console.log('-'.repeat(60));
+        console.log('排名 | 角色     | 评分 | DPS | 生存 | 技能潜力 | 法宝契合');
+        console.log('-'.repeat(60));
         for (const role of report.roleBalance.ranking) {
-            console.log(`${role.rank}. ${role.name.padEnd(10)} | 评分: ${role.score.toString().padStart(4)} | DPS: ${role.dps.toString().padStart(3)} | 生存: ${role.survival.toString().padStart(4)}`);
+            console.log(
+                `${role.rank.toString().padStart(2)}   | ` +
+                `${role.name.padEnd(8)} | ` +
+                `${role.score.toString().padStart(4)} | ` +
+                `${role.dps.toString().padStart(3)} | ` +
+                `${role.survival.toString().padStart(4)} | ` +
+                `${Math.round(role.skillPotential).toString().padStart(8)} | ` +
+                `${Math.round(role.artifactSynergy).toString().padStart(8)}`
+            );
         }
         console.log('');
         
@@ -620,6 +857,34 @@ export class BalanceReporter {
         console.log(`【平衡状态】${report.roleBalance.status}`);
         console.log(`差异率: ${report.roleBalance.balanceRatio}`);
         console.log(`最强: ${report.roleBalance.strongest} | 最弱: ${report.roleBalance.weakest}`);
+        console.log('');
+        
+        // 技能分析
+        console.log('【技能潜力分析】');
+        console.log('-'.repeat(40));
+        for (const role of report.roleBalance.ranking) {
+            console.log(`\n${role.name}:`);
+            if (role.skillDetails && role.skillDetails.length > 0) {
+                for (const skill of role.skillDetails.slice(0, 3)) {
+                    console.log(`  ★ ${skill.name}: ${skill.desc} (价值: ${skill.value})`);
+                }
+            } else {
+                console.log('  无专属技能');
+            }
+        }
+        console.log('');
+        
+        // 法宝契合分析
+        console.log('【最佳法宝搭配】');
+        console.log('-'.repeat(40));
+        for (const role of report.roleBalance.ranking) {
+            console.log(`\n${role.name}:`);
+            if (role.bestArtifacts && role.bestArtifacts.length > 0) {
+                for (const artifact of role.bestArtifacts) {
+                    console.log(`  ◆ ${artifact.name} (契合度: ${Math.round(artifact.synergy)}) - ${artifact.reason}`);
+                }
+            }
+        }
         console.log('');
         
         // 建议

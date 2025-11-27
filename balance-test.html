@@ -161,6 +161,8 @@
         .stat-fill.survival { background: linear-gradient(90deg, #4caf50, #8bc34a); }
         .stat-fill.aoe { background: linear-gradient(90deg, #2196f3, #03a9f4); }
         .stat-fill.mobility { background: linear-gradient(90deg, #9c27b0, #e91e63); }
+        .stat-fill.skill { background: linear-gradient(90deg, #ff9800, #ffc107); }
+        .stat-fill.artifact { background: linear-gradient(90deg, #00bcd4, #4dd0e1); }
         
         .stat-value {
             width: 40px;
@@ -286,6 +288,20 @@
         </div>
         
         <div class="section">
+            <h2>⚔️ 技能潜力分析</h2>
+            <div class="role-grid" id="skill-grid">
+                <div class="loading">分析中...</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🏺 最佳法宝搭配</h2>
+            <div class="role-grid" id="artifact-grid">
+                <div class="loading">分析中...</div>
+            </div>
+        </div>
+        
+        <div class="section">
             <h2>💡 平衡性建议</h2>
             <ul class="suggestion-list" id="suggestion-list">
                 <div class="loading">分析中...</div>
@@ -314,6 +330,12 @@
                 
                 // 绘制雷达图
                 drawRadarChart(report.roleBalance.ranking);
+                
+                // 更新技能分析
+                updateSkillGrid(report.roleBalance.ranking);
+                
+                // 更新法宝搭配
+                updateArtifactGrid(report.roleBalance.ranking);
                 
                 // 更新建议列表
                 updateSuggestions(report.roleBalance.suggestions);
@@ -354,6 +376,10 @@
             const maxAoe = Math.max(...ranking.map(r => r.aoe));
             const maxMobility = Math.max(...ranking.map(r => r.mobility));
             
+            // 计算技能和法宝最大值
+            const maxSkill = Math.max(...ranking.map(r => r.skillPotential || 50));
+            const maxArtifact = Math.max(...ranking.map(r => r.artifactSynergy || 50));
+            
             grid.innerHTML = ranking.map(role => `
                 <div class="role-card">
                     <div class="role-header">
@@ -391,6 +417,68 @@
                             </div>
                             <div class="stat-value">${role.mobility}</div>
                         </div>
+                        <div class="stat-row">
+                            <div class="stat-label">技能</div>
+                            <div class="stat-bar">
+                                <div class="stat-fill skill" style="width: ${((role.skillPotential || 50) / maxSkill * 100).toFixed(0)}%"></div>
+                            </div>
+                            <div class="stat-value">${Math.round(role.skillPotential || 50)}</div>
+                        </div>
+                        <div class="stat-row">
+                            <div class="stat-label">法宝</div>
+                            <div class="stat-bar">
+                                <div class="stat-fill artifact" style="width: ${((role.artifactSynergy || 50) / maxArtifact * 100).toFixed(0)}%"></div>
+                            </div>
+                            <div class="stat-value">${Math.round(role.artifactSynergy || 50)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateSkillGrid(ranking) {
+            const grid = document.getElementById('skill-grid');
+            
+            grid.innerHTML = ranking.map(role => `
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-name">${role.name}</div>
+                        <div style="color: #ff9800; font-weight: bold;">技能潜力: ${Math.round(role.skillPotential || 50)}</div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        ${(role.skillDetails || []).slice(0, 4).map(skill => `
+                            <div style="display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 5px; margin-bottom: 5px;">
+                                <div>
+                                    <div style="font-weight: bold; color: #4fc3f7;">${skill.name}</div>
+                                    <div style="font-size: 0.8rem; color: #888;">${skill.desc}</div>
+                                </div>
+                                <div style="color: #ff9800; font-weight: bold;">${skill.value}</div>
+                            </div>
+                        `).join('') || '<div style="color: #666; text-align: center; padding: 20px;">无专属技能</div>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateArtifactGrid(ranking) {
+            const grid = document.getElementById('artifact-grid');
+            
+            grid.innerHTML = ranking.map(role => `
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-name">${role.name}</div>
+                        <div style="color: #00bcd4; font-weight: bold;">法宝契合: ${Math.round(role.artifactSynergy || 50)}</div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        ${(role.bestArtifacts || []).map((artifact, i) => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 5px; margin-bottom: 5px; border-left: 3px solid ${i === 0 ? '#ffd700' : i === 1 ? '#c0c0c0' : '#cd7f32'};">
+                                <div>
+                                    <div style="font-weight: bold; color: #4fc3f7;">${artifact.name}</div>
+                                    <div style="font-size: 0.8rem; color: #888;">${artifact.reason}</div>
+                                </div>
+                                <div style="color: #00bcd4; font-weight: bold;">${Math.round(artifact.synergy)}</div>
+                            </div>
+                        `).join('') || '<div style="color: #666; text-align: center; padding: 20px;">无数据</div>'}
                     </div>
                 </div>
             `).join('');
@@ -423,8 +511,8 @@
             // 清空画布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 属性标签
-            const labels = ['DPS', '生存', 'AOE', '机动'];
+            // 属性标签（加入技能和法宝）
+            const labels = ['DPS', '生存', 'AOE', '机动', '技能', '法宝'];
             const angles = labels.map((_, i) => (Math.PI * 2 * i / labels.length) - Math.PI / 2);
             
             // 绘制网格
@@ -465,11 +553,13 @@
                 ctx.fillText(label, x, y);
             });
             
-            // 计算最大值
+            // 计算最大值（加入技能和法宝）
             const maxDps = Math.max(...ranking.map(r => r.dps));
             const maxSurvival = Math.max(...ranking.map(r => r.survival));
             const maxAoe = Math.max(...ranking.map(r => r.aoe));
             const maxMobility = Math.max(...ranking.map(r => r.mobility));
+            const maxSkill = Math.max(...ranking.map(r => r.skillPotential || 50));
+            const maxArtifact = Math.max(...ranking.map(r => r.artifactSynergy || 50));
             
             // 颜色数组
             const colors = [
@@ -486,7 +576,9 @@
                     role.dps / maxDps,
                     role.survival / maxSurvival,
                     role.aoe / maxAoe,
-                    role.mobility / maxMobility
+                    role.mobility / maxMobility,
+                    (role.skillPotential || 50) / maxSkill,
+                    (role.artifactSynergy || 50) / maxArtifact
                 ];
                 
                 ctx.beginPath();
