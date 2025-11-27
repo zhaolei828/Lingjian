@@ -782,7 +782,14 @@ export class GameEngine {
         const py = this.player.y;
         this.player.y *= tilt;
         this.player.draw(ctx);
-        if (this.artifact) this.artifact.draw(ctx);
+        
+        // 法宝也需要应用相同的伪3D缩放
+        if (this.artifact) {
+            const ay = this.artifact.y;
+            this.artifact.y *= tilt;
+            this.artifact.draw(ctx);
+            this.artifact.y = ay;
+        }
         
         this.player.y = py;
         

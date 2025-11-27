@@ -969,13 +969,19 @@ export class Artifact extends Entity {
                 this.drawDinghaiZhu(ctx, img);
                 break;
                 
+            case 'fantian':
+                // 虚天鼎 - 显示CD进度
+                this.drawFantian(ctx, img);
+                break;
+                
+            case 'gourd':
+                // 玄天斩灵 - 显示CD进度
+                this.drawGourd(ctx, img);
+                break;
+                
             default:
-                // 默认绘制（悬浮在玩家旁边）
-                if (img) {
-                    const hover = Math.sin(window.Game.playTime * 2) * 10;
-                    ctx.translate(40, -60 + hover);
-                    ctx.drawImage(img, -20, -20, 40, 40);
-                }
+                // 被动型法宝也显示悬浮图标
+                this.drawPassiveArtifact(ctx, img);
                 break;
         }
         
@@ -1157,6 +1163,82 @@ export class Artifact extends Entity {
         ctx.beginPath();
         ctx.arc(-6, -6, 5, 0, Math.PI * 2);
         ctx.fill();
+    }
+    
+    // 虚天鼎绘制 - 显示CD进度环
+    drawFantian(ctx, img) {
+        const hover = Math.sin(window.Game.playTime * 2) * 8;
+        ctx.translate(45, -55 + hover);
+        
+        // CD进度环
+        if (this.maxCd > 0) {
+            const progress = 1 - (this.cd / this.maxCd);
+            ctx.strokeStyle = '#f1c40f';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, 22, -Math.PI/2, -Math.PI/2 + progress * Math.PI * 2);
+            ctx.stroke();
+        }
+        
+        // 鼎图标
+        if (img) {
+            ctx.drawImage(img, -18, -18, 36, 36);
+        }
+    }
+    
+    // 玄天斩灵绘制 - 葫芦带CD
+    drawGourd(ctx, img) {
+        const hover = Math.sin(window.Game.playTime * 2) * 8;
+        ctx.translate(45, -55 + hover);
+        
+        // CD进度环
+        if (this.maxCd > 0) {
+            const progress = 1 - (this.cd / this.maxCd);
+            ctx.strokeStyle = '#9c27b0';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, 22, -Math.PI/2, -Math.PI/2 + progress * Math.PI * 2);
+            ctx.stroke();
+        }
+        
+        // 葫芦图标
+        if (img) {
+            ctx.drawImage(img, -15, -20, 30, 40);
+        }
+    }
+    
+    // 被动型法宝绘制 - 半透明悬浮图标
+    drawPassiveArtifact(ctx, img) {
+        const hover = Math.sin(window.Game.playTime * 2) * 6;
+        ctx.translate(45, -50 + hover);
+        
+        // 半透明效果表示被动
+        ctx.globalAlpha = 0.7;
+        
+        // 光晕
+        ctx.fillStyle = this.getArtifactColor();
+        ctx.globalAlpha = 0.2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 0.7;
+        
+        // 图标
+        if (img) {
+            ctx.drawImage(img, -18, -18, 36, 36);
+        }
+        
+        ctx.globalAlpha = 1;
+    }
+    
+    // 获取法宝主题色
+    getArtifactColor() {
+        switch (this.id) {
+            case 'jinjiao_jian': return '#f1c40f';  // 金色
+            case 'xuanwu_dun': return '#4caf50';    // 绿色
+            case 'jubao_pen': return '#f39c12';     // 橙金色
+            default: return '#fff';
+        }
     }
 }
 

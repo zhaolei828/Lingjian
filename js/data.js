@@ -229,10 +229,108 @@ export const SVG_LIB = {
         <ellipse cx="83" cy="48" rx="4" ry="2" fill="#ffcdd2" opacity="0.5"/>
     </svg>`,
 
-    // Artifacts
-    fantian_seal: `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="60" height="60" fill="#f1c40f" stroke="#f39c12" stroke-width="4"/><path d="M10 10 L70 70 M70 10 L10 70" stroke="#e67e22" stroke-width="2"/><rect x="25" y="25" width="30" height="30" fill="#e74c3c" stroke="#c0392b" stroke-width="3"/><circle cx="40" cy="40" r="8" fill="#f1c40f"/></svg>`,
+    // ========== 法宝专属图标 ==========
+    // 诛仙剑阵 - 四剑交叉阵法
+    artifact_zhuxian: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="30" cy="30" r="28" fill="none" stroke="#00bcd4" stroke-width="2" stroke-dasharray="4,2"/>
+        <path d="M30 2 L30 58" stroke="#00bcd4" stroke-width="3"/>
+        <path d="M2 30 L58 30" stroke="#00bcd4" stroke-width="3"/>
+        <path d="M10 10 L50 50" stroke="#4dd0e1" stroke-width="2"/>
+        <path d="M50 10 L10 50" stroke="#4dd0e1" stroke-width="2"/>
+        <circle cx="30" cy="30" r="8" fill="#00bcd4"/>
+        <circle cx="30" cy="30" r="4" fill="#e0f7fa"/>
+    </svg>`,
+    
+    // 金蛟剪 - 金色交叉剪刀
+    artifact_jinjiao: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 5 L35 30 L15 55" fill="none" stroke="#f1c40f" stroke-width="4" stroke-linecap="round"/>
+        <path d="M45 5 L25 30 L45 55" fill="none" stroke="#f39c12" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="30" cy="30" r="6" fill="#f1c40f" stroke="#e67e22" stroke-width="2"/>
+        <circle cx="15" cy="5" r="4" fill="#f1c40f"/>
+        <circle cx="45" cy="5" r="4" fill="#f39c12"/>
+    </svg>`,
+    
+    // 玄武盾 - 龟壳盾牌
+    artifact_xuanwu: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <path d="M30 5 L55 20 L55 45 L30 58 L5 45 L5 20 Z" fill="#2e7d32" stroke="#1b5e20" stroke-width="2"/>
+        <path d="M30 15 L45 25 L45 40 L30 48 L15 40 L15 25 Z" fill="#388e3c" stroke="#2e7d32" stroke-width="1"/>
+        <path d="M30 25 L38 30 L38 38 L30 42 L22 38 L22 30 Z" fill="#4caf50"/>
+        <circle cx="30" cy="33" r="5" fill="#81c784"/>
+    </svg>`,
+    
+    // 乾坤圈 - 金色光环
+    artifact_qiankun: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="30" cy="30" r="25" fill="none" stroke="#f1c40f" stroke-width="6"/>
+        <circle cx="30" cy="30" r="20" fill="none" stroke="#f39c12" stroke-width="2"/>
+        <circle cx="30" cy="30" r="15" fill="none" stroke="#e67e22" stroke-width="1"/>
+        <circle cx="30" cy="5" r="3" fill="#fff"/>
+        <circle cx="30" cy="55" r="3" fill="#fff"/>
+        <circle cx="5" cy="30" r="3" fill="#fff"/>
+        <circle cx="55" cy="30" r="3" fill="#fff"/>
+    </svg>`,
+    
+    // 风火轮 - 火焰轮子
+    artifact_fenghuo: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="30" cy="30" r="20" fill="none" stroke="#ff5722" stroke-width="4"/>
+        <path d="M30 10 Q40 20 30 30 Q20 20 30 10" fill="#ff9800"/>
+        <path d="M50 30 Q40 40 30 30 Q40 20 50 30" fill="#ff5722"/>
+        <path d="M30 50 Q20 40 30 30 Q40 40 30 50" fill="#ff9800"/>
+        <path d="M10 30 Q20 20 30 30 Q20 40 10 30" fill="#ff5722"/>
+        <circle cx="30" cy="30" r="6" fill="#ffeb3b"/>
+    </svg>`,
+    
+    // 定海神珠 - 蓝色神珠
+    artifact_dinghai: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <defs><radialGradient id="pearl"><stop offset="0%" stop-color="#e3f2fd"/><stop offset="50%" stop-color="#2196f3"/><stop offset="100%" stop-color="#0d47a1"/></radialGradient></defs>
+        <circle cx="30" cy="30" r="25" fill="url(#pearl)"/>
+        <circle cx="22" cy="22" r="8" fill="rgba(255,255,255,0.6)"/>
+        <circle cx="30" cy="30" r="28" fill="none" stroke="#64b5f6" stroke-width="2" stroke-dasharray="8,4"/>
+    </svg>`,
+    
+    // 聚宝盆 - 金元宝盆
+    artifact_jubao: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="30" cy="45" rx="25" ry="12" fill="#8d6e63" stroke="#5d4037" stroke-width="2"/>
+        <path d="M5 45 Q5 25 30 20 Q55 25 55 45" fill="#a1887f" stroke="#5d4037" stroke-width="2"/>
+        <ellipse cx="30" cy="20" rx="12" ry="6" fill="#f1c40f" stroke="#f39c12" stroke-width="1"/>
+        <path d="M20 18 Q30 10 40 18" fill="#f1c40f" stroke="#e67e22" stroke-width="1"/>
+        <ellipse cx="22" cy="35" rx="6" ry="4" fill="#f1c40f"/>
+        <ellipse cx="38" cy="38" rx="5" ry="3" fill="#f39c12"/>
+    </svg>`,
+    
+    // 虚天鼎 - 三足青铜鼎
+    artifact_fantian: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 55 L20 35 L40 35 L45 55" fill="#8d6e63" stroke="#5d4037" stroke-width="2"/>
+        <rect x="18" y="20" width="24" height="15" fill="#a1887f" stroke="#5d4037" stroke-width="2"/>
+        <rect x="22" y="10" width="4" height="12" fill="#8d6e63"/>
+        <rect x="34" y="10" width="4" height="12" fill="#8d6e63"/>
+        <ellipse cx="30" cy="20" rx="12" ry="4" fill="#bcaaa4" stroke="#8d6e63"/>
+        <path d="M25 27 L35 27" stroke="#5d4037" stroke-width="2"/>
+        <circle cx="30" cy="5" r="4" fill="#ff5722"/>
+    </svg>`,
+    
+    // 乾蓝冰焰 - 冰火阴阳
+    artifact_mirror: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="30" cy="30" r="28" fill="#fff" stroke="#bdc3c7" stroke-width="2"/>
+        <path d="M30 2 A 28 28 0 0 1 30 58 A 14 14 0 0 1 30 30 A 14 14 0 0 0 30 2" fill="#2196f3"/>
+        <path d="M30 2 A 28 28 0 0 0 30 58 A 14 14 0 0 0 30 30 A 14 14 0 0 1 30 2" fill="#ff5722"/>
+        <circle cx="30" cy="16" r="4" fill="#ff5722"/>
+        <circle cx="30" cy="44" r="4" fill="#2196f3"/>
+    </svg>`,
+    
+    // 玄天斩灵 - 紫金葫芦
+    artifact_gourd: `<svg width="60" height="70" viewBox="0 0 60 70" xmlns="http://www.w3.org/2000/svg">
+        <path d="M30 70 C12 70 5 55 12 38 C16 30 24 28 26 20" fill="#9c27b0" stroke="#7b1fa2" stroke-width="2"/>
+        <path d="M30 70 C48 70 55 55 48 38 C44 30 36 28 34 20" fill="#9c27b0" stroke="#7b1fa2" stroke-width="2"/>
+        <ellipse cx="30" cy="12" rx="10" ry="12" fill="#ab47bc" stroke="#7b1fa2" stroke-width="2"/>
+        <rect x="28" y="0" width="4" height="6" fill="#f1c40f"/>
+        <path d="M22 0 L30 3 L38 0" fill="none" stroke="#f1c40f" stroke-width="2"/>
+        <ellipse cx="30" cy="45" rx="8" ry="10" fill="rgba(255,255,255,0.2)"/>
+    </svg>`,
+    
+    // 兼容旧代码
+    fantian_seal: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="8" width="44" height="44" fill="#f1c40f" stroke="#f39c12" stroke-width="3"/><path d="M8 8 L52 52 M52 8 L8 52" stroke="#e67e22" stroke-width="2"/><rect x="18" y="18" width="24" height="24" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/><circle cx="30" cy="30" r="6" fill="#f1c40f"/></svg>`,
     yinyang_mirror: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="28" fill="#fff" stroke="#bdc3c7" stroke-width="2"/><path d="M30 2 A 28 28 0 0 1 30 58 A 14 14 0 0 1 30 30 A 14 14 0 0 0 30 2" fill="#000"/><circle cx="30" cy="16" r="4" fill="#fff"/><circle cx="30" cy="44" r="4" fill="#000"/></svg>`,
-    slaying_gourd: `<svg width="60" height="80" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg"><path d="M30 80 C10 80 0 60 10 40 C15 30 25 30 25 20 L25 10 L35 10 L35 20 C35 30 45 30 50 40 C60 60 50 80 30 80" fill="#e67e22" stroke="#d35400" stroke-width="2"/><path d="M30 10 L30 0 L50 5" stroke="#fff" stroke-width="3"/></svg>`,
+    slaying_gourd: `<svg width="60" height="70" viewBox="0 0 60 70" xmlns="http://www.w3.org/2000/svg"><path d="M30 70 C10 70 0 50 10 35 C15 27 25 25 25 18 L25 10 L35 10 L35 18 C35 25 45 27 50 35 C60 50 50 70 30 70" fill="#e67e22" stroke="#d35400" stroke-width="2"/><path d="M30 10 L30 2 L45 5" stroke="#f1c40f" stroke-width="3"/></svg>`,
 
     sword: `<svg width="64" height="128" viewBox="0 0 64 128" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#00bcd4"/></linearGradient></defs><path d="M32 0 L22 20 L28 100 L36 100 L42 20 Z" fill="url(#sg)"/><rect x="20" y="90" width="24" height="6" fill="#f1c40f"/><circle cx="32" cy="110" r="4" fill="#f1c40f"/></svg>`,
     
@@ -740,21 +838,21 @@ export const ROLES = [
 
 export const ARTIFACTS = [
     // 攻击型
-    { id: 'zhuxian_array', name: '诛仙剑阵', desc: '4剑环绕自动攻击', type: 'attack', cd: 0, svg: 'fantian_seal' },
-    { id: 'jinjiao_jian', name: '金蛟剪', desc: '穿透+2，伤害+20%', type: 'attack', cd: 0, svg: 'slaying_gourd' },
+    { id: 'zhuxian_array', name: '诛仙剑阵', desc: '4剑环绕自动攻击', type: 'attack', cd: 0, svg: 'artifact_zhuxian' },
+    { id: 'jinjiao_jian', name: '金蛟剪', desc: '穿透+2，伤害+20%', type: 'attack', cd: 0, svg: 'artifact_jinjiao' },
     // 防御型
-    { id: 'xuanwu_dun', name: '玄武盾', desc: '减伤30%，反弹10%', type: 'defense', cd: 0, svg: 'fantian_seal' },
-    { id: 'qiankun_quan', name: '乾坤圈', desc: '结界击退敌人', type: 'defense', cd: 0, svg: 'yinyang_mirror' },
+    { id: 'xuanwu_dun', name: '玄武盾', desc: '减伤30%，反弹10%', type: 'defense', cd: 0, svg: 'artifact_xuanwu' },
+    { id: 'qiankun_quan', name: '乾坤圈', desc: '结界击退敌人', type: 'defense', cd: 0, svg: 'artifact_qiankun' },
     // 移速型
-    { id: 'fenghuo_lun', name: '风火轮', desc: '移速+50%，火焰轨迹', type: 'speed', cd: 0, svg: 'yinyang_mirror' },
+    { id: 'fenghuo_lun', name: '风火轮', desc: '移速+50%，火焰轨迹', type: 'speed', cd: 0, svg: 'artifact_fenghuo' },
     // 控制型
-    { id: 'dinghai_zhu', name: '定海神珠', desc: '敌人减速30%光环', type: 'control', cd: 0, svg: 'fantian_seal' },
+    { id: 'dinghai_zhu', name: '定海神珠', desc: '敌人减速30%光环', type: 'control', cd: 0, svg: 'artifact_dinghai' },
     // 收益型
-    { id: 'jubao_pen', name: '聚宝盆', desc: '掉落+50%，拾取+100%', type: 'utility', cd: 0, svg: 'slaying_gourd' },
-    // 特效型（原有）
-    { id: 'fantian', name: '虚天鼎', desc: '每10秒震晕全场', type: 'special', cd: 10, svg: 'fantian_seal' },
-    { id: 'mirror', name: '乾蓝冰焰', desc: '前方烧后方冻', type: 'special', cd: 0, svg: 'yinyang_mirror' },
-    { id: 'gourd', name: '玄天斩灵', desc: '每5秒斩杀精英', type: 'special', cd: 5, svg: 'slaying_gourd' }
+    { id: 'jubao_pen', name: '聚宝盆', desc: '掉落+50%，拾取+100%', type: 'utility', cd: 0, svg: 'artifact_jubao' },
+    // 特效型
+    { id: 'fantian', name: '虚天鼎', desc: '每10秒震晕全场', type: 'special', cd: 10, svg: 'artifact_fantian' },
+    { id: 'mirror', name: '乾蓝冰焰', desc: '前方烧后方冻', type: 'special', cd: 0, svg: 'artifact_mirror' },
+    { id: 'gourd', name: '玄天斩灵', desc: '每5秒斩杀精英', type: 'special', cd: 5, svg: 'artifact_gourd' }
 ];
 
 export const STAGES = [
