@@ -1,6 +1,6 @@
-import { ARENA_CONFIG, ARENA_MOBS, ARENA_BOSSES, ITEM_CARDS, SVG_LIB } from './data.js';
+import { ARENA_CONFIG, ARENA_MOBS, ARENA_BOSSES, ITEM_CARDS, SVG_LIB, ARTIFACTS, SKILLS } from './data.js';
 import { loadAssets, Assets as ASSETS } from './assets.js';
-import { Player, Enemy, FloatText, Particle } from './entities.js';
+import { Player, Enemy, FloatText, Particle, Artifact } from './entities.js';
 import { generateBloodArenaPattern } from './map.js';
 import { Coin } from './coin.js';
 import { ItemCardManager } from './item-card.js';
@@ -154,6 +154,7 @@ export class ArenaEngine {
         
         // 实体
         this.player = null;
+        this.artifact = null; // 法宝
         this.enemies = [];
         this.bullets = [];
         this.particles = [];
@@ -164,6 +165,10 @@ export class ArenaEngine {
         this.score = 0;       // 兼容 Enemy.takeDamage
         this.footprints = []; // 兼容 Player.update
         this.stageIdx = 0;    // 兼容各种检查
+        
+        // 技能选择状态
+        this.pendingSkillChoice = false;
+        this.availableSkills = [];
         
         // 触屏控制（供 Player.update 使用）
         this.touch = { active: false, dx: 0, dy: 0 };
@@ -210,6 +215,10 @@ export class ArenaEngine {
         this.player.x = 0;
         this.player.y = 0;
         
+        // 随机法宝
+        const randArtifact = ARTIFACTS[Math.floor(Math.random() * ARTIFACTS.length)];
+        this.artifact = new Artifact(randArtifact.id);
+        
         // 重置状态
         this.enemies = [];
         this.bullets = [];
@@ -224,6 +233,7 @@ export class ArenaEngine {
         this.showingBossIntro = false;
         this.bossCountdown = 0;
         this.currentBoss = null;
+        this.pendingSkillChoice = false;
         
         this.itemCards.reset();
         
@@ -237,10 +247,14 @@ export class ArenaEngine {
         this.bgPattern = this.ctx.createPattern(generateBloodArenaPattern(), 'repeat');
         
         this.updateUI();
-        this.showWaveTitle('血色秘境', '妖兽试炼开始');
+        
+        // 显示法宝信息
+        const artifactName = this.artifact?.data?.name || '神秘法宝';
+        this.showWaveTitle('血色秘境', `携带法宝：${artifactName}`);
+        this.texts.push(new FloatText(0, -100, `🔮 ${artifactName}`, '#9b59b6'));
         
         // 延迟开始第一波
-        setTimeout(() => this.startNextWave(), 2000);
+        setTimeout(() => this.startNextWave(), 2500);
     }
     
     loop(now) {
@@ -286,6 +300,11 @@ export class ArenaEngine {
         
         // 更新玩家（包括自动攻击）
         this.player.update(dt);
+        
+        // 更新法宝
+        if (this.artifact) {
+            this.artifact.update(dt, this.player);
+        }
         
         // 限制玩家在场地内
         const R = 550;
@@ -556,13 +575,85 @@ export class ArenaEngine {
     checkWaveComplete() {
         if (this.waveCleared) return;
         if (this.showingBossIntro) return;
+        if (this.pendingSkillChoice) return;
         
         if (this.enemies.length === 0) {
             this.waveCleared = true;
             
-            // 延迟开始下一波
-            setTimeout(() => this.startNextWave(), 1000);
+            // 波次完成，显示技能选择（最后一波除外）
+            if (this.currentWave < ARENA_CONFIG.waves.length) {
+                this.showSkillChoice();
+            } else {
+                // 通关
+                setTimeout(() => this.gameOver(true), 1000);
+            }
         }
+    }
+    
+    // 显示技能选择界面
+    showSkillChoice() {
+        this.pendingSkillChoice = true;
+        this.state = 'SKILL_CHOICE';
+        
+        // 获取可选技能（通用 + 门派专属）
+        const roleId = this.player.role.id;
+        const commonSkills = SKILLS.common || [];
+        const roleSkills = SKILLS[roleId] || [];
+        const allSkills = [...commonSkills, ...roleSkills];
+        
+        // 随机选3个不重复的技能
+        const shuffled = allSkills.sort(() => Math.random() - 0.5);
+        this.availableSkills = shuffled.slice(0, 3);
+        
+        // 显示UI
+        this.renderSkillChoiceUI();
+    }
+    
+    // 渲染技能选择UI
+    renderSkillChoiceUI() {
+        const overlay = document.getElementById('skill-overlay');
+        const container = document.getElementById('skill-choices');
+        
+        if (!overlay || !container) {
+            console.warn('技能选择UI未找到，跳过');
+            this.confirmSkillChoice(null);
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        this.availableSkills.forEach((skill, idx) => {
+            const card = document.createElement('div');
+            card.className = 'skill-card';
+            card.innerHTML = `
+                <div class="skill-icon">${skill.icon}</div>
+                <div class="skill-name">${skill.name}</div>
+                <div class="skill-desc">${skill.desc}</div>
+            `;
+            card.onclick = () => this.confirmSkillChoice(skill);
+            container.appendChild(card);
+        });
+        
+        overlay.classList.remove('hidden');
+    }
+    
+    // 确认技能选择
+    confirmSkillChoice(skill) {
+        if (skill) {
+            // 应用技能效果
+            skill.effect(this.player.stats);
+            this.texts.push(new FloatText(this.player.x, this.player.y - 50, `${skill.icon} ${skill.name}`, '#f1c40f'));
+        }
+        
+        // 隐藏UI
+        const overlay = document.getElementById('skill-overlay');
+        if (overlay) overlay.classList.add('hidden');
+        
+        this.pendingSkillChoice = false;
+        this.state = 'PLAY';
+        
+        // 延迟开始下一波
+        setTimeout(() => this.startNextWave(), 500);
     }
     
     showBossHUD(boss) {
@@ -769,6 +860,11 @@ export class ArenaEngine {
         // 绘制玩家
         if (this.player) {
             this.player.draw(ctx, ASSETS);
+        }
+        
+        // 绘制法宝
+        if (this.artifact) {
+            this.artifact.draw(ctx);
         }
         
         // 绘制粒子
