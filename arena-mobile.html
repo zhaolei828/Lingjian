@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>血色秘境 • 灵剑</title>
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/arena.css">
     <style>
         /* 移动端专属样式覆盖 */
@@ -79,6 +80,31 @@
         
         .wave-label {
             font-size: 11px;
+        }
+        
+        /* 帧率显示 */
+        .fps-counter {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #4caf50;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 100;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .fps-counter.warning {
+            color: #ff9800;
+            border-color: rgba(255, 152, 0, 0.3);
+        }
+        
+        .fps-counter.critical {
+            color: #f44336;
+            border-color: rgba(244, 67, 54, 0.3);
         }
         
         .enemy-count {
@@ -307,83 +333,7 @@
             font-size: 12px !important;
         }
         
-        /* ========== 技能选择界面 - 移动端适配 ========== */
-        .skill-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-        
-        .skill-overlay.hidden {
-            display: none !important;
-        }
-        
-        .skill-panel {
-            text-align: center;
-            width: 95%;
-            max-width: 400px;
-        }
-        
-        .skill-title {
-            font-size: 22px;
-            color: #f1c40f;
-            text-shadow: 0 0 15px rgba(241, 196, 15, 0.5);
-            margin-bottom: 20px;
-        }
-        
-        .skill-choices {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 0 10px;
-        }
-        
-        .skill-card {
-            background: linear-gradient(135deg, #2c1810 0%, #1a0a0a 100%);
-            border: 2px solid #8b0000;
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            text-align: left;
-        }
-        
-        .skill-card:active {
-            transform: scale(0.95);
-            border-color: #f1c40f;
-            box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
-        }
-        
-        .skill-icon {
-            font-size: 36px;
-            flex-shrink: 0;
-        }
-        
-        .skill-info {
-            flex: 1;
-        }
-        
-        .skill-name {
-            font-size: 18px;
-            color: #f1c40f;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .skill-desc {
-            font-size: 13px;
-            color: #aaa;
-        }
+        /* 技能选择样式已移至通用 style.css */
     </style>
 </head>
 <body>
@@ -414,6 +364,10 @@
         <div class="gold-counter">
             <span class="gold-icon">💰</span>
             <span class="gold-value" id="gold-count">0</span>
+        </div>
+        <!-- 帧率显示 -->
+        <div class="fps-counter" id="fps-counter">
+            <span id="fps-value">60</span> FPS
         </div>
     </div>
 
@@ -485,14 +439,6 @@
         <div class="countdown-text" id="countdown-text">BOSS 来袭</div>
     </div>
 
-    <!-- 技能选择 -->
-    <div id="skill-overlay" class="skill-overlay hidden">
-        <div class="skill-panel">
-            <div class="skill-title">⚔️ 波次通过 · 选择功法 ⚔️</div>
-            <div class="skill-choices" id="skill-choices"></div>
-        </div>
-    </div>
-
     <!-- 升级菜单 -->
     <div id="levelup-menu" class="menu-box hidden">
         <h2 class="levelup-title">顿悟机缘</h2>
@@ -562,6 +508,14 @@
 
 <!-- 操作提示（游戏中隐藏） -->
 <div class="control-hint" id="control-hint">← 左侧滑动移动 | 自动攻击 →</div>
+
+<!-- 技能选择 - 放在 overlay 外面，独立显示 -->
+<div id="skill-overlay" class="skill-overlay hidden">
+    <div class="skill-panel">
+        <div class="skill-title">⚔️ 波次通过 · 选择功法 ⚔️</div>
+        <div class="skill-choices" id="skill-choices"></div>
+    </div>
+</div>
 
 <!-- Nipple.js 虚拟摇杆库 - 必须在模块脚本之前加载 -->
 <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.2/dist/nipplejs.min.js"></script>

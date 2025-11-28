@@ -72,54 +72,265 @@ class ArenaEnemy extends Enemy {
         ctx.ellipse(0, 20, 20, 8, 0, 0, Math.PI * 2);
         ctx.fill();
         
-        // 面向玩家
-        if (window.Game.player && window.Game.player.x < this.x) {
+        // 检测是否需要翻转（面向玩家）
+        const shouldFlip = window.Game.player && window.Game.player.x < this.x;
+        if (shouldFlip) {
             ctx.scale(-1, 1);
         }
         
         // 绘制怪物图像
-        const img = assets[this.type];
+        const svgKey = (ARENA_MOBS[this.type] || ARENA_BOSSES[this.type])?.svg || this.type;
+        const img = assets[svgKey];
         if (img && img.complete && img.naturalWidth > 0) {
-            const size = this.isBoss ? 64 : 48;
-            ctx.drawImage(img, -size/2, -size/2, size, size);
+            const size = this.isBoss ? 80 : 48;
+            ctx.drawImage(img, -size/2, -size/2 - 5, size, size);
         } else {
-            // 后备绘制 - 使用 SVG_LIB 中的颜色主题
-            const mobData = ARENA_MOBS[this.type] || ARENA_BOSSES[this.type];
-            ctx.fillStyle = this.isBoss ? '#c0392b' : '#8b0000';
-            ctx.beginPath();
-            ctx.arc(0, 0, this.isBoss ? 30 : 18, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 眼睛
-            ctx.fillStyle = '#ff0';
-            ctx.beginPath();
-            ctx.arc(-6, -5, 3, 0, Math.PI * 2);
-            ctx.arc(6, -5, 3, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 名字（调试用）
-            ctx.fillStyle = '#fff';
-            ctx.font = '10px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(mobData?.name || this.type, 0, 30);
+            // 后备绘制 - 绘制Q版怪物
+            this.drawFallbackMob(ctx);
         }
         
         ctx.restore();
         
+        // 名字绘制在 restore 之后，避免翻转（独立绘制）
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        const mobData = ARENA_MOBS[this.type] || ARENA_BOSSES[this.type];
+        ctx.fillStyle = this.isBoss ? '#ffcc00' : '#fff';
+        ctx.font = this.isBoss ? 'bold 14px Arial' : '11px Arial';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 3;
+        ctx.fillText(mobData?.name || this.type, 0, -30 * scale);
+        ctx.restore();
+        
+        // 绘制血条
+        this.drawHpBar(ctx);
+    }
+    
+    // 后备绘制 - Q版怪物
+    drawFallbackMob(ctx) {
+        const time = Date.now() / 1000;
+        const bounce = Math.sin(time * 5 + this.x) * 2; // 弹跳效果
+        
+        if (this.type.includes('bat')) {
+            // 蝙蝠 - 带翅膀
+            ctx.fillStyle = '#8b0000';
+            // 身体
+            ctx.beginPath();
+            ctx.ellipse(0, bounce, 12, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // 翅膀
+            const wingFlap = Math.sin(time * 15) * 20;
+            ctx.fillStyle = '#5c0000';
+            ctx.beginPath();
+            ctx.moveTo(-8, 0);
+            ctx.quadraticCurveTo(-25, -10 + wingFlap, -20, 5);
+            ctx.lineTo(-8, 5);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(8, 0);
+            ctx.quadraticCurveTo(25, -10 - wingFlap, 20, 5);
+            ctx.lineTo(8, 5);
+            ctx.fill();
+            // 眼睛
+            ctx.fillStyle = '#ff0';
+            ctx.beginPath();
+            ctx.arc(-4, -3 + bounce, 3, 0, Math.PI * 2);
+            ctx.arc(4, -3 + bounce, 3, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.type.includes('spider')) {
+            // 蜘蛛 - 八条腿
+            ctx.fillStyle = '#5c0000';
+            // 腿
+            for (let i = 0; i < 4; i++) {
+                const legAngle = (i - 1.5) * 0.4;
+                const legWiggle = Math.sin(time * 8 + i) * 5;
+                ctx.beginPath();
+                ctx.moveTo(-6, 0);
+                ctx.quadraticCurveTo(-20 + legWiggle, -10 + i * 8, -25, i * 8 - 8);
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#5c0000';
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(6, 0);
+                ctx.quadraticCurveTo(20 - legWiggle, -10 + i * 8, 25, i * 8 - 8);
+                ctx.stroke();
+            }
+            // 身体
+            ctx.fillStyle = '#8b0000';
+            ctx.beginPath();
+            ctx.arc(0, bounce, 15, 0, Math.PI * 2);
+            ctx.fill();
+            // 眼睛 (多个)
+            ctx.fillStyle = '#ff0';
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.arc(-6 + i * 4, -5 + bounce, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        } else if (this.type.includes('wolf')) {
+            // 狼 - Q版
+            ctx.fillStyle = '#8b0000';
+            // 身体
+            ctx.beginPath();
+            ctx.ellipse(0, 5 + bounce, 18, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // 头
+            ctx.fillStyle = '#b71c1c';
+            ctx.beginPath();
+            ctx.arc(8, -5 + bounce, 12, 0, Math.PI * 2);
+            ctx.fill();
+            // 耳朵
+            ctx.fillStyle = '#8b0000';
+            ctx.beginPath();
+            ctx.moveTo(5, -15 + bounce);
+            ctx.lineTo(0, -25 + bounce);
+            ctx.lineTo(8, -18 + bounce);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(12, -15 + bounce);
+            ctx.lineTo(18, -25 + bounce);
+            ctx.lineTo(16, -18 + bounce);
+            ctx.fill();
+            // 眼睛
+            ctx.fillStyle = '#ff0';
+            ctx.beginPath();
+            ctx.arc(5, -6 + bounce, 3, 0, Math.PI * 2);
+            ctx.arc(12, -6 + bounce, 3, 0, Math.PI * 2);
+            ctx.fill();
+            // 鼻子
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(16, -3 + bounce, 2, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.type.includes('serpent') || this.type.includes('snake')) {
+            // 蛇
+            ctx.strokeStyle = '#8b0000';
+            ctx.lineWidth = 10;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(-20, 10);
+            for (let i = 0; i < 5; i++) {
+                const x = -20 + i * 10;
+                const y = 10 + Math.sin(time * 5 + i) * 8;
+                ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            // 头
+            ctx.fillStyle = '#b71c1c';
+            ctx.beginPath();
+            ctx.arc(20, 10 + Math.sin(time * 5 + 4) * 8, 10, 0, Math.PI * 2);
+            ctx.fill();
+            // 眼睛
+            ctx.fillStyle = '#ff0';
+            ctx.beginPath();
+            ctx.arc(23, 7 + Math.sin(time * 5 + 4) * 8, 3, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.type.includes('ghost')) {
+            // 鬼魂
+            ctx.globalAlpha = 0.8;
+            ctx.fillStyle = '#8b0000';
+            // 身体 (波浪形底部)
+            ctx.beginPath();
+            ctx.moveTo(-15, -10 + bounce);
+            ctx.quadraticCurveTo(-18, 15, -12, 20);
+            ctx.quadraticCurveTo(-6, 15, 0, 20);
+            ctx.quadraticCurveTo(6, 15, 12, 20);
+            ctx.quadraticCurveTo(18, 15, 15, -10 + bounce);
+            ctx.arc(0, -10 + bounce, 15, 0, Math.PI, true);
+            ctx.fill();
+            // 眼睛 (空洞)
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.ellipse(-5, -8 + bounce, 4, 6, 0, 0, Math.PI * 2);
+            ctx.ellipse(5, -8 + bounce, 4, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // 眼睛光点
+            ctx.fillStyle = '#f00';
+            ctx.beginPath();
+            ctx.arc(-5, -10 + bounce, 2, 0, Math.PI * 2);
+            ctx.arc(5, -10 + bounce, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        } else if (this.type.includes('scorpion')) {
+            // 蝎子
+            ctx.fillStyle = '#8b0000';
+            // 身体
+            ctx.beginPath();
+            ctx.ellipse(0, 5 + bounce, 15, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // 钳子
+            ctx.strokeStyle = '#5c0000';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(-12, 0);
+            ctx.lineTo(-25, -10);
+            ctx.lineTo(-30, -5);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(12, 0);
+            ctx.lineTo(25, -10);
+            ctx.lineTo(30, -5);
+            ctx.stroke();
+            // 尾巴
+            ctx.beginPath();
+            ctx.moveTo(0, 10);
+            ctx.quadraticCurveTo(-5, 25, 0, 35);
+            ctx.quadraticCurveTo(5, 40, 8, 30);
+            ctx.stroke();
+            // 毒刺
+            ctx.fillStyle = '#ff0';
+            ctx.beginPath();
+            ctx.arc(8, 28, 4, 0, Math.PI * 2);
+            ctx.fill();
+            // 眼睛
+            ctx.fillStyle = '#ff0';
+            ctx.beginPath();
+            ctx.arc(-5, bounce, 3, 0, Math.PI * 2);
+            ctx.arc(5, bounce, 3, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // 默认 - 简单圆形怪物
+            ctx.fillStyle = this.isBoss ? '#c0392b' : '#8b0000';
+            ctx.beginPath();
+            ctx.arc(0, bounce, this.isBoss ? 25 : 15, 0, Math.PI * 2);
+            ctx.fill();
+            // 眼睛
+            ctx.fillStyle = '#ff0';
+            ctx.beginPath();
+            ctx.arc(-5, -3 + bounce, 3, 0, Math.PI * 2);
+            ctx.arc(5, -3 + bounce, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+        
+    drawHpBar(ctx) {
+        const scale = this.isBoss ? this.bossSize : 1.0;
         // 血条（BOSS 在 HUD 显示，普通怪在头上）
         if (!this.isBoss && this.hp < this.maxHp) {
             ctx.save();
-            ctx.translate(this.x, this.y - 30 * scale);
+            ctx.translate(this.x, this.y - 35 * scale);
             const barWidth = 40;
-            const barHeight = 4;
+            const barHeight = 5;
             const hpRatio = this.hp / this.maxHp;
             
             // 背景
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-            ctx.fillRect(-barWidth/2, 0, barWidth, barHeight);
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(-barWidth/2 - 1, -1, barWidth + 2, barHeight + 2);
             
             // 血量
-            ctx.fillStyle = hpRatio > 0.5 ? '#4caf50' : hpRatio > 0.25 ? '#ff9800' : '#f44336';
+            const gradient = ctx.createLinearGradient(-barWidth/2, 0, barWidth/2, 0);
+            if (hpRatio > 0.5) {
+                gradient.addColorStop(0, '#4caf50');
+                gradient.addColorStop(1, '#8bc34a');
+            } else if (hpRatio > 0.25) {
+                gradient.addColorStop(0, '#ff9800');
+                gradient.addColorStop(1, '#ffc107');
+            } else {
+                gradient.addColorStop(0, '#f44336');
+                gradient.addColorStop(1, '#ff5722');
+            }
+            ctx.fillStyle = gradient;
             ctx.fillRect(-barWidth/2, 0, barWidth * hpRatio, barHeight);
             
             ctx.restore();
@@ -146,6 +357,7 @@ export class ArenaEngine {
         this.waveCleared = false;
         this.bossCountdown = 0;
         this.showingBossIntro = false;
+        this.bossTextShown = false;
         this.currentBoss = null;
         
         // 统计
@@ -232,6 +444,7 @@ export class ArenaEngine {
         this.totalGold = 0;
         this.playTime = 0;
         this.showingBossIntro = false;
+        this.bossTextShown = false;
         this.bossCountdown = 0;
         this.currentBoss = null;
         this.pendingSkillChoice = false;
@@ -362,12 +575,276 @@ export class ArenaEngine {
         // 检查波次完成
         this.checkWaveComplete();
         
+        // Boss 战特殊机制
+        this.updateBossBattle(dt);
+        
+        // 更新能量球
+        this.updatePowerOrbs(dt);
+        
         // 更新UI
         this.updateUI();
         
         // 检查玩家死亡
         if (this.player.hp <= 0) {
             this.gameOver(false);
+        }
+    }
+    
+    // Boss 战增强机制
+    updateBossBattle(dt) {
+        if (!this.currentBoss || this.currentBoss.dead) {
+            this.currentBoss = null;
+            return;
+        }
+        
+        // Boss 技能计时器
+        if (!this.bossSkillTimer) this.bossSkillTimer = 0;
+        this.bossSkillTimer += dt;
+        
+        // 每 5 秒发动一次特殊攻击
+        if (this.bossSkillTimer >= 5) {
+            this.bossSkillTimer = 0;
+            this.bossSpecialAttack();
+        }
+        
+        // Boss 定期生成能量球帮助玩家
+        if (!this.orbSpawnTimer) this.orbSpawnTimer = 0;
+        this.orbSpawnTimer += dt;
+        
+        if (this.orbSpawnTimer >= 8) {
+            this.orbSpawnTimer = 0;
+            this.spawnPowerOrb();
+        }
+    }
+    
+    // Boss 特殊攻击
+    bossSpecialAttack() {
+        if (!this.currentBoss) return;
+        
+        const boss = this.currentBoss;
+        const attackType = Math.floor(Math.random() * 3);
+        
+        // 警告提示
+        this.showWaveTitle('⚠️ 危险 ⚠️', '躲避攻击！');
+        this.shake = 0.5;
+        
+        switch(attackType) {
+            case 0:
+                // 冲撞攻击 - Boss 向玩家冲刺
+                this.bossCharge(boss);
+                break;
+            case 1:
+                // 范围攻击 - 在玩家位置生成伤害圈
+                this.bossAOE(boss);
+                break;
+            case 2:
+                // 召唤小怪
+                this.bossSummon(boss);
+                break;
+        }
+    }
+    
+    // Boss 冲撞
+    bossCharge(boss) {
+        if (!this.player) return;
+        
+        // 计算冲撞方向
+        const dx = this.player.x - boss.x;
+        const dy = this.player.y - boss.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        
+        // 创建冲撞效果（Boss 快速移动向玩家）
+        const chargeSpeed = 800;
+        boss.chargeVx = (dx / dist) * chargeSpeed;
+        boss.chargeVy = (dy / dist) * chargeSpeed;
+        boss.isCharging = true;
+        boss.chargeDuration = 0.5;
+        
+        // 冲撞轨迹粒子
+        for (let i = 0; i < 20; i++) {
+            this.particles.push(new Particle(boss.x, boss.y, '#ff0000', 0.5, 8));
+        }
+    }
+    
+    // Boss 范围攻击
+    bossAOE(boss) {
+        if (!this.player) return;
+        
+        // 在玩家当前位置创建警告圈
+        const aoeX = this.player.x;
+        const aoeY = this.player.y;
+        const aoeRadius = 120;
+        
+        // 添加到待处理 AOE 列表
+        if (!this.pendingAOEs) this.pendingAOEs = [];
+        this.pendingAOEs.push({
+            x: aoeX,
+            y: aoeY,
+            radius: aoeRadius,
+            timer: 1.5, // 1.5秒后爆炸
+            damage: boss.dmg * 2,
+            warningColor: '#ff000033'
+        });
+    }
+    
+    // Boss 召唤小怪
+    bossSummon(boss) {
+        const mobTypes = ['blood_bat', 'blood_spider'];
+        const summonCount = 3;
+        
+        for (let i = 0; i < summonCount; i++) {
+            const angle = (i / summonCount) * Math.PI * 2;
+            const dist = 100;
+            const x = boss.x + Math.cos(angle) * dist;
+            const y = boss.y + Math.sin(angle) * dist;
+            
+            const mobType = mobTypes[Math.floor(Math.random() * mobTypes.length)];
+            const enemy = new ArenaEnemy(mobType, x, y, 0.5, this.player.lvl);
+            this.enemies.push(enemy);
+            
+            // 召唤粒子
+            for (let j = 0; j < 10; j++) {
+                this.particles.push(new Particle(x, y, '#8b0000', 0.5, 6));
+            }
+        }
+        
+        this.texts.push(new FloatText(boss.x, boss.y - 50, '召唤!', '#ff5252'));
+    }
+    
+    // 生成能量球
+    spawnPowerOrb() {
+        // 在玩家附近随机位置生成
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 150 + Math.random() * 100;
+        const x = this.player.x + Math.cos(angle) * dist;
+        const y = this.player.y + Math.sin(angle) * dist;
+        
+        const orbTypes = [
+            { type: 'heal', color: '#4caf50', effect: '回复', value: 30 },
+            { type: 'damage', color: '#f44336', effect: '攻击提升', value: 1.5, duration: 10 },
+            { type: 'speed', color: '#2196f3', effect: '速度提升', value: 1.5, duration: 8 },
+            { type: 'skill_reset', color: '#9c27b0', effect: '技能刷新', value: 0 }
+        ];
+        
+        const orbData = orbTypes[Math.floor(Math.random() * orbTypes.length)];
+        
+        if (!this.powerOrbs) this.powerOrbs = [];
+        this.powerOrbs.push({
+            x, y,
+            type: orbData.type,
+            color: orbData.color,
+            effect: orbData.effect,
+            value: orbData.value,
+            duration: orbData.duration || 0,
+            radius: 20,
+            life: 15, // 15秒后消失
+            pulse: 0
+        });
+        
+        // 生成提示
+        this.texts.push(new FloatText(x, y - 30, '💫 能量球!', orbData.color));
+    }
+    
+    // 更新能量球
+    updatePowerOrbs(dt) {
+        if (!this.powerOrbs) this.powerOrbs = [];
+        
+        // 更新 AOE 攻击
+        if (this.pendingAOEs) {
+            for (let i = this.pendingAOEs.length - 1; i >= 0; i--) {
+                const aoe = this.pendingAOEs[i];
+                aoe.timer -= dt;
+                
+                if (aoe.timer <= 0) {
+                    // AOE 爆炸！
+                    const dist = Math.hypot(this.player.x - aoe.x, this.player.y - aoe.y);
+                    if (dist < aoe.radius && !this.player.invincible) {
+                        this.player.hp -= aoe.damage;
+                        this.shake = 1;
+                        this.texts.push(new FloatText(this.player.x, this.player.y - 30, Math.floor(aoe.damage), '#ff0000'));
+                    }
+                    
+                    // 爆炸粒子
+                    for (let j = 0; j < 30; j++) {
+                        this.particles.push(new Particle(aoe.x, aoe.y, '#ff5252', 0.5, 8));
+                    }
+                    
+                    this.pendingAOEs.splice(i, 1);
+                }
+            }
+        }
+        
+        // 更新 Boss 冲撞
+        for (const e of this.enemies) {
+            if (e.isCharging && e.chargeDuration > 0) {
+                e.chargeDuration -= dt;
+                e.x += e.chargeVx * dt;
+                e.y += e.chargeVy * dt;
+                
+                // 冲撞轨迹
+                if (Math.random() < 0.5) {
+                    this.particles.push(new Particle(e.x, e.y, '#ff5252', 0.3, 5));
+                }
+                
+                if (e.chargeDuration <= 0) {
+                    e.isCharging = false;
+                }
+            }
+        }
+        
+        // 更新能量球
+        for (let i = this.powerOrbs.length - 1; i >= 0; i--) {
+            const orb = this.powerOrbs[i];
+            orb.life -= dt;
+            orb.pulse += dt * 5;
+            
+            if (orb.life <= 0) {
+                this.powerOrbs.splice(i, 1);
+                continue;
+            }
+            
+            // 检测玩家拾取
+            const dist = Math.hypot(this.player.x - orb.x, this.player.y - orb.y);
+            if (dist < orb.radius + 25) {
+                this.collectPowerOrb(orb);
+                this.powerOrbs.splice(i, 1);
+            }
+        }
+    }
+    
+    // 拾取能量球
+    collectPowerOrb(orb) {
+        switch(orb.type) {
+            case 'heal':
+                this.player.hp = Math.min(this.player.maxHp, this.player.hp + orb.value);
+                this.texts.push(new FloatText(this.player.x, this.player.y - 30, '+' + orb.value + ' HP', '#4caf50'));
+                break;
+            case 'damage':
+                this.player.damageBoost = (this.player.damageBoost || 1) * orb.value;
+                setTimeout(() => {
+                    this.player.damageBoost = Math.max(1, (this.player.damageBoost || 1) / orb.value);
+                }, orb.duration * 1000);
+                this.texts.push(new FloatText(this.player.x, this.player.y - 30, '攻击提升!', '#f44336'));
+                break;
+            case 'speed':
+                this.player.speedBoost = (this.player.speedBoost || 1) * orb.value;
+                setTimeout(() => {
+                    this.player.speedBoost = Math.max(1, (this.player.speedBoost || 1) / orb.value);
+                }, orb.duration * 1000);
+                this.texts.push(new FloatText(this.player.x, this.player.y - 30, '速度提升!', '#2196f3'));
+                break;
+            case 'skill_reset':
+                // 重置法宝 CD
+                if (this.artifact) {
+                    this.artifact.cd = 0;
+                    this.texts.push(new FloatText(this.player.x, this.player.y - 30, '法宝CD重置!', '#9c27b0'));
+                }
+                break;
+        }
+        
+        // 拾取粒子效果
+        for (let i = 0; i < 15; i++) {
+            this.particles.push(new Particle(orb.x, orb.y, orb.color, 0.4, 5));
         }
     }
     
@@ -514,32 +991,125 @@ export class ArenaEngine {
     
     startBossCountdown(waveData) {
         this.showingBossIntro = true;
-        this.bossCountdown = 3;
+        this.bossCountdown = 3.99; // 从接近4开始，确保第一帧显示3
         this.pendingWaveData = waveData;
+        this.lastCountdownNum = 99; // 初始化为不可能的值，确保第一次一定会更新
         
-        // 显示倒计时UI
-        document.getElementById('boss-countdown').classList.remove('hidden');
-        document.getElementById('countdown-text').textContent = waveData.bossName + ' 来袭！';
+        // 判断是小Boss还是大Boss（第10波是大Boss）
+        this.isFinalBoss = this.currentWave >= 10;
         
-        // 震屏
-        document.body.classList.add('shake');
+        // 创建倒计时遮罩
+        this.createBossCountdownOverlay(waveData);
+    }
+    
+    createBossCountdownOverlay(waveData) {
+        // 移除旧的遮罩
+        const oldOverlay = document.getElementById('boss-countdown-overlay');
+        if (oldOverlay) oldOverlay.remove();
+        
+        // 创建新遮罩
+        const overlay = document.createElement('div');
+        overlay.id = 'boss-countdown-overlay';
+        overlay.className = 'boss-countdown-overlay';
+        
+        const bossClass = this.isFinalBoss ? 'final-boss' : 'mini-boss';
+        
+        // 初始不显示数字，等 updateBossCountdown 来设置
+        overlay.innerHTML = `
+            <div class="boss-countdown-number ${bossClass}" id="countdown-num"></div>
+            <div class="boss-name-text ${bossClass}" id="countdown-text" style="opacity: 0;"></div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // 开始震屏
+        if (this.isFinalBoss) {
+            document.body.classList.add('shake-screen-final');
+        } else {
+            document.body.classList.add('shake-screen');
+        }
     }
     
     updateBossCountdown(dt) {
         this.bossCountdown -= dt;
         
-        const num = Math.ceil(this.bossCountdown);
-        document.getElementById('countdown-num').textContent = num > 0 ? num : '!';
+        // 使用 Math.ceil 但限制在 0-3 范围内
+        const rawNum = Math.ceil(this.bossCountdown);
+        const num = Math.max(0, Math.min(3, rawNum));
         
-        if (this.bossCountdown <= 0) {
-            this.showingBossIntro = false;
-            document.getElementById('boss-countdown').classList.add('hidden');
-            document.body.classList.remove('shake');
+        const countdownEl = document.getElementById('countdown-num');
+        const textEl = document.getElementById('countdown-text');
+        
+        if (!countdownEl) return;
+        
+        const bossClass = this.isFinalBoss ? 'final-boss' : 'mini-boss';
+        
+        // 数字变化时更新动画
+        if (num !== this.lastCountdownNum) {
+            this.lastCountdownNum = num;
             
-            // 刷BOSS
-            this.spawnWave(this.pendingWaveData);
-            this.waveCleared = false;
-            this.updateUI();
+            if (num > 0 && this.bossCountdown > 0) {
+                // 3, 2, 1 倒计时
+                countdownEl.textContent = num;
+                countdownEl.className = `boss-countdown-number ${bossClass}`;
+                // 触发重新动画
+                countdownEl.style.animation = 'none';
+                countdownEl.offsetHeight; // 强制重绘
+                countdownEl.style.animation = '';
+                
+                // 震屏增强
+                this.shake = this.isFinalBoss ? 2 : 0.5;
+                
+                console.log('[Boss倒计时]', num);
+            }
+        }
+        
+        // 当倒计时到0时显示 BOSS 来袭
+        if (this.bossCountdown <= 0 && this.bossCountdown > -0.1 && !this.bossTextShown) {
+            this.bossTextShown = true;
+            
+            // BOSS 来袭！
+            const bossName = this.pendingWaveData.bossName || 'BOSS';
+            countdownEl.textContent = this.isFinalBoss ? '💀 ' + bossName + ' 💀' : '⚔️ ' + bossName + ' ⚔️';
+            countdownEl.className = `boss-countdown-number ${bossClass} final`;
+            
+            // 显示副标题
+            textEl.textContent = this.isFinalBoss ? '最终试炼 · 准备战斗！' : '来袭！';
+            textEl.style.opacity = '1';
+            textEl.className = `boss-name-text ${bossClass}`;
+            
+            // 大震屏
+            this.shake = this.isFinalBoss ? 5 : 2;
+            
+            console.log('[Boss倒计时] BOSS来袭!');
+        }
+        
+        if (this.bossCountdown <= -1.5) {
+            // 倒计时结束，Boss来袭文字显示1.5秒后再刷Boss
+            this.showingBossIntro = false;
+            this.bossTextShown = false; // 重置标记
+            
+            // 移除遮罩
+            const overlay = document.getElementById('boss-countdown-overlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                overlay.style.transition = 'opacity 0.5s';
+                setTimeout(() => overlay.remove(), 500);
+            }
+            
+            // 停止震屏
+            document.body.classList.remove('shake-screen', 'shake-screen-final');
+            
+            // 显示战斗开始提示（先显示文字）
+            const bossName = this.pendingWaveData.bossName || 'BOSS';
+            this.showWaveTitle(this.isFinalBoss ? '⚔️ 最终决战 ⚔️' : '💀 BOSS战 💀', bossName + ' 已降临！');
+            
+            // 延迟刷BOSS（让玩家有准备时间）
+            setTimeout(() => {
+                this.spawnWave(this.pendingWaveData);
+                this.waveCleared = false;
+                this.updateUI();
+            }, 800);
         }
     }
     
@@ -619,13 +1189,17 @@ export class ArenaEngine {
         const overlay = document.getElementById('skill-overlay');
         const container = document.getElementById('skill-choices');
         
+        console.log('[技能选择] 渲染UI, overlay:', overlay, 'container:', container);
+        
         if (!overlay || !container) {
-            console.warn('技能选择UI未找到，跳过');
+            console.warn('[技能选择] UI元素未找到，跳过技能选择');
             this.confirmSkillChoice(null);
             return;
         }
         
         container.innerHTML = '';
+        
+        console.log('[技能选择] 可选技能:', this.availableSkills);
         
         this.availableSkills.forEach((skill, idx) => {
             const card = document.createElement('div');
@@ -645,6 +1219,7 @@ export class ArenaEngine {
                 handled = true;
                 e.preventDefault();
                 e.stopPropagation();
+                console.log('[技能选择] 选择了:', skill.name);
                 this.confirmSkillChoice(skill);
             };
             
@@ -653,10 +1228,11 @@ export class ArenaEngine {
             container.appendChild(card);
         });
         
-        // 强制显示 overlay
+        // 强制显示 overlay - 确保移除 hidden 类并设置 display
         overlay.classList.remove('hidden');
-        overlay.style.display = 'flex';
-        overlay.style.opacity = '1';
+        overlay.style.cssText = 'display: flex !important; opacity: 1; visibility: visible; pointer-events: auto;';
+        
+        console.log('[技能选择] UI已显示, overlay.style:', overlay.style.cssText);
     }
     
     // 确认技能选择
@@ -895,6 +1471,12 @@ export class ArenaEngine {
             this.artifact.draw(ctx);
         }
         
+        // 绘制 AOE 预警圈
+        this.drawAOEWarnings(ctx);
+        
+        // 绘制能量球
+        this.drawPowerOrbs(ctx);
+        
         // 绘制粒子
         this.particles.forEach(p => p.draw(ctx));
         
@@ -911,11 +1493,27 @@ export class ArenaEngine {
     }
     
     updatePerfPanel() {
+        // 更新 perf-fps (PC端性能面板)
         const fpsEl = document.getElementById('perf-fps');
-        if (!fpsEl) return;
+        if (fpsEl) {
+            fpsEl.textContent = perfMonitor.fps;
+            fpsEl.style.color = perfMonitor.fps < 30 ? '#ff5252' : perfMonitor.fps < 50 ? '#ff9800' : '#4caf50';
+        }
         
-        fpsEl.textContent = perfMonitor.fps;
-        fpsEl.style.color = perfMonitor.fps < 30 ? '#ff5252' : perfMonitor.fps < 50 ? '#ff9800' : '#4caf50';
+        // 更新 fps-value (移动端帧率显示)
+        const fpsValueEl = document.getElementById('fps-value');
+        const fpsCounterEl = document.getElementById('fps-counter');
+        if (fpsValueEl) {
+            fpsValueEl.textContent = perfMonitor.fps;
+        }
+        if (fpsCounterEl) {
+            fpsCounterEl.classList.remove('warning', 'critical');
+            if (perfMonitor.fps < 25) {
+                fpsCounterEl.classList.add('critical');
+            } else if (perfMonitor.fps < 45) {
+                fpsCounterEl.classList.add('warning');
+            }
+        }
         
         const enemiesEl = document.getElementById('perf-enemies');
         if (enemiesEl) enemiesEl.textContent = this.enemies.length;
@@ -1026,6 +1624,85 @@ export class ArenaEngine {
             
             ctx.restore();
         });
+    }
+    
+    // 绘制 AOE 预警圈
+    drawAOEWarnings(ctx) {
+        if (!this.pendingAOEs) return;
+        
+        for (const aoe of this.pendingAOEs) {
+            const alpha = 0.3 + Math.sin(Date.now() / 100) * 0.2;
+            
+            // 外圈 - 闪烁警告
+            ctx.strokeStyle = `rgba(255, 0, 0, ${alpha})`;
+            ctx.lineWidth = 4;
+            ctx.setLineDash([10, 5]);
+            ctx.beginPath();
+            ctx.arc(aoe.x, aoe.y, aoe.radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 填充 - 红色半透明
+            const fillAlpha = 0.1 + (1 - aoe.timer / 1.5) * 0.3; // 越接近爆炸越红
+            ctx.fillStyle = `rgba(255, 0, 0, ${fillAlpha})`;
+            ctx.beginPath();
+            ctx.arc(aoe.x, aoe.y, aoe.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 倒计时文字
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#f00';
+            ctx.shadowBlur = 10;
+            ctx.fillText(aoe.timer.toFixed(1) + 's', aoe.x, aoe.y + 8);
+            ctx.shadowBlur = 0;
+        }
+    }
+    
+    // 绘制能量球
+    drawPowerOrbs(ctx) {
+        if (!this.powerOrbs) return;
+        
+        for (const orb of this.powerOrbs) {
+            const pulse = Math.sin(orb.pulse) * 5;
+            const alpha = orb.life > 3 ? 1 : orb.life / 3; // 快消失时淡出
+            
+            // 外发光
+            ctx.save();
+            ctx.globalAlpha = alpha * 0.5;
+            const glow = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.radius + 20 + pulse);
+            glow.addColorStop(0, orb.color);
+            glow.addColorStop(1, 'transparent');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(orb.x, orb.y, orb.radius + 20 + pulse, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            
+            // 内核
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = orb.color;
+            ctx.shadowColor = orb.color;
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(orb.x, orb.y, orb.radius + pulse * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 高光
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(orb.x - 5, orb.y - 5, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 效果文字
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(orb.effect, orb.x, orb.y + orb.radius + 20);
+            ctx.restore();
+        }
     }
     
     drawBloodMist(ctx) {

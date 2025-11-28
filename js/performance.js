@@ -8,14 +8,14 @@ export const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Oper
 export const PerfConfig = {
     // 移动端配置
     mobile: {
-        maxParticles: 50,        // 最大粒子数
-        maxBullets: 100,         // 最大子弹数
-        maxEnemies: 30,          // 最大敌人数（屏幕内）
-        maxTexts: 10,            // 最大飘字数
-        targetFPS: 30,           // 目标帧率
+        maxParticles: 80,        // 最大粒子数
+        maxBullets: 150,         // 最大子弹数
+        maxEnemies: 50,          // 最大敌人数（屏幕内）
+        maxTexts: 15,            // 最大飘字数
+        targetFPS: 60,           // 目标帧率（不再限制）
         enableShadows: false,    // 禁用阴影
         enableTrails: false,     // 禁用拖尾
-        particleLife: 0.3,       // 粒子生命缩短
+        particleLife: 0.4,       // 粒子生命缩短
         simplifyEffects: true,   // 简化特效
     },
     // PC端配置
@@ -183,6 +183,7 @@ export class PerformanceMonitor {
         this.fps = 60;
         this.frameCount = 0;
         this.lastCheck = performance.now();
+        this.frameTimes = []; // 用于计算实时帧率
         this.metrics = {
             particles: 0,
             bullets: 0,
@@ -192,10 +193,27 @@ export class PerformanceMonitor {
     }
     
     tick() {
-        this.frameCount++;
         const now = performance.now();
+        this.frameCount++;
+        
+        // 记录最近的帧时间（保留最近30帧）
+        this.frameTimes.push(now);
+        if (this.frameTimes.length > 30) {
+            this.frameTimes.shift();
+        }
+        
+        // 实时计算帧率（基于最近帧的平均间隔）
+        if (this.frameTimes.length >= 2) {
+            const oldest = this.frameTimes[0];
+            const newest = this.frameTimes[this.frameTimes.length - 1];
+            const elapsed = newest - oldest;
+            if (elapsed > 0) {
+                this.fps = Math.round((this.frameTimes.length - 1) / elapsed * 1000);
+            }
+        }
+        
+        // 每秒重置计数器（用于其他统计）
         if (now - this.lastCheck >= 1000) {
-            this.fps = this.frameCount;
             this.frameCount = 0;
             this.lastCheck = now;
         }

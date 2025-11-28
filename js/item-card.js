@@ -303,9 +303,18 @@ export class ItemCardManager {
         card.count--;
         if (card.count <= 0) {
             this.slots[slotIndex] = null;
+            // 自动左移：将右边的道具往左补位
+            this.compactSlots();
         }
         
         this.updateUI();
+    }
+    
+    // 自动左移道具槽
+    compactSlots() {
+        // 将所有非空槽位紧凑排列到左边
+        const items = this.slots.filter(s => s !== null);
+        this.slots = items.concat(Array(this.maxSlots - items.length).fill(null));
     }
     
     executeCardEffect(card) {

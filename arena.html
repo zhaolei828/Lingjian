@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>血色秘境 • 灵剑</title>
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/arena.css">
 </head>
 <body>
@@ -113,14 +114,6 @@
         <div class="countdown-text" id="countdown-text">BOSS 来袭</div>
     </div>
 
-    <!-- 技能选择 -->
-    <div id="skill-overlay" class="skill-overlay hidden">
-        <div class="skill-panel">
-            <div class="skill-title">⚔️ 波次通过 · 选择功法 ⚔️</div>
-            <div class="skill-choices" id="skill-choices"></div>
-        </div>
-    </div>
-
     <!-- 升级菜单 -->
     <div id="levelup-menu" class="menu-box hidden">
         <h2 class="levelup-title">顿悟机缘</h2>
@@ -185,6 +178,14 @@
 
 <!-- 金币飞行容器 -->
 <div id="flying-coins"></div>
+
+<!-- 技能选择 - 放在 overlay 外面，独立显示 -->
+<div id="skill-overlay" class="skill-overlay hidden">
+    <div class="skill-panel">
+        <div class="skill-title">⚔️ 波次通过 · 选择功法 ⚔️</div>
+        <div class="skill-choices" id="skill-choices"></div>
+    </div>
+</div>
 
 <!-- 性能监控面板（调试用，按 F3 显示/隐藏）-->
 <div id="perf-panel" style="display:none; position:fixed; top:10px; right:10px; background:rgba(0,0,0,0.8); color:#fff; padding:15px; border-radius:8px; font-family:monospace; font-size:12px; z-index:9999;">
