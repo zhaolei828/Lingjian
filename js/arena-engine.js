@@ -500,8 +500,8 @@ export class ArenaEngine {
     }
     
     update(dt) {
+        // Boss倒计时期间暂停游戏更新
         if (this.showingBossIntro) {
-            this.updateBossCountdown(dt);
             return;
         }
         
@@ -991,126 +991,86 @@ export class ArenaEngine {
     
     startBossCountdown(waveData) {
         this.showingBossIntro = true;
-        this.bossCountdown = 3.99; // 从接近4开始，确保第一帧显示3
         this.pendingWaveData = waveData;
-        this.lastCountdownNum = 99; // 初始化为不可能的值，确保第一次一定会更新
         
         // 判断是小Boss还是大Boss（第10波是大Boss）
         this.isFinalBoss = this.currentWave >= 10;
         
-        // 创建倒计时遮罩
-        this.createBossCountdownOverlay(waveData);
+        // 用 setTimeout 序列显示倒计时，简单可靠
+        this.showCountdownSequence(waveData);
     }
     
-    createBossCountdownOverlay(waveData) {
+    showCountdownSequence(waveData) {
+        const bossClass = this.isFinalBoss ? 'final-boss' : 'mini-boss';
+        const bossName = waveData.bossName || 'BOSS';
+        
         // 移除旧的遮罩
         const oldOverlay = document.getElementById('boss-countdown-overlay');
         if (oldOverlay) oldOverlay.remove();
         
-        // 创建新遮罩
+        // 创建遮罩
         const overlay = document.createElement('div');
         overlay.id = 'boss-countdown-overlay';
         overlay.className = 'boss-countdown-overlay';
-        
-        const bossClass = this.isFinalBoss ? 'final-boss' : 'mini-boss';
-        
-        // 初始不显示数字，等 updateBossCountdown 来设置
-        overlay.innerHTML = `
-            <div class="boss-countdown-number ${bossClass}" id="countdown-num"></div>
-            <div class="boss-name-text ${bossClass}" id="countdown-text" style="opacity: 0;"></div>
-        `;
-        
         document.body.appendChild(overlay);
         
         // 开始震屏
-        if (this.isFinalBoss) {
-            document.body.classList.add('shake-screen-final');
-        } else {
-            document.body.classList.add('shake-screen');
-        }
-    }
-    
-    updateBossCountdown(dt) {
-        this.bossCountdown -= dt;
+        document.body.classList.add(this.isFinalBoss ? 'shake-screen-final' : 'shake-screen');
         
-        // 使用 Math.ceil 但限制在 0-3 范围内
-        const rawNum = Math.ceil(this.bossCountdown);
-        const num = Math.max(0, Math.min(3, rawNum));
+        // 倒计时序列：3 -> 2 -> 1 -> BOSS来袭
+        const sequence = ['3', '2', '1', bossName];
+        let index = 0;
         
-        const countdownEl = document.getElementById('countdown-num');
-        const textEl = document.getElementById('countdown-text');
-        
-        if (!countdownEl) return;
-        
-        const bossClass = this.isFinalBoss ? 'final-boss' : 'mini-boss';
-        
-        // 数字变化时更新动画
-        if (num !== this.lastCountdownNum) {
-            this.lastCountdownNum = num;
+        const showNext = () => {
+            // 清空遮罩内容
+            overlay.innerHTML = '';
             
-            if (num > 0 && this.bossCountdown > 0) {
-                // 3, 2, 1 倒计时
-                countdownEl.textContent = num;
-                countdownEl.className = `boss-countdown-number ${bossClass}`;
-                // 触发重新动画
-                countdownEl.style.animation = 'none';
-                countdownEl.offsetHeight; // 强制重绘
-                countdownEl.style.animation = '';
-                
-                // 震屏增强
+            if (index < 3) {
+                // 显示数字 3, 2, 1
+                const numDiv = document.createElement('div');
+                numDiv.className = `boss-countdown-number ${bossClass}`;
+                numDiv.textContent = sequence[index];
+                overlay.appendChild(numDiv);
                 this.shake = this.isFinalBoss ? 2 : 0.5;
                 
-                console.log('[Boss倒计时]', num);
+                index++;
+                setTimeout(showNext, 700); // 每个数字显示700ms
+            } else {
+                // 显示 BOSS 来袭
+                const numDiv = document.createElement('div');
+                numDiv.className = `boss-countdown-number ${bossClass} final`;
+                numDiv.textContent = this.isFinalBoss ? '💀 ' + bossName + ' 💀' : '⚔️ ' + bossName + ' ⚔️';
+                overlay.appendChild(numDiv);
+                
+                const textDiv = document.createElement('div');
+                textDiv.className = `boss-name-text ${bossClass}`;
+                textDiv.textContent = this.isFinalBoss ? '最终试炼!' : '来袭!';
+                overlay.appendChild(textDiv);
+                
+                this.shake = this.isFinalBoss ? 5 : 2;
+                
+                // 1.2秒后结束倒计时
+                setTimeout(() => {
+                    this.showingBossIntro = false;
+                    
+                    // 淡出遮罩
+                    overlay.style.opacity = '0';
+                    overlay.style.transition = 'opacity 0.3s';
+                    setTimeout(() => overlay.remove(), 300);
+                    
+                    // 停止震屏
+                    document.body.classList.remove('shake-screen', 'shake-screen-final');
+                    
+                    // 刷Boss
+                    this.spawnWave(this.pendingWaveData);
+                    this.waveCleared = false;
+                    this.updateUI();
+                }, 1200);
             }
-        }
+        };
         
-        // 当倒计时到0时显示 BOSS 来袭
-        if (this.bossCountdown <= 0 && this.bossCountdown > -0.1 && !this.bossTextShown) {
-            this.bossTextShown = true;
-            
-            // BOSS 来袭！
-            const bossName = this.pendingWaveData.bossName || 'BOSS';
-            countdownEl.textContent = this.isFinalBoss ? '💀 ' + bossName + ' 💀' : '⚔️ ' + bossName + ' ⚔️';
-            countdownEl.className = `boss-countdown-number ${bossClass} final`;
-            
-            // 显示副标题
-            textEl.textContent = this.isFinalBoss ? '最终试炼 · 准备战斗！' : '来袭！';
-            textEl.style.opacity = '1';
-            textEl.className = `boss-name-text ${bossClass}`;
-            
-            // 大震屏
-            this.shake = this.isFinalBoss ? 5 : 2;
-            
-            console.log('[Boss倒计时] BOSS来袭!');
-        }
-        
-        if (this.bossCountdown <= -1.5) {
-            // 倒计时结束，Boss来袭文字显示1.5秒后再刷Boss
-            this.showingBossIntro = false;
-            this.bossTextShown = false; // 重置标记
-            
-            // 移除遮罩
-            const overlay = document.getElementById('boss-countdown-overlay');
-            if (overlay) {
-                overlay.style.opacity = '0';
-                overlay.style.transition = 'opacity 0.5s';
-                setTimeout(() => overlay.remove(), 500);
-            }
-            
-            // 停止震屏
-            document.body.classList.remove('shake-screen', 'shake-screen-final');
-            
-            // 显示战斗开始提示（先显示文字）
-            const bossName = this.pendingWaveData.bossName || 'BOSS';
-            this.showWaveTitle(this.isFinalBoss ? '⚔️ 最终决战 ⚔️' : '💀 BOSS战 💀', bossName + ' 已降临！');
-            
-            // 延迟刷BOSS（让玩家有准备时间）
-            setTimeout(() => {
-                this.spawnWave(this.pendingWaveData);
-                this.waveCleared = false;
-                this.updateUI();
-            }, 800);
-        }
+        // 开始序列
+        showNext();
     }
     
     spawnWave(waveData) {
@@ -1189,17 +1149,12 @@ export class ArenaEngine {
         const overlay = document.getElementById('skill-overlay');
         const container = document.getElementById('skill-choices');
         
-        console.log('[技能选择] 渲染UI, overlay:', overlay, 'container:', container);
-        
         if (!overlay || !container) {
-            console.warn('[技能选择] UI元素未找到，跳过技能选择');
             this.confirmSkillChoice(null);
             return;
         }
         
         container.innerHTML = '';
-        
-        console.log('[技能选择] 可选技能:', this.availableSkills);
         
         this.availableSkills.forEach((skill, idx) => {
             const card = document.createElement('div');
@@ -1219,7 +1174,6 @@ export class ArenaEngine {
                 handled = true;
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('[技能选择] 选择了:', skill.name);
                 this.confirmSkillChoice(skill);
             };
             
@@ -1228,11 +1182,9 @@ export class ArenaEngine {
             container.appendChild(card);
         });
         
-        // 强制显示 overlay - 确保移除 hidden 类并设置 display
+        // 强制显示 overlay
         overlay.classList.remove('hidden');
         overlay.style.cssText = 'display: flex !important; opacity: 1; visibility: visible; pointer-events: auto;';
-        
-        console.log('[技能选择] UI已显示, overlay.style:', overlay.style.cssText);
     }
     
     // 确认技能选择
