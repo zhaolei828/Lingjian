@@ -95,12 +95,16 @@ export class Player extends Entity {
         this.cdTimer-=dt;
         if(this.cdTimer<=0) {
             const t = this.findTarget();
-            if(t) { this.fire(t); this.cdTimer = this.stats.cd; }
+            if(t) { 
+                this.fire(t); 
+                this.cdTimer = this.stats.cd; 
+            }
         }
     }
     findTarget() {
         // 【优化】使用空间哈希快速查找最近敌人
-        return collisionManager.findNearestEnemy(this.x, this.y, 600);
+        const target = collisionManager.findNearestEnemy(this.x, this.y, 600);
+        return target;
     }
     fire(t) {
         if (this.role.id === 'body') {
@@ -1099,16 +1103,18 @@ export class Artifact extends Entity {
     drawFenghuoLun(ctx, img) {
         // 绘制火焰轨迹
         this.fireTrails.forEach(t => {
+            if (t.life <= 0) return; // 跳过已消失的轨迹
             ctx.save();
             ctx.translate(t.x - this.x, t.y - this.y);
-            ctx.globalAlpha = t.life / 2.0;
+            const lifeRatio = Math.max(0, t.life / 2.0);
+            ctx.globalAlpha = lifeRatio;
             ctx.fillStyle = '#ff5722';
             ctx.beginPath();
-            ctx.arc(0, 0, 15 * (t.life / 2.0), 0, Math.PI * 2);
+            ctx.arc(0, 0, Math.max(1, 15 * lifeRatio), 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = '#ffeb3b';
             ctx.beginPath();
-            ctx.arc(0, 0, 8 * (t.life / 2.0), 0, Math.PI * 2);
+            ctx.arc(0, 0, Math.max(1, 8 * lifeRatio), 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         });

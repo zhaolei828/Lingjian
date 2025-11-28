@@ -306,6 +306,84 @@
         .card p {
             font-size: 12px !important;
         }
+        
+        /* ========== 技能选择界面 - 移动端适配 ========== */
+        .skill-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .skill-overlay.hidden {
+            display: none !important;
+        }
+        
+        .skill-panel {
+            text-align: center;
+            width: 95%;
+            max-width: 400px;
+        }
+        
+        .skill-title {
+            font-size: 22px;
+            color: #f1c40f;
+            text-shadow: 0 0 15px rgba(241, 196, 15, 0.5);
+            margin-bottom: 20px;
+        }
+        
+        .skill-choices {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 0 10px;
+        }
+        
+        .skill-card {
+            background: linear-gradient(135deg, #2c1810 0%, #1a0a0a 100%);
+            border: 2px solid #8b0000;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-align: left;
+        }
+        
+        .skill-card:active {
+            transform: scale(0.95);
+            border-color: #f1c40f;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
+        }
+        
+        .skill-icon {
+            font-size: 36px;
+            flex-shrink: 0;
+        }
+        
+        .skill-info {
+            flex: 1;
+        }
+        
+        .skill-name {
+            font-size: 18px;
+            color: #f1c40f;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .skill-desc {
+            font-size: 13px;
+            color: #aaa;
+        }
     </style>
 </head>
 <body>
@@ -339,24 +417,24 @@
         </div>
     </div>
 
-    <!-- 道具卡槽 -->
+    <!-- 道具卡槽 - 移动端使用 touchstart 事件，不用 onclick -->
     <div class="item-slots" id="item-slots">
-        <div class="item-slot" data-slot="0" onclick="useItemCard(0)">
+        <div class="item-slot" data-slot="0">
             <div class="slot-content"></div>
         </div>
-        <div class="item-slot" data-slot="1" onclick="useItemCard(1)">
+        <div class="item-slot" data-slot="1">
             <div class="slot-content"></div>
         </div>
-        <div class="item-slot" data-slot="2" onclick="useItemCard(2)">
+        <div class="item-slot" data-slot="2">
             <div class="slot-content"></div>
         </div>
-        <div class="item-slot" data-slot="3" onclick="useItemCard(3)">
+        <div class="item-slot" data-slot="3">
             <div class="slot-content"></div>
         </div>
-        <div class="item-slot" data-slot="4" onclick="useItemCard(4)">
+        <div class="item-slot" data-slot="4">
             <div class="slot-content"></div>
         </div>
-        <div class="item-slot" data-slot="5" onclick="useItemCard(5)">
+        <div class="item-slot" data-slot="5">
             <div class="slot-content"></div>
         </div>
     </div>
@@ -405,6 +483,14 @@
     <div id="boss-countdown" class="menu-box hidden">
         <div class="countdown-number" id="countdown-num">3</div>
         <div class="countdown-text" id="countdown-text">BOSS 来袭</div>
+    </div>
+
+    <!-- 技能选择 -->
+    <div id="skill-overlay" class="skill-overlay hidden">
+        <div class="skill-panel">
+            <div class="skill-title">⚔️ 波次通过 · 选择功法 ⚔️</div>
+            <div class="skill-choices" id="skill-choices"></div>
+        </div>
     </div>
 
     <!-- 升级菜单 -->

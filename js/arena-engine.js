@@ -632,14 +632,31 @@ export class ArenaEngine {
             card.className = 'skill-card';
             card.innerHTML = `
                 <div class="skill-icon">${skill.icon}</div>
-                <div class="skill-name">${skill.name}</div>
-                <div class="skill-desc">${skill.desc}</div>
+                <div class="skill-info">
+                    <div class="skill-name">${skill.name}</div>
+                    <div class="skill-desc">${skill.desc}</div>
+                </div>
             `;
-            card.onclick = () => this.confirmSkillChoice(skill);
+            
+            // 防止重复触发
+            let handled = false;
+            const handleSelect = (e) => {
+                if (handled) return;
+                handled = true;
+                e.preventDefault();
+                e.stopPropagation();
+                this.confirmSkillChoice(skill);
+            };
+            
+            card.addEventListener('click', handleSelect);
+            card.addEventListener('touchend', handleSelect);
             container.appendChild(card);
         });
         
+        // 强制显示 overlay
         overlay.classList.remove('hidden');
+        overlay.style.display = 'flex';
+        overlay.style.opacity = '1';
     }
     
     // 确认技能选择
@@ -652,7 +669,10 @@ export class ArenaEngine {
         
         // 隐藏UI
         const overlay = document.getElementById('skill-overlay');
-        if (overlay) overlay.classList.add('hidden');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            overlay.style.display = 'none';
+        }
         
         this.pendingSkillChoice = false;
         this.state = 'PLAY';
