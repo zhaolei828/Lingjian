@@ -15,7 +15,7 @@ export default {
                 { src: 'game.json', dest: 'dist' },
                 { src: 'project.config.json', dest: 'dist' },
                 { src: 'js/libs/weapp-adapter.js', dest: 'dist' },
-                { src: 'img/**/*', dest: 'dist/img' }
+                { src: 'img', dest: 'dist' }  // 直接复制整个文件夹，保留结构
             ]
         })
     ]
