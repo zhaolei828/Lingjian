@@ -1080,6 +1080,12 @@ export class ItemCardManager {
     }
     
     updateUI() {
+        // 检查是否存在 DOM 环境
+        if (typeof document === 'undefined' || !document.querySelector) {
+            // Canvas 环境：UI 由 game-ui.js 绘制，这里不需要操作
+            return;
+        }
+        
         for (let i = 0; i < this.maxSlots; i++) {
             const slotEl = document.querySelector(`.item-slot[data-slot="${i}"]`);
             if (!slotEl) continue;
@@ -1100,5 +1106,27 @@ export class ItemCardManager {
                 slotEl.title = '';
             }
         }
+    }
+    
+    // 检查触摸点击是否在道具卡槽上（供 Canvas UI 使用）
+    handleTouch(x, y, width, height) {
+        const slotSize = 40;
+        const spacing = 5;
+        const startX = width - (slotSize + spacing) * 6 - 10;
+        const startY = height - slotSize - 80;
+        
+        for (let i = 0; i < 6; i++) {
+            const slotX = startX + (slotSize + spacing) * i;
+            const slotY = startY;
+            
+            if (x >= slotX && x <= slotX + slotSize &&
+                y >= slotY && y <= slotY + slotSize) {
+                // 点击了槽位 i
+                this.useCard(i);
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

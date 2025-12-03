@@ -1,11 +1,13 @@
-import { ArenaEngine } from './arena-engine.js';
+// 移动端血色秘境入口 - 使用统一引擎
+import { UnifiedArenaEngine, GAME_MODES } from './arena-unified.js';
 import { ROLES, SVG_LIB } from './data.js';
 import { initAvatar, loadAssets } from './assets.js';
+import { Platform } from './platform.js';
 
-// 移动端血色秘境引擎 - 使用 Nipple.js 虚拟摇杆
-class MobileArenaEngine extends ArenaEngine {
-    constructor() {
-        super();
+// 移动端血色秘境引擎 - 继承统一引擎，添加 Nipple.js 虚拟摇杆
+class MobileArenaEngine extends UnifiedArenaEngine {
+    constructor(canvas, width, height) {
+        super(canvas, width, height);
         
         // 摇杆状态
         this.joystickInput = {
@@ -105,10 +107,10 @@ class MobileArenaEngine extends ArenaEngine {
         }
     }
     
-    // 开始游戏
+    // 开始游戏 - 秘境模式
     start(roleId) {
-        // 先调用父类的 start
-        super.start(roleId);
+        // 调用父类的 start（秘境模式）
+        super.start(roleId, GAME_MODES.ARENA, 0);
         
         // 初始化摇杆
         this.initJoystick();
@@ -120,6 +122,10 @@ class MobileArenaEngine extends ArenaEngine {
         // 显示摇杆区域
         const zone = document.getElementById('joystick-zone');
         if (zone) zone.style.display = 'block';
+        
+        // 隐藏菜单
+        document.getElementById('overlay')?.classList.add('hidden');
+        document.getElementById('start-menu')?.classList.add('hidden');
     }
     
     // 游戏结束
@@ -136,7 +142,7 @@ class MobileArenaEngine extends ArenaEngine {
         this.joystickInput.dy = 0;
     }
     
-    // 更新
+    // 更新 - 将摇杆输入传递给父类
     update(dt) {
         // 将摇杆输入传递给 touch 状态供 Player.update 使用
         this.touch.active = this.joystickInput.active;
@@ -146,57 +152,6 @@ class MobileArenaEngine extends ArenaEngine {
         // 调用父类更新
         super.update(dt);
     }
-    
-    // 重写绘制方法
-    draw() {
-        const ctx = this.ctx;
-        ctx.clearRect(0, 0, this.width, this.height);
-        
-        ctx.save();
-        
-        // 震屏效果
-        if (this.shake > 0) {
-            ctx.translate(
-                (Math.random() - 0.5) * this.shake * 10,
-                (Math.random() - 0.5) * this.shake * 10
-            );
-        }
-        
-        // 相机偏移
-        ctx.translate(-this.camera.x, -this.camera.y);
-        
-        // 绘制背景
-        this.drawBackground(ctx);
-        
-        // 绘制边缘
-        this.drawArenaEdge(ctx);
-        
-        // 绘制金币
-        const ASSETS = {}; // 从父类获取
-        this.coins.forEach(c => c.draw(ctx, ASSETS));
-        
-        // 绘制敌人
-        this.enemies.forEach(e => e.draw(ctx, ASSETS));
-        
-        // 绘制子弹
-        this.drawBullets(ctx);
-        
-        // 绘制玩家
-        if (this.player) {
-            this.player.draw(ctx, ASSETS);
-        }
-        
-        // 绘制粒子
-        this.particles.forEach(p => p.draw(ctx));
-        
-        // 绘制文字
-        this.texts.forEach(t => t.draw(ctx));
-        
-        ctx.restore();
-        
-        // 绘制血雾效果
-        this.drawBloodMist(ctx);
-    }
 }
 
 // 全局引擎实例
@@ -205,10 +160,22 @@ let currentRole = 'sword';
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
-    engine = new MobileArenaEngine();
+    // 获取画布
+    const canvas = document.getElementById('gameCanvas');
+    
+    // 设置画布尺寸
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // 创建移动端秘境引擎
+    engine = new MobileArenaEngine(canvas, width, height);
     
     // 暴露给全局
     window.engine = engine;
+    window.Game = engine;
     
     // 从 localStorage 读取主游戏选择的角色
     const savedRole = localStorage.getItem('arenaRole');
@@ -228,6 +195,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 初始化道具槽触摸事件
     setupItemSlotTouch();
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        engine.resize(canvas.width, canvas.height);
+    });
+    
+    // 启动游戏循环
+    requestAnimationFrame(t => engine.loop(t));
 });
 
 // 阻止默认行为（缩放、滚动等）
@@ -309,9 +286,9 @@ window.backToMain = function() {
 
 // 再次挑战
 window.restartArena = function() {
-    document.getElementById('overlay').classList.add('hidden');
-    document.getElementById('victory-menu').classList.add('hidden');
-    document.getElementById('defeat-menu').classList.add('hidden');
+    document.getElementById('overlay')?.classList.add('hidden');
+    document.getElementById('victory-menu')?.classList.add('hidden');
+    document.getElementById('defeat-menu')?.classList.add('hidden');
     
     if (engine) {
         engine.start(currentRole);

@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<canvas id="gameCanvas"></canvas>
+<canvas id="gameCanvas" style="position: fixed; top: 0; left: 0; z-index: 0;"></canvas>
 
 <div id="ui-layer">
     <!-- 顶部HUD -->
@@ -75,7 +75,7 @@
 </div>
 
 <!-- 遮罩层 -->
-<div id="overlay">
+<div id="overlay" style="z-index: 100 !important; background: rgba(10,5,5,0.95) !important;">
     <!-- 开始菜单 -->
     <div id="start-menu" class="menu-box">
         <div class="arena-title">血色秘境</div>

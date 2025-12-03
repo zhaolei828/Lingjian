@@ -1,0 +1,12 @@
+{
+    "setting": {
+        "es6": true,
+        "postcss": true,
+        "minified": true
+    },
+    "compileType": "game",
+    "appid": "",
+    "projectname": "lingjian-arena",
+    "description": "灵剑 · 血色秘境"
+}
+

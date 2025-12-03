@@ -1,0 +1,38 @@
+{
+    "setting": {
+        "es6": true,
+        "postcss": true,
+        "minified": true,
+        "uglifyFileName": false,
+        "enhance": true,
+        "packNpmRelationList": [],
+        "babelSetting": {
+            "ignore": [],
+            "disablePlugins": [],
+            "outputPath": ""
+        },
+        "useCompilerPlugins": false,
+        "urlCheck": false,
+        "coverView": true,
+        "compileHotReLoad": true
+    },
+    "compileType": "game",
+    "simulatorPluginLibVersion": {},
+    "packOptions": {
+        "ignore": [
+            { "type": "file", "value": "*.html" },
+            { "type": "file", "value": "*.md" },
+            { "type": "folder", "value": "docs" },
+            { "type": "file", "value": "Desktop.ini" }
+        ],
+        "include": []
+    },
+    "isGameTourist": true,
+    "appid": "wx6ac3f5090a6b99c5",
+    "projectname": "lingjian-arena",
+    "description": "灵剑 · 血色秘境",
+    "editorSetting": {
+        "tabIndent": "insertSpaces",
+        "tabSize": 4
+    }
+}
