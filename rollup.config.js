@@ -1,14 +1,23 @@
 import resolve from '@rollup/plugin-node-resolve';
+import copy from 'rollup-plugin-copy';
 
 export default {
     input: 'game.src.js',
     output: {
-        file: 'game.js',
+        file: 'dist/game.js',
         format: 'iife',  // 立即执行函数，适合小游戏
         name: 'Game'
     },
     plugins: [
-        resolve()
+        resolve(),
+        copy({
+            targets: [
+                { src: 'game.json', dest: 'dist' },
+                { src: 'project.config.json', dest: 'dist' },
+                { src: 'js/libs/weapp-adapter.js', dest: 'dist' },
+                { src: 'img/**/*', dest: 'dist/img' }
+            ]
+        })
     ]
 };
 

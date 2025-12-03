@@ -6,8 +6,9 @@
     "doc": "docs"
   },
   "scripts": {
-    "build": "rollup -c rollup.config.js",
+    "build": "rmdir /s /q dist 2>nul & rollup -c rollup.config.js",
     "build:watch": "rollup -c rollup.config.js -w",
+    "clean": "rmdir /s /q dist 2>nul",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -24,6 +25,7 @@
   "description": "",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "rollup": "^4.53.3"
+    "rollup": "^4.53.3",
+    "rollup-plugin-copy": "^3.5.0"
   }
 }
