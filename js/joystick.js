@@ -77,13 +77,17 @@ export class VirtualJoystick {
         return x >= z.x && x <= z.x + z.width && y >= z.y && y <= z.y + z.height;
     }
     
+    // 获取触摸坐标（Web 和小游戏都用 clientX/clientY）
+    getTouchCoords(touch) {
+        return { x: touch.clientX, y: touch.clientY };
+    }
+    
     handleTouchStart(e) {
         // 如果已有触摸，忽略
         if (this.active) return;
         
         for (const touch of e.changedTouches) {
-            const x = touch.clientX;
-            const y = touch.clientY;
+            const { x, y } = this.getTouchCoords(touch);
             
             if (this.isInZone(x, y)) {
                 this.active = true;
@@ -116,7 +120,8 @@ export class VirtualJoystick {
         
         for (const touch of e.changedTouches) {
             if (touch.identifier === this.touchId) {
-                this.updateOutput(touch.clientX, touch.clientY);
+                const { x, y } = this.getTouchCoords(touch);
+                this.updateOutput(x, y);
                 break;
             }
         }

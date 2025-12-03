@@ -541,12 +541,20 @@ export class UIManager {
         });
     }
     
-    // 绑定触摸事件
+    // 绑定触摸事件（只绑定一次）
+    _touchBound = false;
     bindTouchEvents() {
+        if (this._touchBound) {
+            console.log('[UI] Touch events already bindled, skip');
+            return;
+        }
+        this._touchBound = true;
+        console.log('[UI] Bindng touch events...');
         Platform.onTouchStart((e) => this.handleTouchStart(e));
         Platform.onTouchMove((e) => this.handleTouchMove(e));
         Platform.onTouchEnd((e) => this.handleTouchEnd(e));
         Platform.onTouchCancel((e) => this.handleTouchCancel(e));
+        console.log('[UI] Touch events bindled');
     }
     
     // 获取所有可交互组件（按层级从高到低）
@@ -585,16 +593,31 @@ export class UIManager {
     
     handleTouchStart(e) {
         const touch = e.touches[0];
-        if (!touch) return;
+        if (!touch) {
+            console.log('[UI] handleTouchStart: no touch');
+            return;
+        }
         
-        // 考虑 canvas 缩放和 pixelRatio
-        const rect = Platform.isWeb ? this.canvas.getBoundingClientRect() : { left: 0, top: 0 };
-        const scaleX = this.width / rect.width;
-        const scaleY = this.height / rect.height;
-        const x = (touch.clientX - rect.left) * scaleX;
-        const y = (touch.clientY - rect.top) * scaleY;
+        // 微信小游戏和 Web 都使用 clientX/clientY
+        // 小游戏没有 getBoundingClientRect，直接使用坐标
+        let x, y;
+        if (Platform.isWeb && this.canvas.getBoundingClientRect) {
+            const rect = this.canvas.getBoundingClientRect();
+            const scaleX = this.width / rect.width;
+            const scaleY = this.height / rect.height;
+            x = (touch.clientX - rect.left) * scaleX;
+            y = (touch.clientY - rect.top) * scaleY;
+        } else {
+            // 小游戏环境直接使用 clientX/clientY
+            x = touch.clientX;
+            y = touch.clientY;
+        }
+        
+        console.log(`[UI] Touch at (${Math.round(x)}, ${Math.round(y)}), components: ${this.getInteractiveComponents().length}`);
         
         const comp = this.findComponentAt(x, y);
+        console.log(`[UI] Found component: ${comp ? comp.constructor.name : 'none'}`);
+        
         if (comp && comp.onTouchStart) {
             this.activeComponent = comp;
             comp.onTouchStart(x, y);

@@ -22,6 +22,11 @@
         "ignore": [
             { "type": "file", "value": "*.html" },
             { "type": "file", "value": "*.md" },
+            { "type": "file", "value": "*.src.js" },
+            { "type": "file", "value": "rollup.config.js" },
+            { "type": "file", "value": "package.json" },
+            { "type": "file", "value": "package-lock.json" },
+            { "type": "folder", "value": "node_modules" },
             { "type": "folder", "value": "docs" },
             { "type": "file", "value": "Desktop.ini" }
         ],

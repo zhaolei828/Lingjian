@@ -78,8 +78,12 @@ export class GameUI {
         this.createStartMenu();
     }
     
-    // 设置道具卡槽触摸事件
+    // 设置道具卡槽触摸事件（只绑定一次）
+    _itemSlotTouchBound = false;
     setupItemSlotTouch() {
+        if (this._itemSlotTouchBound) return;
+        this._itemSlotTouchBound = true;
+        
         Platform.onTouchStart((e) => {
             if (this.currentScreen !== 'playing') return;
             if (!this.engine || !this.engine.itemCards) return;
@@ -88,11 +92,18 @@ export class GameUI {
             if (!touch) return;
             
             // 获取屏幕坐标转换为逻辑坐标
-            const rect = this.canvas.getBoundingClientRect ? this.canvas.getBoundingClientRect() : { left: 0, top: 0, width: this.width, height: this.height };
-            const scaleX = this.width / rect.width;
-            const scaleY = this.height / rect.height;
-            const x = (touch.clientX - rect.left) * scaleX;
-            const y = (touch.clientY - rect.top) * scaleY;
+            let x, y;
+            if (Platform.isWeb && this.canvas.getBoundingClientRect) {
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.width / rect.width;
+                const scaleY = this.height / rect.height;
+                x = (touch.clientX - rect.left) * scaleX;
+                y = (touch.clientY - rect.top) * scaleY;
+            } else {
+                // 小游戏环境直接使用 clientX/clientY
+                x = touch.clientX;
+                y = touch.clientY;
+            }
             
             // 检查是否点击了道具卡槽
             this.engine.itemCards.handleTouch(x, y, this.width, this.height);
@@ -115,6 +126,7 @@ export class GameUI {
     
     // ========== 开始菜单 ==========
     createStartMenu() {
+        console.log('[GameUI] createStartMenu called');
         this.ui.clearAll();
         this.currentScreen = 'start';
         
@@ -136,18 +148,27 @@ export class GameUI {
             }
         );
         this.ui.add(panel, 'overlay');
+        console.log('[GameUI] Panel added, interactive components:', this.ui.getInteractiveComponents().length);
         
         // 标题
-        const title = new Label(panelWidth / 2, 30, '灵剑录', {
-            fontSize: 36,
+        const title = new Label(panelWidth / 2, 28, '灵剑 • 绝世仙缘', {
+            fontSize: 28,
             color: '#c0392b',
             align: 'center',
             shadow: { color: '#000', blur: 10 }
         });
         panel.addChild(title);
         
+        // 副标题
+        const subtitle = new Label(panelWidth / 2, 52, '移动版', {
+            fontSize: 14,
+            color: '#888',
+            align: 'center'
+        });
+        panel.addChild(subtitle);
+        
         // ========== 模式选择标签页 ==========
-        const tabY = 70;
+        const tabY = 75;
         const tabWidth = (panelWidth - 40) / 2;
         
         // 关卡模式按钮
@@ -179,7 +200,7 @@ export class GameUI {
         panel.addChild(arenaTabBtn);
         
         // ========== 根据模式显示不同内容 ==========
-        const contentY = 120;
+        const contentY = 125;
         
         if (this.selectedMode === GAME_MODES.ARENA) {
             // 秘境模式说明
@@ -239,7 +260,7 @@ export class GameUI {
         }
         
         // ========== 角色选择 ==========
-        const roleY = this.selectedMode === GAME_MODES.ARENA ? contentY + 100 : contentY + 290;
+        const roleY = this.selectedMode === GAME_MODES.ARENA ? contentY + 105 : contentY + 295;
         
         const roleLabel = new Label(panelWidth / 2, roleY, '选择角色', {
             fontSize: 12,

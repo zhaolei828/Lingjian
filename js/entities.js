@@ -253,8 +253,12 @@ export class Player extends Entity {
         if(this.invulnTimer > 0) return;
         if(this.invincible) return; // 金身符无敌
         
+        // 确保伤害值有效
+        const damage = d || 0;
+        if (isNaN(damage) || damage <= 0) return;
+        
         // 玄武盾减伤效果
-        let actualDamage = d;
+        let actualDamage = damage;
         if (this.damageReduction) {
             actualDamage = d * (1 - this.damageReduction);
         }
@@ -265,7 +269,7 @@ export class Player extends Entity {
         
         // 玄武盾反弹效果
         if (this.damageReflect && attacker && !attacker.dead) {
-            const reflectDamage = d * this.damageReflect;
+            const reflectDamage = damage * this.damageReflect;
             attacker.hp -= reflectDamage;
             window.Game.texts.push(new FloatText(attacker.x, attacker.y, "-"+Math.floor(reflectDamage), '#3498db'));
             window.Game.particles.push(new Particle(attacker.x, attacker.y, '#3498db', 0.3, 4));
@@ -340,7 +344,11 @@ export class Enemy extends Entity {
         if(dToPlayer<30*this.scale) p.hit(this.dmg); // Discrete damage
     }
     takeDamage(v, kx, ky, type, knockbackMult = 1.0) {
-        this.hp-=v; 
+        // 确保伤害值有效
+        const dmg = v || 0;
+        if (isNaN(dmg) || dmg <= 0) return;
+        
+        this.hp -= dmg; 
         this.hitFlashTimer = 0.1; // Flash
         
         let force = 120;
@@ -374,7 +382,7 @@ export class Enemy extends Entity {
         // Only show text if enough time passed since last hit of this type (0.2s)
         // OR if it's a crit (always show crits)
         if (crit || !this.lastDamageTime[type] || (now - this.lastDamageTime[type] > 0.2)) {
-             window.Game.texts.push(new FloatText(this.x, this.y-20*this.scale, Math.floor(v), c, crit));
+             window.Game.texts.push(new FloatText(this.x, this.y-20*this.scale, Math.floor(dmg), c, crit));
              this.lastDamageTime[type] = now;
         }
         

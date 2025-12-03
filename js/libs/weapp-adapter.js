@@ -1,12 +1,14 @@
 // ========== 微信小游戏适配层 ==========
 // 提供基础的 DOM API 模拟，让现有代码能在小游戏环境运行
 
-// 注意：大部分适配已在 platform.js 中完成
-// 这个文件主要用于处理一些边缘情况
-
 // 如果是小游戏环境
 if (typeof wx !== 'undefined' || typeof tt !== 'undefined') {
     const api = typeof wx !== 'undefined' ? wx : tt;
+    
+    // 【重要】首先创建主画布（第一个创建的是屏幕画布）
+    const mainCanvas = api.createCanvas();
+    GameGlobal.canvas = mainCanvas;
+    GameGlobal.__bindedCanvas = mainCanvas; // 标记为已绑定的主画布
     
     // 模拟 window 对象（如果不存在）
     if (typeof window === 'undefined') {
@@ -18,6 +20,7 @@ if (typeof wx !== 'undefined' || typeof tt !== 'undefined') {
         GameGlobal.document = {
             createElement: (tagName) => {
                 if (tagName === 'canvas') {
+                    // 返回新的离屏画布（非主画布）
                     return api.createCanvas();
                 }
                 if (tagName === 'img' || tagName === 'image') {
@@ -49,14 +52,15 @@ if (typeof wx !== 'undefined' || typeof tt !== 'undefined') {
         };
     }
     
-    // 模拟 HTMLCanvasElement
+    // 模拟 HTMLCanvasElement（延迟获取，避免过早创建 canvas）
     if (typeof HTMLCanvasElement === 'undefined') {
-        GameGlobal.HTMLCanvasElement = api.createCanvas().constructor;
+        // 使用空函数占位，实际类型检查时不常用
+        GameGlobal.HTMLCanvasElement = function() {};
     }
     
-    // 模拟 HTMLImageElement
+    // 模拟 HTMLImageElement（延迟获取）
     if (typeof HTMLImageElement === 'undefined') {
-        GameGlobal.HTMLImageElement = api.createImage().constructor;
+        GameGlobal.HTMLImageElement = function() {};
     }
     
     // 模拟 localStorage（基于小游戏存储）

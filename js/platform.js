@@ -89,8 +89,15 @@ export const Platform = {
         if (isWeb) {
             return document.getElementById('gameCanvas') || document.querySelector('canvas');
         }
-        // 小游戏环境下，canvas 是全局的
-        return typeof canvas !== 'undefined' ? canvas : nativeAPI.createCanvas();
+        // 小游戏环境下，优先使用全局 canvas
+        if (typeof GameGlobal !== 'undefined' && GameGlobal.canvas) {
+            return GameGlobal.canvas;
+        }
+        if (typeof canvas !== 'undefined') {
+            return canvas;
+        }
+        // 创建新画布（第一个创建的是屏幕画布）
+        return nativeAPI.createCanvas();
     },
     
     // ========== 图片相关 ==========
@@ -174,9 +181,11 @@ export const Platform = {
     // 注册触摸开始事件
     onTouchStart(handler) {
         this._touchStartHandlers.push(handler);
+        console.log(`[Platform] onTouchStart registered, total: ${this._touchStartHandlers.length}, isWeb: ${isWeb}`);
         if (isWeb) {
             // Web 环境在初始化时统一绑定
         } else {
+            console.log('[Platform] Calling nativeAPI.onTouchStart...');
             nativeAPI.onTouchStart(handler);
         }
     },
@@ -233,6 +242,13 @@ export const Platform = {
         if (idx > -1) this._touchEndHandlers.splice(idx, 1);
         if (!isWeb && nativeAPI.offTouchEnd) {
             nativeAPI.offTouchEnd(handler);
+        }
+    },
+    
+    offTouchCancel(handler) {
+        // TouchCancel 通常可以忽略或当作 TouchEnd 处理
+        if (!isWeb && nativeAPI.offTouchCancel) {
+            nativeAPI.offTouchCancel(handler);
         }
     },
     
