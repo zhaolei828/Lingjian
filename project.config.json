@@ -20,20 +20,47 @@
     "simulatorPluginLibVersion": {},
     "packOptions": {
         "ignore": [
-            { "type": "file", "value": "*.html" },
-            { "type": "file", "value": "*.md" },
-            { "type": "file", "value": "*.src.js" },
-            { "type": "file", "value": "rollup.config.js" },
-            { "type": "file", "value": "package.json" },
-            { "type": "file", "value": "package-lock.json" },
-            { "type": "folder", "value": "node_modules" },
-            { "type": "folder", "value": "docs" },
-            { "type": "file", "value": "Desktop.ini" }
+            {
+                "type": "file",
+                "value": "*.html"
+            },
+            {
+                "type": "file",
+                "value": "*.md"
+            },
+            {
+                "type": "file",
+                "value": "*.src.js"
+            },
+            {
+                "type": "file",
+                "value": "rollup.config.js"
+            },
+            {
+                "type": "file",
+                "value": "package.json"
+            },
+            {
+                "type": "file",
+                "value": "package-lock.json"
+            },
+            {
+                "type": "folder",
+                "value": "node_modules"
+            },
+            {
+                "type": "folder",
+                "value": "docs"
+            },
+            {
+                "type": "file",
+                "value": "Desktop.ini"
+            }
         ],
         "include": []
     },
     "isGameTourist": true,
-    "appid": "wx6ac3f5090a6b99c5",
+    "appid": "wxd57bd7310265a642",
     "projectname": "lingjian-arena",
     "description": "灵剑 · 血色秘境",
     "editorSetting": {
