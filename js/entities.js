@@ -1,5 +1,5 @@
 import { Assets } from './assets.js';
-import { ROLES, ARTIFACTS } from './data.js';
+import { ROLES, ARTIFACTS, ARENA_MOBS, ARENA_BOSSES } from './data.js';
 import { collisionManager } from './spatial-hash.js';
 
 export class Entity { 
@@ -604,6 +604,150 @@ export class Enemy extends Entity {
     }
 }
 
+// ========== 秘境专属敌人类 ==========
+export class ArenaEnemy extends Enemy {
+    constructor(type, x, y, levelMult, playerLevel) {
+        const mobData = ARENA_MOBS[type] || ARENA_BOSSES[type];
+        const baseHp = mobData?.hp || 50;
+        const baseDmg = mobData?.dmg || 10;
+        const baseSpeed = mobData?.speed || 80;
+        const level = Math.max(1, Math.floor(playerLevel * levelMult));
+        
+        super(type, x, y, level);
+        
+        this.hp = baseHp * (1 + level * 0.2);
+        this.maxHp = this.hp;
+        this.dmg = baseDmg * (1 + level * 0.1);
+        this.speed = baseSpeed;
+        this.goldDrop = mobData?.goldDrop || [1, 2];
+        this.isBoss = !!ARENA_BOSSES[type];
+        this.bossSize = mobData?.size || 1.0;
+        this.name = mobData?.name || type;
+        this.scale = this.isBoss ? this.bossSize : 1.0;
+        
+        if (this.isBoss) {
+            this.hp *= 10;
+            this.maxHp = this.hp;
+            this.dmg *= 2;
+        }
+    }
+    
+    takeDamage(v, kx, ky, type, knockback) {
+        if (this.dead) return;
+        
+        const dmg = v || 0;
+        if (isNaN(dmg) || dmg <= 0) return;
+        
+        this.hp -= dmg;
+        this.hitFlashTimer = 0.1;
+        
+        // 击退
+        const force = (this.isBoss ? 5 : 10) * (knockback || 1);
+        this.pushX = (kx || 0) * force;
+        this.pushY = (ky || 0) * force;
+        
+        // 伤害数字
+        window.Game.texts.push(new FloatText(this.x, this.y - 30, Math.floor(dmg), '#ff5252'));
+        
+        // 粒子效果
+        for (let i = 0; i < 3; i++) {
+            if (window.Game.pool) {
+                window.Game.particles.push(window.Game.pool.get('particle', Particle, this.x, this.y, '#ff5252', 0.3, 4));
+            } else {
+                window.Game.particles.push(new Particle(this.x, this.y, '#ff5252', 0.3, 4));
+            }
+        }
+        
+        // 死亡处理
+        if (this.hp <= 0 && !this.dead) {
+            if (window.Game.onEnemyKilled) {
+                window.Game.onEnemyKilled(this);
+            } else {
+                this.dead = true;
+            }
+        }
+    }
+    
+    draw(ctx, assets) {
+        if (this.dead) return;
+        
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.scale(this.scale, this.scale);
+        
+        // 阴影
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath();
+        ctx.ellipse(0, 20, 20, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        const shouldFlip = window.Game.player && window.Game.player.x < this.x;
+        if (shouldFlip) ctx.scale(-1, 1);
+        
+        // 受击闪烁
+        if (this.hitFlashTimer > 0) {
+            ctx.globalAlpha = 0.5 + Math.sin(Date.now() * 0.02) * 0.3;
+        }
+        
+        // 绘制怪物
+        this.drawArenaMob(ctx);
+        
+        ctx.restore();
+        
+        // 名字和血条（不受缩放影响）
+        this.drawArenaUI(ctx);
+    }
+    
+    drawArenaMob(ctx) {
+        const time = Date.now() / 1000;
+        const bounce = Math.sin(time * 5 + this.x) * 2;
+        
+        // 简化的怪物绘制
+        ctx.fillStyle = this.isBoss ? '#c0392b' : '#8b0000';
+        ctx.beginPath();
+        ctx.arc(0, bounce, this.isBoss ? 25 : 15, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 眼睛
+        ctx.fillStyle = '#ff0';
+        ctx.beginPath();
+        ctx.arc(-5, -3 + bounce, 3, 0, Math.PI * 2);
+        ctx.arc(5, -3 + bounce, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    drawArenaUI(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        // 名字
+        const mobData = ARENA_MOBS[this.type] || ARENA_BOSSES[this.type];
+        ctx.fillStyle = this.isBoss ? '#ffcc00' : '#fff';
+        ctx.font = this.isBoss ? 'bold 14px Arial' : '11px Arial';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 3;
+        ctx.fillText(mobData?.name || this.type, 0, -30 * this.scale);
+        ctx.shadowBlur = 0;
+        
+        // 血条（非 BOSS）
+        if (!this.isBoss && this.hp < this.maxHp) {
+            const barWidth = 40;
+            const barHeight = 5;
+            const hpRatio = Math.max(0, this.hp / this.maxHp);
+            const barY = -35 * this.scale;
+            
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(-barWidth/2 - 1, barY - 1, barWidth + 2, barHeight + 2);
+            
+            ctx.fillStyle = hpRatio > 0.5 ? '#4caf50' : hpRatio > 0.25 ? '#ff9800' : '#f44336';
+            ctx.fillRect(-barWidth/2, barY, barWidth * hpRatio, barHeight);
+        }
+        
+        ctx.restore();
+    }
+}
+
 export class Bullet extends Entity {
     constructor(x, y, t, s) {
         super(x, y);
@@ -767,16 +911,19 @@ export class Bullet extends Entity {
         }
 
         // 【优化】使用空间哈希只检测附近敌人
-        const nearbyEnemies = collisionManager.findEnemiesInRange(this.x, this.y, 80);
-        for(let e of nearbyEnemies) {
-            if(this.dist(e)<35 && !this.hitList.includes(e)) {
-                this.hit(e);
-                this.hitList.push(e);
-                if(this.pierce > 0) {
-                    this.pierce--;
-                } else {
-                    this.dead = true;
-                    break;
+        // 秘境模式下跳过此碰撞检测（由 arena-unified.js 处理）
+        if (!this.skipCollision) {
+            const nearbyEnemies = collisionManager.findEnemiesInRange(this.x, this.y, 80);
+            for(let e of nearbyEnemies) {
+                if(this.dist(e)<35 && !this.hitList.includes(e)) {
+                    this.hit(e);
+                    this.hitList.push(e);
+                    if(this.pierce > 0) {
+                        this.pierce--;
+                    } else {
+                        this.dead = true;
+                        break;
+                    }
                 }
             }
         }

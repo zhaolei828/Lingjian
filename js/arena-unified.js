@@ -4,7 +4,7 @@
 
 import { Platform } from './platform.js';
 import { STAGES, ARENA_CONFIG, ARENA_MOBS, ARENA_BOSSES, ARTIFACTS, SKILLS, ROLES, SVG_LIB, ITEM_CARDS } from './data.js';
-import { Player, Enemy, FloatText, Particle, Artifact, StaticObject, Chest, Footprint, Bullet } from './entities.js';
+import { Player, Enemy, ArenaEnemy, FloatText, Particle, Artifact, StaticObject, Chest, Footprint, Bullet } from './entities.js';
 import { Assets, loadAssets } from './assets.js';
 import { generateBloodArenaPattern, generateStagePattern } from './map.js';
 import { Coin } from './coin.js';
@@ -60,127 +60,7 @@ const STAGE_STYLES = [
     }
 ];
 
-// 血色秘境专属敌人类
-class ArenaEnemy extends Enemy {
-    constructor(type, x, y, levelMult, playerLevel) {
-        const mobData = ARENA_MOBS[type] || ARENA_BOSSES[type];
-        const baseHp = mobData?.hp || 50;
-        const baseDmg = mobData?.dmg || 10;
-        const level = Math.max(1, Math.floor(playerLevel * levelMult));
-        
-        super(type, x, y, level);
-        
-        this.hp = baseHp * (1 + level * 0.2);
-        this.maxHp = this.hp;
-        this.dmg = baseDmg * (1 + level * 0.1);
-        this.goldDrop = mobData?.goldDrop || [1, 2];
-        this.isBoss = !!ARENA_BOSSES[type];
-        this.bossSize = mobData?.size || 1.0;
-        this.name = mobData?.name || type;
-        
-        if (this.isBoss) {
-            this.hp *= 10;
-            this.maxHp = this.hp;
-            this.dmg *= 2;
-        }
-    }
-    
-    takeDamage(v, kx, ky, type, knockback) {
-        if (this.dead) return;
-        
-        // 确保伤害值有效
-        const dmg = v || 0;
-        if (isNaN(dmg) || dmg <= 0) return;
-        
-        this.hp -= dmg;
-        this.x += (kx || 0) * 10 * (knockback || 1);
-        this.y += (ky || 0) * 10 * (knockback || 1);
-        
-        window.Game.texts.push(new FloatText(this.x, this.y - 30, Math.floor(dmg), '#ff5252'));
-        
-        for (let i = 0; i < 5; i++) {
-            window.Game.particles.push(window.Game.pool.get('particle', Particle, this.x, this.y, '#ff5252', 0.3, 4));
-        }
-        
-        if (this.hp <= 0 && !this.dead) {
-            window.Game.onEnemyKilled(this);
-        }
-    }
-    
-    draw(ctx, assets) {
-        if (this.dead) return;
-        
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        
-        const scale = this.isBoss ? this.bossSize : 1.0;
-        ctx.scale(scale, scale);
-        
-        // 阴影
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath();
-        ctx.ellipse(0, 20, 20, 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        const shouldFlip = window.Game.player && window.Game.player.x < this.x;
-        if (shouldFlip) ctx.scale(-1, 1);
-        
-        // 绘制怪物
-        this.drawFallbackMob(ctx);
-        
-        ctx.restore();
-        
-        // 名字
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        const mobData = ARENA_MOBS[this.type] || ARENA_BOSSES[this.type];
-        ctx.fillStyle = this.isBoss ? '#ffcc00' : '#fff';
-        ctx.font = this.isBoss ? 'bold 14px Arial' : '11px Arial';
-        ctx.textAlign = 'center';
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = 3;
-        ctx.fillText(mobData?.name || this.type, 0, -30 * scale);
-        ctx.restore();
-        
-        this.drawHpBar(ctx);
-    }
-    
-    drawFallbackMob(ctx) {
-        const time = Date.now() / 1000;
-        const bounce = Math.sin(time * 5 + this.x) * 2;
-        
-        // 简化的怪物绘制
-        ctx.fillStyle = this.isBoss ? '#c0392b' : '#8b0000';
-        ctx.beginPath();
-        ctx.arc(0, bounce, this.isBoss ? 25 : 15, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.fillStyle = '#ff0';
-        ctx.beginPath();
-        ctx.arc(-5, -3 + bounce, 3, 0, Math.PI * 2);
-        ctx.arc(5, -3 + bounce, 3, 0, Math.PI * 2);
-        ctx.fill();
-    }
-    
-    drawHpBar(ctx) {
-        const scale = this.isBoss ? this.bossSize : 1.0;
-        if (!this.isBoss && this.hp < this.maxHp) {
-            ctx.save();
-            ctx.translate(this.x, this.y - 35 * scale);
-            const barWidth = 40;
-            const barHeight = 5;
-            const hpRatio = this.hp / this.maxHp;
-            
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(-barWidth/2 - 1, -1, barWidth + 2, barHeight + 2);
-            
-            ctx.fillStyle = hpRatio > 0.5 ? '#4caf50' : hpRatio > 0.25 ? '#ff9800' : '#f44336';
-            ctx.fillRect(-barWidth/2, 0, barWidth * hpRatio, barHeight);
-            
-            ctx.restore();
-        }
-    }
-}
+// ArenaEnemy 类已移至 entities.js
 
 // 全局升级菜单函数（供 entities.js 中的 Player.levelUp 调用）
 window.showUpgradeMenu = function() {
@@ -957,14 +837,22 @@ export class UnifiedArenaEngine {
             return true;
         });
         
-        // 更新子弹
+        // 更新子弹（秘境模式专用碰撞检测）
         this.bullets = this.bullets.filter(b => {
             if (b.dead) return false;
-            b.update(dt);
             
-            // 子弹-敌人碰撞
+            // 标记为秘境模式，跳过 entities.js 中的碰撞检测
+            b.skipCollision = true;
+            b.update(dt);
+            b.skipCollision = false;
+            
+            // 秘境模式碰撞检测
             for (const enemy of this.enemies) {
-                if (enemy.dead) continue;
+                if (enemy.dead || b.dead) continue;
+                
+                // 检查是否已经命中过这个敌人（防止重复伤害）
+                if (b.hitList && b.hitList.includes(enemy)) continue;
+                
                 const dx = b.x - enemy.x;
                 const dy = b.y - enemy.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
@@ -975,9 +863,18 @@ export class UnifiedArenaEngine {
                     const dmgValue = b.dmg || 10;
                     if (!isNaN(dmgValue) && dmgValue > 0) {
                         enemy.takeDamage(dmgValue, dx / dist, dy / dist, b.type, b.knockback || 1.0);
+                        
+                        // 记录已命中的敌人
+                        if (!b.hitList) b.hitList = [];
+                        b.hitList.push(enemy);
                     }
-                    b.pierce--;
-                    if (b.pierce <= 0) b.dead = true;
+                    
+                    // 处理穿透
+                    if (b.pierce > 0) {
+                        b.pierce--;
+                    } else {
+                        b.dead = true;
+                    }
                 }
             }
             
@@ -1865,10 +1762,16 @@ export class UnifiedArenaEngine {
         ctx.arc(moonX - 15, moonY - 15, 35, 0, Math.PI * 2);
         ctx.fill();
         
-        // 地面纹理
+        // 地面纹理 - 基于相机位置动态绘制，确保覆盖整个可视区域
         if (this.bgPattern) {
             ctx.fillStyle = this.bgPattern;
-            ctx.fillRect(-700, -700, 1400, 1400);
+            // 计算需要绘制的范围：相机可视区域 + 边距
+            const padding = 200;
+            const bgX = this.camera.x - padding;
+            const bgY = this.camera.y - padding;
+            const bgW = this.width + padding * 2;
+            const bgH = this.height + padding * 2;
+            ctx.fillRect(bgX, bgY, bgW, bgH);
         }
         
         // 竞技场边缘
