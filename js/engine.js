@@ -1,3 +1,11 @@
+/**
+ * @deprecated 此文件为旧版引擎，仅供 pc.html 使用
+ * 新开发请使用 arena-unified.js (UnifiedArenaEngine)
+ * 该引擎已不再维护，缺少以下新特性：
+ * - 对象池 (Object Pool)
+ * - 不规则边缘 (Irregular Edge)
+ * - 秘境模式 (Arena Mode)
+ */
 import { STAGES, ARTIFACTS } from './data.js';
 import { loadAssets } from './assets.js';
 import { Player, Enemy, FloatText, Chest, StaticObject, Particle, Artifact, Beam, Footprint, Puppet } from './entities.js';

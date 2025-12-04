@@ -2,6 +2,13 @@
 
 export class Coin {
     constructor(x, y, value = 1) {
+        this.reset(x, y, value);
+    }
+    
+    /**
+     * 重置金币状态（供对象池复用）
+     */
+    reset(x, y, value = 1) {
         this.x = x;
         this.y = y;
         this.value = value;

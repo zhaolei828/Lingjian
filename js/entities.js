@@ -175,11 +175,19 @@ export class Player extends Entity {
         ctx.fill();
         ctx.restore();
 
+        // 获取角色图片
+        const playerImg = Assets[this.role.svg];
+        const hasValidImg = playerImg && playerImg.complete && playerImg.naturalWidth > 0;
+        
         if (this.dashTime > 0) {
             ctx.save(); ctx.translate(this.x, this.y);
             ctx.globalAlpha = 0.5;
             ctx.scale(this.facing, 1);
-            ctx.drawImage(Assets[this.role.svg], -32 - (Math.random()-0.5)*10, -32, 64, 64);
+            if (hasValidImg) {
+                ctx.drawImage(playerImg, -32 - (Math.random()-0.5)*10, -32, 64, 64);
+            } else {
+                this.drawFallbackPlayer(ctx);
+            }
             ctx.restore();
         }
 
@@ -203,16 +211,14 @@ export class Player extends Entity {
         const depthOffset = 3; // 每层偏移量
         
         // 绘制厚度层（在主体后面）
-        if (Math.abs(tiltX) > 0.1 || Math.abs(tiltY) > 0.1) {
+        if (hasValidImg && (Math.abs(tiltX) > 0.1 || Math.abs(tiltY) > 0.1)) {
             for (let i = thickness; i > 0; i--) {
                 ctx.save();
                 ctx.translate(this.x, this.y);
-                // 根据移动方向偏移
                 ctx.translate(-tiltX * depthOffset * i, tiltY * depthOffset * i * 0.5);
                 ctx.scale(this.facing, 1);
-                // 越深的层越暗
                 ctx.globalAlpha = 0.15 - i * 0.03;
-                ctx.drawImage(Assets[this.role.svg], -32, -32, 64, 64);
+                ctx.drawImage(playerImg, -32, -32, 64, 64);
                 ctx.restore();
             }
         }
@@ -221,11 +227,14 @@ export class Player extends Entity {
         ctx.save(); 
         ctx.translate(this.x, this.y);
         ctx.scale(this.facing, 1);
-        // 轻微的透视变形（移动时稍微压扁/拉伸）
         const scaleX = 1 - Math.abs(tiltX) * 0.1;
         const skewY = tiltY * 0.05;
         ctx.transform(scaleX, skewY, 0, 1, 0, 0);
-        ctx.drawImage(Assets[this.role.svg], -32, -32, 64, 64);
+        if (hasValidImg) {
+            ctx.drawImage(playerImg, -32, -32, 64, 64);
+        } else {
+            this.drawFallbackPlayer(ctx);
+        }
         ctx.restore();
         
         if (this.dashCd > 0) {
@@ -285,6 +294,58 @@ export class Player extends Entity {
         window.Game.updateUI(); 
         window.Game.screenShake(0.3);
         if(this.hp<=0) window.Game.gameOver(); 
+    }
+    
+    // 后备绘制 - 当角色图片加载失败时使用
+    drawFallbackPlayer(ctx) {
+        const roleColors = {
+            'sword': '#3498db',   // 天剑宗 - 蓝色
+            'mage': '#e74c3c',    // 玄元道 - 红色
+            'body': '#f39c12',    // 荒古门 - 金色
+            'ghost': '#9b59b6',   // 幽冥涧 - 紫色
+            'formation': '#1abc9c' // 天机阁 - 青色
+        };
+        const color = roleColors[this.role.id] || '#3498db';
+        
+        // 身体
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 20, 25, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 头部
+        ctx.fillStyle = '#ffe0bd';
+        ctx.beginPath();
+        ctx.arc(0, -20, 12, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 眼睛
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.arc(-4, -22, 2, 0, Math.PI * 2);
+        ctx.arc(4, -22, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 武器/特征
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        if (this.role.id === 'sword') {
+            // 剑
+            ctx.beginPath();
+            ctx.moveTo(15, -10);
+            ctx.lineTo(30, -25);
+            ctx.stroke();
+        } else if (this.role.id === 'mage') {
+            // 法杖
+            ctx.beginPath();
+            ctx.moveTo(15, -5);
+            ctx.lineTo(20, -30);
+            ctx.stroke();
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.arc(20, -32, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }
 
@@ -434,15 +495,21 @@ export class Enemy extends Entity {
             ctx.restore();
         }
 
-        ctx.drawImage(Assets[this.img], -24, -24, 48, 48);
-
-        if (this.hitFlashTimer > 0) {
-            // Optimized Hit Flash: Use additive blending to brighten
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.globalAlpha = 0.8;
-            ctx.drawImage(Assets[this.img], -24, -24, 48, 48);
-            ctx.restore();
+        // 检查图片是否有效，否则使用后备绘制
+        const img = Assets[this.img];
+        if (img && img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, -24, -24, 48, 48);
+            
+            if (this.hitFlashTimer > 0) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = 0.8;
+                ctx.drawImage(img, -24, -24, 48, 48);
+                ctx.restore();
+            }
+        } else {
+            // 后备绘制 - Q版怪物
+            this.drawFallback(ctx);
         }
 
         if(this.slowTimer>0) {
@@ -454,11 +521,103 @@ export class Enemy extends Entity {
         if(this.hp<this.maxHp) { ctx.fillStyle='red'; ctx.fillRect(-15,-30,30*(this.hp/this.maxHp),4); }
         ctx.restore();
     }
+    
+    // 后备绘制 - Q版怪物（当 SVG 加载失败时使用）
+    drawFallback(ctx) {
+        const time = Date.now() / 1000;
+        const bounce = Math.sin(time * 5 + this.x) * 2;
+        
+        // 根据怪物类型绘制不同样式
+        if (this.type.includes('bat')) {
+            // 蝙蝠
+            ctx.fillStyle = '#8b0000';
+            ctx.beginPath();
+            ctx.ellipse(0, bounce, 12, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // 翅膀
+            const wingFlap = Math.sin(time * 15) * 20;
+            ctx.fillStyle = '#5c0000';
+            ctx.beginPath();
+            ctx.moveTo(-8, 0);
+            ctx.quadraticCurveTo(-25, -10 + wingFlap, -20, 5);
+            ctx.lineTo(-8, 5);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(8, 0);
+            ctx.quadraticCurveTo(25, -10 - wingFlap, 20, 5);
+            ctx.lineTo(8, 5);
+            ctx.fill();
+        } else if (this.type.includes('ghost')) {
+            // 幽灵
+            ctx.fillStyle = 'rgba(100, 100, 200, 0.7)';
+            ctx.beginPath();
+            ctx.ellipse(0, bounce - 5, 15, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // 幽灵尾巴
+            ctx.beginPath();
+            ctx.moveTo(-12, bounce + 10);
+            for (let i = 0; i < 5; i++) {
+                const x = -12 + i * 6;
+                const y = bounce + 10 + Math.sin(time * 3 + i) * 5;
+                ctx.lineTo(x, y + 8);
+            }
+            ctx.lineTo(12, bounce + 10);
+            ctx.fill();
+        } else if (this.type.includes('rock') || this.type.includes('magma')) {
+            // 岩石怪
+            ctx.fillStyle = this.type.includes('magma') ? '#ff6600' : '#666';
+            ctx.beginPath();
+            ctx.moveTo(0, -15 + bounce);
+            ctx.lineTo(15, 5 + bounce);
+            ctx.lineTo(10, 15 + bounce);
+            ctx.lineTo(-10, 15 + bounce);
+            ctx.lineTo(-15, 5 + bounce);
+            ctx.closePath();
+            ctx.fill();
+        } else if (this.type.includes('crystal')) {
+            // 水晶兽
+            ctx.fillStyle = '#00bcd4';
+            ctx.beginPath();
+            ctx.moveTo(0, -18 + bounce);
+            ctx.lineTo(12, 0 + bounce);
+            ctx.lineTo(0, 18 + bounce);
+            ctx.lineTo(-12, 0 + bounce);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        } else {
+            // 默认圆形怪物
+            ctx.fillStyle = this.isElite ? '#c0392b' : '#8b0000';
+            ctx.beginPath();
+            ctx.arc(0, bounce, 15, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // 眼睛
+        ctx.fillStyle = '#ff0';
+        ctx.beginPath();
+        ctx.arc(-5, -3 + bounce, 3, 0, Math.PI * 2);
+        ctx.arc(5, -3 + bounce, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
 }
 
 export class Bullet extends Entity {
     constructor(x, y, t, s) {
         super(x, y);
+        this.reset(x, y, t, s);
+    }
+    
+    /**
+     * 重置子弹状态（供对象池复用）
+     */
+    reset(x, y, t, s) {
+        this.x = x;
+        this.y = y;
+        this.dead = false;
+        
         this.type = s.element; 
         const a = Math.atan2(t.y-y, t.x-x) + (Math.random()-0.5)*0.1;
         
@@ -480,6 +639,7 @@ export class Bullet extends Entity {
         this.originVY = this.vy;
         this.currentSpeed = spd;
         this.area = s.area || 0;
+        this.knockback = s.knockback || 1.0;
         
         if(this.type === 'earth') { this.life = 3.0; this.dmg *= 1.5; }
         
@@ -684,27 +844,87 @@ export class Bullet extends Entity {
         ctx.rotate(this.angle + Math.PI/2);
         if(this.type === 'fire') {
             ctx.rotate(window.Game.playTime * 10);
-            ctx.drawImage(Assets['fire'], -16, -16, 32, 32);
+            this.drawBulletIcon(ctx, 'fire', '#e74c3c', 16);
         } else if(this.type === 'wood') {
              ctx.rotate(window.Game.playTime * 5);
-             ctx.drawImage(Assets['leaf'], -12, -24, 24, 48);
+             this.drawBulletIcon(ctx, 'leaf', '#2ecc71', 12);
         } else if(this.type === 'water') {
-            ctx.drawImage(Assets['ice'], -16, -16, 32, 32);
+            this.drawBulletIcon(ctx, 'ice', '#3498db', 16);
         } else if(this.type === 'earth') {
             ctx.rotate(window.Game.playTime * 2);
-            ctx.drawImage(Assets['rock_b'], -20, -20, 40, 40);
+            this.drawBulletIcon(ctx, 'rock_b', '#e67e22', 20);
         } else if(this.type === 'ghost') {
              ctx.rotate(-Math.PI/2); 
              if (this.vx < 0) ctx.scale(1, -1); 
-             // Ghost fire instead of wolf
              ctx.fillStyle = '#7b1fa2'; 
              ctx.beginPath(); ctx.arc(0,0,8,0,Math.PI*2); ctx.fill();
              ctx.fillStyle = '#e1bee7';
              ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
         } else {
-            ctx.drawImage(Assets['sword'], -10, -20, 20, 40);
+            this.drawBulletIcon(ctx, 'sword', '#fff', 10);
         }
         ctx.restore();
+    }
+    
+    // 绘制子弹图标（带后备绘制）
+    drawBulletIcon(ctx, type, color, size) {
+        const img = Assets[type];
+        if (img && img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, -size, -size, size * 2, size * 2);
+        } else {
+            // 后备绘制
+            ctx.fillStyle = color;
+            if (type === 'fire') {
+                // 火焰
+                ctx.beginPath();
+                ctx.moveTo(0, -size);
+                ctx.quadraticCurveTo(size, -size/2, size/2, size);
+                ctx.quadraticCurveTo(0, size/2, -size/2, size);
+                ctx.quadraticCurveTo(-size, -size/2, 0, -size);
+                ctx.fill();
+            } else if (type === 'leaf') {
+                // 叶子
+                ctx.beginPath();
+                ctx.ellipse(0, 0, size/2, size, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#27ae60';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, -size);
+                ctx.lineTo(0, size);
+                ctx.stroke();
+            } else if (type === 'ice') {
+                // 冰晶
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const x = Math.cos(angle) * size;
+                    const y = Math.sin(angle) * size;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+            } else if (type === 'rock_b') {
+                // 岩石
+                ctx.beginPath();
+                ctx.moveTo(0, -size);
+                ctx.lineTo(size, 0);
+                ctx.lineTo(size/2, size);
+                ctx.lineTo(-size/2, size);
+                ctx.lineTo(-size, 0);
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                // 剑气
+                ctx.beginPath();
+                ctx.moveTo(0, -size * 2);
+                ctx.lineTo(size/2, size);
+                ctx.lineTo(-size/2, size);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
     }
 }
 
@@ -1076,8 +1296,17 @@ export class Artifact extends Entity {
         ctx.arc(0, 0, 100, Math.PI/2, 3*Math.PI/2);
         ctx.fill();
         
-        if (img) {
+        if (img && img.complete && img.naturalWidth > 0) {
             ctx.drawImage(img, -20, -20, 40, 40);
+        } else {
+            // 后备绘制 - 镜子
+            ctx.fillStyle = '#e0e0e0';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 15, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#9e9e9e';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
     }
     
@@ -1102,8 +1331,19 @@ export class Artifact extends Entity {
         ctx.globalAlpha = 1;
         
         // 法宝图标
-        if (img) {
+        if (img && img.complete && img.naturalWidth > 0) {
             ctx.drawImage(img, -15, -15, 30, 30);
+        } else {
+            // 后备绘制 - 金圈
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.arc(0, 0, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('圈', 0, 0);
         }
     }
     
@@ -1218,8 +1458,21 @@ export class Artifact extends Entity {
         }
         
         // 鼎图标
-        if (img) {
+        if (img && img.complete && img.naturalWidth > 0) {
             ctx.drawImage(img, -18, -18, 36, 36);
+        } else {
+            // 后备绘制 - 鼎
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.moveTo(-12, 10);
+            ctx.lineTo(-15, 0);
+            ctx.lineTo(-10, -10);
+            ctx.lineTo(10, -10);
+            ctx.lineTo(15, 0);
+            ctx.lineTo(12, 10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillRect(-3, -15, 6, 6);
         }
     }
     
@@ -1239,8 +1492,19 @@ export class Artifact extends Entity {
         }
         
         // 葫芦图标
-        if (img) {
+        if (img && img.complete && img.naturalWidth > 0) {
             ctx.drawImage(img, -15, -20, 30, 40);
+        } else {
+            // 后备绘制 - 葫芦
+            ctx.fillStyle = '#9c27b0';
+            ctx.beginPath();
+            ctx.arc(0, 8, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(0, -5, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#7b1fa2';
+            ctx.fillRect(-2, -15, 4, 8);
         }
     }
     
@@ -1261,8 +1525,20 @@ export class Artifact extends Entity {
         ctx.globalAlpha = 0.7;
         
         // 图标
-        if (img) {
+        if (img && img.complete && img.naturalWidth > 0) {
             ctx.drawImage(img, -18, -18, 36, 36);
+        } else {
+            // 后备绘制 - 通用法宝图标
+            const color = this.getArtifactColor();
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(0, 0, 15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('宝', 0, 0);
         }
         
         ctx.globalAlpha = 1;
@@ -1445,10 +1721,19 @@ export class Lightning extends Entity {
 
 export class Particle {
     constructor(x,y,c,l,s, g=0) { 
+        this.reset(x,y,c,l,s,g);
+    }
+    
+    /**
+     * 重置粒子状态（供对象池复用）
+     */
+    reset(x,y,c,l,s, g=0) {
         this.x=x; this.y=y; this.c=c; this.life=l; this.maxL=l; this.size=s; this.g=g;
+        this.dead = false;
         const ang = Math.random()*Math.PI*2; const spd = Math.random()*100;
         this.vx=Math.cos(ang)*spd; this.vy=Math.sin(ang)*spd; 
     }
+    
     update(dt) { 
         this.life-=dt; if(this.life<=0) this.dead=true; 
         this.vy += this.g * dt;
@@ -1491,7 +1776,20 @@ export class Chest extends Entity {
         ctx.save(); ctx.translate(this.x, this.y);
         const s = 1 + Math.sin(window.Game.playTime * 5) * 0.1;
         ctx.scale(s, s);
-        ctx.drawImage(Assets['chest'], -24, -24, 48, 48);
+        
+        const img = Assets['chest'];
+        if (img && img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, -24, -24, 48, 48);
+        } else {
+            // 后备绘制 - 宝箱
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(-18, -12, 36, 24);
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(-15, -10, 30, 20);
+            ctx.fillStyle = '#daa520';
+            ctx.fillRect(-3, -5, 6, 10);
+        }
+        
         ctx.globalCompositeOperation = 'lighter';
         ctx.shadowColor='#f1c40f'; ctx.shadowBlur=20;
         ctx.fillStyle = `rgba(255, 215, 0, ${0.3 + Math.sin(window.Game.playTime*10)*0.2})`;
@@ -1565,14 +1863,54 @@ export class StaticObject extends Entity {
     }
     draw(ctx) {
         const img = Assets[this.img];
-        if (img) {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            // Simple shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.beginPath(); ctx.ellipse(0, img.height/2 - 5, img.width/3, img.height/8, 0, 0, Math.PI*2); ctx.fill();
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        // Simple shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath(); ctx.ellipse(0, 20, 15, 8, 0, 0, Math.PI*2); ctx.fill();
+        
+        if (img && img.complete && img.naturalWidth > 0) {
             ctx.drawImage(img, -img.width/2, -img.height/2);
-            ctx.restore();
+        } else {
+            // 后备绘制 - 静态物体
+            this.drawFallback(ctx);
+        }
+        ctx.restore();
+    }
+    
+    // 后备绘制
+    drawFallback(ctx) {
+        if (this.img.includes('tree')) {
+            // 树
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(-5, -30, 10, 50);
+            ctx.fillStyle = '#2e7d32';
+            ctx.beginPath();
+            ctx.arc(0, -40, 25, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.img.includes('rock') || this.img.includes('stone')) {
+            // 石头
+            ctx.fillStyle = '#757575';
+            ctx.beginPath();
+            ctx.moveTo(-15, 10);
+            ctx.lineTo(-20, -5);
+            ctx.lineTo(-10, -15);
+            ctx.lineTo(10, -15);
+            ctx.lineTo(20, -5);
+            ctx.lineTo(15, 10);
+            ctx.closePath();
+            ctx.fill();
+        } else if (this.img.includes('stele')) {
+            // 石碑
+            ctx.fillStyle = '#616161';
+            ctx.fillRect(-10, -40, 20, 50);
+            ctx.fillStyle = '#9e9e9e';
+            ctx.fillRect(-8, -38, 16, 45);
+        } else {
+            // 默认方块
+            ctx.fillStyle = '#795548';
+            ctx.fillRect(-15, -20, 30, 30);
         }
     }
 }

@@ -4,7 +4,7 @@
 
 import { Platform } from './platform.js';
 import { STAGES, ARENA_CONFIG, ARENA_MOBS, ARENA_BOSSES, ARTIFACTS, SKILLS, ROLES, SVG_LIB, ITEM_CARDS } from './data.js';
-import { Player, Enemy, FloatText, Particle, Artifact, StaticObject, Chest, Footprint } from './entities.js';
+import { Player, Enemy, FloatText, Particle, Artifact, StaticObject, Chest, Footprint, Bullet } from './entities.js';
 import { Assets, loadAssets } from './assets.js';
 import { generateBloodArenaPattern, generateStagePattern } from './map.js';
 import { Coin } from './coin.js';
@@ -12,6 +12,7 @@ import { Config, isMobile, limitArray, isInView, perfMonitor } from './performan
 import { collisionManager } from './spatial-hash.js';
 import { ItemCardManager } from './item-card.js';
 import { WeatherSystem } from './weather.js';
+import { Pool } from './pool.js';
 
 // ========== 游戏模式常量 ==========
 export const GAME_MODES = {
@@ -98,7 +99,7 @@ class ArenaEnemy extends Enemy {
         window.Game.texts.push(new FloatText(this.x, this.y - 30, Math.floor(dmg), '#ff5252'));
         
         for (let i = 0; i < 5; i++) {
-            window.Game.particles.push(new Particle(this.x, this.y, '#ff5252', 0.3, 4));
+            window.Game.particles.push(window.Game.pool.get('particle', Particle, this.x, this.y, '#ff5252', 0.3, 4));
         }
         
         if (this.hp <= 0 && !this.dead) {
@@ -274,6 +275,9 @@ export class UnifiedArenaEngine {
         // UI 引用
         this.ui = null;
         
+        // 对象池（优化性能，减少 GC）
+        this.pool = new Pool();
+        
         // 资源
         this.assets = {};
         this.loadAssets();
@@ -439,6 +443,7 @@ export class UnifiedArenaEngine {
         this.texts = [];
         this.coins = [];
         this.minions = [];
+        this.pool.clear(); // 清空对象池
         this.totalKills = 0;
         this.totalGold = 0;
         this.score = 0;
@@ -463,6 +468,9 @@ export class UnifiedArenaEngine {
             
             // 重置道具卡
             this.itemCards.reset();
+            
+            // 生成秘境不规则边缘（血色风格）
+            this.generateArenaIrregularEdge();
             
             // 生成血色秘境背景
             this.bgPattern = this.ctx.createPattern(generateBloodArenaPattern(), 'repeat');
@@ -640,16 +648,161 @@ export class UnifiedArenaEngine {
         }
     }
     
+    /**
+     * 生成不规则边缘路径
+     * 用于替代完美圆形，创造更自然的岛屿边缘
+     */
+    generateIrregularEdgePath() {
+        const R = 600;
+        const pointCount = 120; // 边缘点数量
+        this.irregularEdgePath = [];
+        
+        // 根据关卡类型设置不同的"参差不齐"程度
+        let jitter = 20;     // 随机偏移量
+        let waveAmp = 15;    // 波浪振幅
+        let waveFreq = 3;    // 波浪频率
+        
+        switch (this.stageIdx) {
+            case 0: // 幽暗密林 - 较多凹凸（树根、灌木）
+                jitter = 25;
+                waveAmp = 20;
+                waveFreq = 5;
+                break;
+            case 1: // 埋骨之地 - 中等凹凸（碎石）
+                jitter = 20;
+                waveAmp = 15;
+                waveFreq = 4;
+                break;
+            case 2: // 熔岩炼狱 - 锯齿状（熔岩冷却）
+                jitter = 30;
+                waveAmp = 25;
+                waveFreq = 8;
+                break;
+            case 3: // 极寒冰原 - 平滑但有冰块突起
+                jitter = 15;
+                waveAmp = 30;
+                waveFreq = 2;
+                break;
+            case 4: // 塞外古战场 - 沙丘起伏
+                jitter = 18;
+                waveAmp = 20;
+                waveFreq = 3;
+                break;
+            case 5: // 昆仑仙境 - 较平滑（仙气飘渺）
+                jitter = 10;
+                waveAmp = 12;
+                waveFreq = 2;
+                break;
+        }
+        
+        // 生成随机种子（每次初始化地图时变化）
+        const seed = Math.random() * 1000;
+        
+        for (let i = 0; i < pointCount; i++) {
+            const angle = (i / pointCount) * Math.PI * 2;
+            
+            // 多层噪声叠加，创造更自然的边缘
+            const noise1 = Math.sin(angle * waveFreq + seed) * waveAmp;
+            const noise2 = Math.sin(angle * waveFreq * 2.3 + seed * 1.7) * (waveAmp * 0.5);
+            const noise3 = (Math.random() - 0.5) * jitter;
+            
+            const r = R + noise1 + noise2 + noise3;
+            
+            this.irregularEdgePath.push({
+                x: Math.cos(angle) * r,
+                y: Math.sin(angle) * r,
+                angle: angle,
+                radius: r
+            });
+        }
+    }
+    
+    /**
+     * 创建不规则边缘路径（不执行绑定操作）
+     * @param {CanvasRenderingContext2D} ctx 
+     * @param {number} scale - 缩放比例（默认1.0）
+     */
+    createIrregularEdgePath(ctx, scale = 1.0) {
+        if (!this.irregularEdgePath || this.irregularEdgePath.length === 0) {
+            // 如果没有生成不规则路径，则使用圆形作为后备
+            ctx.arc(0, 0, 600 * scale, 0, Math.PI * 2);
+            return;
+        }
+        
+        const path = this.irregularEdgePath;
+        const startX = path[0].x * scale;
+        const startY = path[0].y * scale;
+        ctx.moveTo(startX, startY);
+        
+        // 使用贝塞尔曲线连接各点，使边缘更平滑
+        for (let i = 0; i < path.length; i++) {
+            const p0 = path[i];
+            const p1 = path[(i + 1) % path.length];
+            
+            // 控制点
+            const cx = ((p0.x + p1.x) / 2) * scale;
+            const cy = ((p0.y + p1.y) / 2) * scale;
+            
+            ctx.quadraticCurveTo(p0.x * scale, p0.y * scale, cx, cy);
+        }
+        
+        ctx.closePath();
+    }
+    
+    /**
+     * 绘制不规则边缘（填充）
+     * @param {CanvasRenderingContext2D} ctx 
+     * @param {string} fillStyle - 填充颜色
+     * @param {number} scale - 缩放比例
+     */
+    fillIrregularEdge(ctx, fillStyle, scale = 1.0) {
+        ctx.beginPath();
+        this.createIrregularEdgePath(ctx, scale);
+        ctx.fillStyle = fillStyle;
+        ctx.fill();
+    }
+    
+    /**
+     * 绘制不规则边缘（描边）
+     * @param {CanvasRenderingContext2D} ctx 
+     * @param {string} strokeStyle - 描边颜色
+     * @param {number} lineWidth - 线宽
+     * @param {number} scale - 缩放比例
+     */
+    strokeIrregularEdge(ctx, strokeStyle, lineWidth, scale = 1.0) {
+        ctx.beginPath();
+        this.createIrregularEdgePath(ctx, scale);
+        ctx.strokeStyle = strokeStyle;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+    }
+    
+    /**
+     * 使用不规则边缘作为裁剪区域
+     * @param {CanvasRenderingContext2D} ctx 
+     * @param {number} scale - 缩放比例
+     */
+    clipIrregularEdge(ctx, scale = 1.0) {
+        ctx.beginPath();
+        this.createIrregularEdgePath(ctx, scale);
+        ctx.clip();
+    }
+    
     // 初始化边缘装饰
     initEdgeDecorations() {
+        // 先生成不规则边缘路径
+        this.generateIrregularEdgePath();
+        
         this.edgeDecorations = [];
-        const R = 600;
         const count = this.stageIdx === 0 ? 90 : 60;
         
         for(let i = 0; i < count; i++) {
-            const angleBase = (i / count) * Math.PI * 2;
-            const angle = angleBase + (Math.random() - 0.5) * 0.1;
-            const r = R - 5 + Math.random() * 15;
+            // 使用不规则边缘路径上的点
+            const pathIdx = Math.floor((i / count) * this.irregularEdgePath.length);
+            const pathPoint = this.irregularEdgePath[pathIdx];
+            
+            const angle = pathPoint.angle + (Math.random() - 0.5) * 0.1;
+            const r = pathPoint.radius - 5 + Math.random() * 15;
             const size = 15 + Math.random() * 20;
             const x = Math.cos(angle) * r;
             const y = Math.sin(angle) * r;
@@ -731,7 +884,7 @@ export class UnifiedArenaEngine {
         
         const colors = ['#1b5e20', '#7f8c8d', '#ff5722', '#4fc3f7', '#2c3e50'];
         for(let i = 0; i < 5; i++) {
-            this.particles.push(new Particle(x, y, colors[this.stageIdx] || '#000', 0.5, 4));
+            this.particles.push(this.pool.get('particle', Particle, x, y, colors[this.stageIdx] || '#000', 0.5, 4));
         }
         
         const stage = STAGES[this.stageIdx];
@@ -832,8 +985,13 @@ export class UnifiedArenaEngine {
         });
         
         // 更新金币
-        this.coins = this.coins.filter(c => {
-            if (c.dead) return false;
+        // 更新金币（使用对象池回收）
+        const aliveCoins = [];
+        for (const c of this.coins) {
+            if (c.dead) {
+                this.pool.recycle('coin', c);
+                continue;
+            }
             c.update(dt, this.player);
             
             // 金币拾取
@@ -843,18 +1001,27 @@ export class UnifiedArenaEngine {
                 if (Math.sqrt(dx * dx + dy * dy) < 30) {
                     this.totalGold += c.value;
                     c.dead = true;
+                    this.pool.recycle('coin', c);
                     this.updateUI();
+                    continue;
                 }
             }
             
-            return !c.dead;
-        });
+            aliveCoins.push(c);
+        }
+        this.coins = aliveCoins;
         
-        // 更新粒子
-        this.particles = this.particles.filter(p => {
+        // 更新粒子（使用对象池回收）
+        const aliveParticles = [];
+        for (const p of this.particles) {
             p.update(dt);
-            return p.life > 0;
-        });
+            if (p.life > 0) {
+                aliveParticles.push(p);
+            } else {
+                this.pool.recycle('particle', p);
+            }
+        }
+        this.particles = aliveParticles;
         
         // 更新文字
         this.texts = this.texts.filter(t => {
@@ -1080,7 +1247,7 @@ export class UnifiedArenaEngine {
         boss.chargeDuration = 0.5;
         
         for (let i = 0; i < 20; i++) {
-            this.particles.push(new Particle(boss.x, boss.y, '#ff0000', 0.5, 8));
+            this.particles.push(this.pool.get('particle', Particle, boss.x, boss.y, '#ff0000', 0.5, 8));
         }
     }
     
@@ -1117,7 +1284,7 @@ export class UnifiedArenaEngine {
             this.enemies.push(enemy);
             
             for (let j = 0; j < 10; j++) {
-                this.particles.push(new Particle(x, y, '#8b0000', 0.5, 6));
+                this.particles.push(this.pool.get('particle', Particle, x, y, '#8b0000', 0.5, 6));
             }
         }
         
@@ -1174,7 +1341,7 @@ export class UnifiedArenaEngine {
                 }
                 
                 for (let j = 0; j < 30; j++) {
-                    this.particles.push(new Particle(aoe.x, aoe.y, '#ff5252', 0.5, 8));
+                    this.particles.push(this.pool.get('particle', Particle, aoe.x, aoe.y, '#ff5252', 0.5, 8));
                 }
                 
                 this.pendingAOEs.splice(i, 1);
@@ -1189,7 +1356,7 @@ export class UnifiedArenaEngine {
                 e.y += e.chargeVy * dt;
                 
                 if (Math.random() < 0.5) {
-                    this.particles.push(new Particle(e.x, e.y, '#ff5252', 0.3, 5));
+                    this.particles.push(this.pool.get('particle', Particle, e.x, e.y, '#ff5252', 0.3, 5));
                 }
                 
                 if (e.chargeDuration <= 0) {
@@ -1254,7 +1421,7 @@ export class UnifiedArenaEngine {
         }
         
         for (let i = 0; i < 15; i++) {
-            this.particles.push(new Particle(orb.x, orb.y, orb.color, 0.4, 5));
+            this.particles.push(this.pool.get('particle', Particle, orb.x, orb.y, orb.color, 0.4, 5));
         }
     }
     
@@ -1415,16 +1582,11 @@ export class UnifiedArenaEngine {
         ctx.lineTo(0, R*2);
         ctx.stroke();
         
-        // 地面表层（圆形竞技场）
-        ctx.fillStyle = style.groundSurf;
-        ctx.beginPath();
-        ctx.arc(0, 0, R, 0, Math.PI*2);
-        ctx.fill();
+        // 地面表层（不规则边缘）
+        this.fillIrregularEdge(ctx, style.groundSurf);
         
         ctx.save();
-        ctx.beginPath();
-        ctx.arc(0, 0, R, 0, Math.PI*2);
-        ctx.clip();
+        this.clipIrregularEdge(ctx);
         
         // 背景纹理
         if (this.bgPattern) {
@@ -1463,12 +1625,8 @@ export class UnifiedArenaEngine {
         // 脚印
         this.footprints.forEach(f => f.draw(ctx));
         
-        // 边缘高光
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-        ctx.lineWidth = 10;
-        ctx.beginPath();
-        ctx.arc(0, 0, R-5, 0, Math.PI*2);
-        ctx.stroke();
+        // 边缘高光（使用不规则边缘）
+        this.strokeIrregularEdge(ctx, 'rgba(255,255,255,0.1)', 10, 0.99);
         
         ctx.restore(); // 结束裁剪
         
@@ -1949,17 +2107,78 @@ export class UnifiedArenaEngine {
         }
     }
     
+    /**
+     * 生成秘境模式不规则边缘（血色风格）
+     */
+    generateArenaIrregularEdge() {
+        const R = 580;
+        const pointCount = 100;
+        this.arenaEdgePath = [];
+        
+        // 秘境模式：锯齿状、血腥风格
+        const jitter = 25;
+        const waveAmp = 20;
+        const waveFreq = 6;
+        const seed = Math.random() * 1000;
+        
+        for (let i = 0; i < pointCount; i++) {
+            const angle = (i / pointCount) * Math.PI * 2;
+            
+            // 多层噪声叠加
+            const noise1 = Math.sin(angle * waveFreq + seed) * waveAmp;
+            const noise2 = Math.sin(angle * waveFreq * 2.5 + seed * 1.3) * (waveAmp * 0.6);
+            const noise3 = (Math.random() - 0.5) * jitter;
+            
+            const r = R + noise1 + noise2 + noise3;
+            
+            this.arenaEdgePath.push({
+                x: Math.cos(angle) * r,
+                y: Math.sin(angle) * r,
+                angle: angle,
+                radius: r
+            });
+        }
+    }
+    
+    /**
+     * 创建秘境边缘路径
+     */
+    createArenaEdgePath(ctx, scale = 1.0) {
+        if (!this.arenaEdgePath || this.arenaEdgePath.length === 0) {
+            ctx.arc(0, 0, 580 * scale, 0, Math.PI * 2);
+            return;
+        }
+        
+        const path = this.arenaEdgePath;
+        ctx.moveTo(path[0].x * scale, path[0].y * scale);
+        
+        for (let i = 0; i < path.length; i++) {
+            const p0 = path[i];
+            const p1 = path[(i + 1) % path.length];
+            
+            const cx = ((p0.x + p1.x) / 2) * scale;
+            const cy = ((p0.y + p1.y) / 2) * scale;
+            
+            ctx.quadraticCurveTo(p0.x * scale, p0.y * scale, cx, cy);
+        }
+        
+        ctx.closePath();
+    }
+    
     // 绘制竞技场边缘
     drawArenaEdge(ctx) {
-        const R = 580;
-        
-        // 边缘迷雾
+        // 边缘迷雾（使用不规则路径上的点）
         ctx.save();
-        for (let i = 0; i < 60; i++) {
-            const angle = (i / 60) * Math.PI * 2;
-            const r = R + Math.sin(this.playTime * 2 + i) * 20;
-            const x = Math.cos(angle) * r;
-            const y = Math.sin(angle) * r;
+        const path = this.arenaEdgePath || [];
+        const mistCount = Math.min(60, path.length);
+        
+        for (let i = 0; i < mistCount; i++) {
+            const idx = Math.floor((i / mistCount) * path.length);
+            const point = path[idx] || { x: Math.cos((i / mistCount) * Math.PI * 2) * 580, y: Math.sin((i / mistCount) * Math.PI * 2) * 580 };
+            
+            const wobble = Math.sin(this.playTime * 2 + i) * 20;
+            const x = point.x + Math.cos(point.angle || 0) * wobble;
+            const y = point.y + Math.sin(point.angle || 0) * wobble;
             
             const gradient = ctx.createRadialGradient(x, y, 0, x, y, 80);
             gradient.addColorStop(0, 'rgba(139, 0, 0, 0.4)');
@@ -1971,12 +2190,12 @@ export class UnifiedArenaEngine {
         }
         ctx.restore();
         
-        // 边界线
+        // 边界线（使用不规则路径）
         ctx.strokeStyle = '#5c0000';
         ctx.lineWidth = 3;
         ctx.setLineDash([20, 10]);
         ctx.beginPath();
-        ctx.arc(0, 0, R, 0, Math.PI * 2);
+        this.createArenaEdgePath(ctx);
         ctx.stroke();
         ctx.setLineDash([]);
     }
@@ -2132,7 +2351,7 @@ export class UnifiedArenaEngine {
         const goldDrop = enemy.goldDrop || [1, 2];
         const goldCount = goldDrop[0] + Math.floor(Math.random() * (goldDrop[1] - goldDrop[0] + 1));
         for (let i = 0; i < goldCount; i++) {
-            const coin = new Coin(
+            const coin = this.pool.get('coin', Coin,
                 enemy.x + (Math.random() - 0.5) * 30,
                 enemy.y + (Math.random() - 0.5) * 30,
                 enemy.isBoss ? 10 : 1
@@ -2153,7 +2372,7 @@ export class UnifiedArenaEngine {
         
         // 死亡粒子
         for (let i = 0; i < 10; i++) {
-            this.particles.push(new Particle(enemy.x, enemy.y, '#8b0000', 0.5, 6));
+            this.particles.push(this.pool.get('particle', Particle, enemy.x, enemy.y, '#8b0000', 0.5, 6));
         }
         
         // BOSS 击杀
@@ -2168,7 +2387,7 @@ export class UnifiedArenaEngine {
             
             // 额外奖励
             for (let i = 0; i < 20; i++) {
-                const coin = new Coin(
+                const coin = this.pool.get('coin', Coin,
                     enemy.x + (Math.random() - 0.5) * 100,
                     enemy.y + (Math.random() - 0.5) * 100,
                     5
