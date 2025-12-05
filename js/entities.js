@@ -658,12 +658,11 @@ export class ArenaEnemy extends Enemy {
             }
         }
         
-        // 死亡处理
+        // 死亡处理 - 先设置 dead 标志，防止重复处理
         if (this.hp <= 0 && !this.dead) {
-            if (window.Game.onEnemyKilled) {
+            this.dead = true;  // 立即标记死亡
+            if (window.Game && window.Game.onEnemyKilled) {
                 window.Game.onEnemyKilled(this);
-            } else {
-                this.dead = true;
             }
         }
     }

@@ -5,7 +5,7 @@ export default {
     input: 'game.src.js',
     output: {
         file: 'dist/game.js',
-        format: 'iife',  // 立即执行函数，适合小游戏
+        format: 'iife',
         name: 'Game'
     },
     plugins: [
@@ -15,9 +15,7 @@ export default {
                 { src: 'game.json', dest: 'dist' },
                 { src: 'project.config.json', dest: 'dist' },
                 { src: 'js/libs/weapp-adapter.js', dest: 'dist' }
-                // img 不打包，生产环境使用 CDN 图片
             ]
         })
     ]
 };
-

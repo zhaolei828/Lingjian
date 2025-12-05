@@ -353,7 +353,7 @@ export class MobileEngine extends UnifiedArenaEngine {
 let engine = null;
 window.currentRole = 'sword';
 window.currentStage = 0;
-window.currentMode = GAME_MODES.ARENA; // 默认秘境模式
+window.currentMode = GAME_MODES.STAGE; // 默认关卡模式
 
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -376,6 +376,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedRole = localStorage.getItem('arenaRole');
     if (savedRole && ROLES.find(r => r.id === savedRole)) {
         window.currentRole = savedRole;
+    }
+    
+    // 从 localStorage 读取关卡
+    const savedStage = localStorage.getItem('arenaStage');
+    if (savedStage !== null) {
+        const stageIdx = parseInt(savedStage);
+        if (!isNaN(stageIdx) && stageIdx >= 0 && stageIdx < STAGES.length) {
+            window.currentStage = stageIdx;
+        }
     }
     
     // 窗口大小变化
@@ -424,6 +433,9 @@ function initMobileUI() {
     // 角色选择（如果存在）
     initMobileRoleSelection();
     
+    // 关卡选择（如果存在）
+    initMobileStageSelection();
+    
     // 道具槽触摸事件
     setupItemSlotTouch();
     
@@ -469,6 +481,38 @@ function initMobileRoleSelection() {
     });
 }
 
+// 关卡选择初始化（平铺卡片样式）
+function initMobileStageSelection() {
+    const container = document.getElementById('m-stage-grid');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    // 关卡图标和描述
+    const stageIcons = ['🌲', '💀', '🔥', '❄️', '⚔️', '✨'];
+    const stageDescs = ['妖兽出没', '亡灵栖息', '烈焰灼烧', '极寒之地', '古战遗址', '仙人遗府'];
+    
+    STAGES.forEach((stage, i) => {
+        const card = document.createElement('div');
+        card.className = `m-stage-card ${i === window.currentStage ? 'selected' : ''}`;
+        card.dataset.stage = i;
+        
+        card.innerHTML = `
+            <div class="m-stage-icon">${stageIcons[i] || '🗺️'}</div>
+            <div class="m-stage-name">${stage.name}</div>
+            <div class="m-stage-desc">${stageDescs[i] || ''}</div>
+        `;
+        
+        card.onclick = () => {
+            window.currentStage = i;
+            localStorage.setItem('arenaStage', i);
+            document.querySelectorAll('.m-stage-card').forEach(el => el.classList.remove('selected'));
+            card.classList.add('selected');
+        };
+        
+        container.appendChild(card);
+    });
+}
+
 function displayCurrentRole() {
     const role = ROLES.find(r => r.id === window.currentRole) || ROLES[0];
     
@@ -503,12 +547,24 @@ window.enterArena = function() {
     }
 };
 
-// 开始关卡
-window.startStage = function(stageIdx = 0) {
+// 开始关卡（使用当前选中的关卡）
+window.startStage = function(stageIdx) {
+    // 如果没有传入参数，使用当前选中的关卡
+    const stage = (stageIdx !== undefined) ? stageIdx : window.currentStage;
     if (engine) {
-        engine.start(window.currentRole, GAME_MODES.STAGE, stageIdx);
+        engine.start(window.currentRole, GAME_MODES.STAGE, stage);
     }
 };
+
+// 初始化开始按钮事件
+document.addEventListener('DOMContentLoaded', () => {
+    const startBtn = document.getElementById('m-start-btn');
+    if (startBtn) {
+        startBtn.onclick = () => {
+            window.startStage(window.currentStage);
+        };
+    }
+});
 
 // 再次挑战
 window.restartGame = window.restartArena = function() {

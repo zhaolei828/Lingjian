@@ -219,48 +219,79 @@ export class GameUI {
                 panel.addChild(label);
             });
         } else {
-            // 关卡模式说明
-            const stageDesc = new Label(20, contentY, '🌍 穿越六大秘境，逐步强化角色', {
-                fontSize: 12,
-                color: '#aaa',
-                align: 'left'
-            });
-            panel.addChild(stageDesc);
+            // 关卡模式 - 3x2 网格卡片布局
+            const stageIcons = ['🌲', '💀', '🔥', '❄️', '⚔️', '✨'];
+            const stageColors = [
+                { normal: '#2e7d32', selected: '#4caf50' },
+                { normal: '#5d4037', selected: '#8d6e63' },
+                { normal: '#bf360c', selected: '#ff5722' },
+                { normal: '#0288d1', selected: '#03a9f4' },
+                { normal: '#8d6e63', selected: '#d4a574' },
+                { normal: '#f1c40f', selected: '#ffd54f' }
+            ];
             
-            // 关卡选择
-            const stageStartY = contentY + 30;
-            const stageHeight = 45;
+            const stageStartY = contentY;
+            const cols = 3;
+            const cardWidth = (panelWidth - 50) / cols;
+            const cardHeight = 75;
+            const gapX = 5;
+            const gapY = 8;
             const visibleStages = STAGES.slice(0, 6);
             
             visibleStages.forEach((stage, i) => {
+                const row = Math.floor(i / cols);
+                const col = i % cols;
                 const isSelected = i === this.selectedStageIdx;
-                const stageBtn = new Button(
-                    20, stageStartY + i * stageHeight,
-                    panelWidth - 40, stageHeight - 5,
-                    `${i + 1}. ${stage.name}`,
+                const color = stageColors[i] || stageColors[0];
+                
+                const cardX = 15 + col * (cardWidth + gapX);
+                const cardY = stageStartY + row * (cardHeight + gapY);
+                
+                const stageCard = new Button(
+                    cardX, cardY,
+                    cardWidth, cardHeight,
+                    '',  // 不使用文字，我们自己绘制内容
                     {
-                        fontSize: 13,
-                        bgColor: isSelected ? 'rgba(52, 152, 219, 0.7)' : 'rgba(40, 40, 40, 0.6)',
-                        borderColor: isSelected ? '#3498db' : '#444',
-                        borderRadius: 8,
-                        textAlign: 'left',
+                        fontSize: 11,
+                        bgColor: isSelected ? `rgba(52, 152, 219, 0.3)` : 'rgba(30, 30, 30, 0.8)',
+                        borderColor: isSelected ? color.selected : color.normal,
+                        borderRadius: 10,
                         onClick: () => { this.selectedStageIdx = i; this.createStartMenu(); }
                     }
                 );
-                panel.addChild(stageBtn);
+                panel.addChild(stageCard);
                 
-                // 关卡时间提示
-                const timeLabel = new Label(panelWidth - 50, stageStartY + i * stageHeight + 22, this.formatTime(stage.time), {
-                    fontSize: 10,
-                    color: '#888',
+                // 关卡图标
+                const iconLabel = new Label(cardX + cardWidth / 2, cardY + 22, stageIcons[i] || '🗺️', {
+                    fontSize: 24,
+                    color: '#fff',
                     align: 'center'
                 });
-                panel.addChild(timeLabel);
+                panel.addChild(iconLabel);
+                
+                // 关卡名称
+                const nameLabel = new Label(cardX + cardWidth / 2, cardY + 48, stage.name.slice(0, 4), {
+                    fontSize: 11,
+                    color: isSelected ? '#fff' : '#ccc',
+                    align: 'center'
+                });
+                panel.addChild(nameLabel);
+                
+                // 选中指示器
+                if (isSelected) {
+                    const indicator = new Label(cardX + cardWidth / 2, cardY + 65, '●', {
+                        fontSize: 8,
+                        color: color.selected,
+                        align: 'center'
+                    });
+                    panel.addChild(indicator);
+                }
             });
         }
         
         // ========== 角色选择 ==========
-        const roleY = this.selectedMode === GAME_MODES.ARENA ? contentY + 105 : contentY + 295;
+        // 秘境模式: 105px 描述文字下方 | 关卡模式: 175px (2行卡片 * 83px)
+        const roleY = this.selectedMode === GAME_MODES.ARENA ? contentY + 105 : contentY + 175;
         
         const roleLabel = new Label(panelWidth / 2, roleY, '选择角色', {
             fontSize: 12,
