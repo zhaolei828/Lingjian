@@ -1425,8 +1425,10 @@ export class UnifiedArenaEngine {
             if (inView(e.x, e.y, 100)) e.draw(ctx, this.assets);
         }
         
-        // 子弹（视锥剔除已内置在 drawBullets）
-        this.drawBullets(ctx);
+        // 子弹（使用 Bullet 类的原生绘制，视锥剔除）
+        for (const b of this.bullets) {
+            if (inView(b.x, b.y, 50)) b.draw(ctx);
+        }
         
         // 道具卡特殊实体
         this.itemCards.draw(ctx);

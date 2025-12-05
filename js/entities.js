@@ -23,6 +23,7 @@ export class Player extends Entity {
         // 战斗属性 - 从角色数据读取
         this.stats = { 
             dmg: role.dmg,                          // 基础伤害
+            speed: role.speed,                      // 移动速度（技能可加成）
             area: role.area || 150,                 // 攻击范围
             range: role.range || 400,               // 攻击距离
             count: role.count || 1,                 // 攻击数量
@@ -80,7 +81,8 @@ export class Player extends Entity {
 
         if(dx||dy) {
             const l = Math.hypot(dx,dy);
-            let moveSpeed = this.speed;
+            // 使用 stats.speed（技能加成）或基础 speed
+            let moveSpeed = this.stats?.speed || this.speed;
             if (this.dashTime > 0) moveSpeed *= 3.0; 
 
             // 保存移动速度（用于伪3D效果）
