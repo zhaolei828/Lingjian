@@ -982,7 +982,12 @@ export class UnifiedArenaEngine {
                     
                     if (this.player.hp <= 0) {
                         this.player.dead = true;
-                        this.gameOver(false);
+                        // 根据模式调用不同的结算
+                        if (this.gameMode === GAME_MODES.ARENA) {
+                            this.gameOver(false);
+                        } else {
+                            this.stageDefeat();
+                        }
                     }
                 }
             }
@@ -1053,6 +1058,14 @@ export class UnifiedArenaEngine {
             this.updateUI();
         }
         
+        // 通关检测：最后一关（昆仑仙境）后生存 120 秒即为通关
+        const lastStage = STAGES[STAGES.length - 1];
+        const victoryTime = lastStage.time + 120; // 360 + 120 = 480秒
+        if (this.stageIdx === STAGES.length - 1 && this.playTime >= victoryTime) {
+            this.stageVictory();
+            return;
+        }
+        
         // 生成普通敌人
         const diff = 1 + this.playTime / 60;
         if (Math.random() < dt / (1.5 / diff)) {
@@ -1086,10 +1099,10 @@ export class UnifiedArenaEngine {
         // 更新天气
         this.weather.update(dt, this.stageIdx, this.camera);
         
-        // 玩家死亡检测
+        // 玩家死亡检测（关卡模式）
         if (this.player && this.player.hp <= 0 && !this.player.dead) {
             this.player.dead = true;
-            this.gameOver(false);
+            this.stageDefeat();
         }
     }
     
@@ -2906,7 +2919,7 @@ export class UnifiedArenaEngine {
         this.updateUI();
     }
     
-    // 游戏结束
+    // 游戏结束（秘境模式）
     gameOver(victory) {
         this.state = victory ? 'VICTORY' : 'DEFEAT';
         
@@ -2932,12 +2945,72 @@ export class UnifiedArenaEngine {
         }
     }
     
-    // 计算评价星级
+    // 关卡模式通关
+    stageVictory() {
+        this.state = 'VICTORY';
+        
+        const stats = {
+            kills: this.score,
+            gold: Math.floor(this.score * 0.5), // 关卡模式金币 = 击杀数的一半
+            stage: this.stageIdx + 1,
+            stageName: STAGES[this.stageIdx]?.name || '昆仑仙境',
+            time: this.formatTime(this.playTime),
+            stars: this.calculateStageStars()
+        };
+        
+        // 保存金币
+        const savedGold = Platform.getStorage('playerGold') || 0;
+        Platform.setStorage('playerGold', savedGold + stats.gold);
+        
+        // 解锁下一关（如果有）
+        const unlockedStages = Platform.getStorage('unlockedStages') || 1;
+        if (this.stageIdx + 1 >= unlockedStages) {
+            Platform.setStorage('unlockedStages', Math.min(STAGES.length, this.stageIdx + 2));
+        }
+        
+        if (this.ui) {
+            this.ui.showStageVictoryMenu(stats);
+        }
+    }
+    
+    // 关卡模式失败
+    stageDefeat() {
+        this.state = 'DEFEAT';
+        
+        const stats = {
+            kills: this.score,
+            gold: Math.floor(this.score * 0.2), // 失败获得 20% 金币
+            stage: this.stageIdx + 1,
+            stageName: STAGES[this.stageIdx]?.name || '未知区域',
+            time: this.formatTime(this.playTime),
+            stars: '☆'
+        };
+        
+        // 保存少量金币
+        const savedGold = Platform.getStorage('playerGold') || 0;
+        Platform.setStorage('playerGold', savedGold + stats.gold);
+        
+        if (this.ui) {
+            this.ui.showStageDefeatMenu(stats);
+        }
+    }
+    
+    // 计算秘境评价星级
     calculateStars() {
         let stars = 0;
         if (this.currentWave >= 5) stars++;
         if (this.currentWave >= 10) stars++;
         if (this.playTime < 300) stars++; // 5分钟内
+        return '⭐'.repeat(stars) || '☆';
+    }
+    
+    // 计算关卡评价星级
+    calculateStageStars() {
+        let stars = 0;
+        // 生存时间评价
+        if (this.playTime >= 300) stars++; // 5分钟
+        if (this.playTime >= 420) stars++; // 7分钟
+        if (this.playTime >= 480) stars++; // 8分钟（通关）
         return '⭐'.repeat(stars) || '☆';
     }
     

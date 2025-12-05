@@ -818,7 +818,7 @@ export class GameUI {
         this.currentScreen = 'playing';
     }
     
-    // ========== 胜利界面 ==========
+    // ========== 秘境通关界面 ==========
     showVictoryMenu(stats) {
         this.currentScreen = 'victory';
         this.ui.clearLayer('overlay');
@@ -826,8 +826,8 @@ export class GameUI {
         
         const cx = this.width / 2;
         const cy = this.height / 2;
-        const panelWidth = Math.min(320, this.width - 40);
-        const panelHeight = 350;
+        const panelWidth = Math.min(340, this.width - 40);
+        const panelHeight = 420;
         
         // 面板
         const panel = new Panel(
@@ -836,8 +836,8 @@ export class GameUI {
             panelWidth,
             panelHeight,
             {
-                bgColor: 'rgba(20, 30, 20, 0.95)',
-                borderColor: '#27ae60',
+                bgColor: 'rgba(15, 10, 20, 0.95)',
+                borderColor: '#9b59b6',
                 title: '— 血色秘境 · 通关 —',
                 titleColor: '#f1c40f',
                 titleFontSize: 24
@@ -845,8 +845,24 @@ export class GameUI {
         );
         this.ui.add(panel, 'overlay');
         
+        // 大标题
+        const bigTitle = new Label(panelWidth / 2, 55, '渡劫成功', {
+            fontSize: 28,
+            color: '#f1c40f',
+            align: 'center'
+        });
+        panel.addChild(bigTitle);
+        
+        // 副标题
+        const subTitle = new Label(panelWidth / 2, 82, `击破 ${stats.wave || 10} 波妖兽`, {
+            fontSize: 14,
+            color: '#9b59b6',
+            align: 'center'
+        });
+        panel.addChild(subTitle);
+        
         // 统计信息
-        const statY = 70;
+        const statY = 115;
         const statItems = [
             { label: '击杀妖兽:', value: stats.kills, unit: '只' },
             { label: '获得金币:', value: stats.gold, unit: '💰', color: '#f1c40f' },
@@ -870,6 +886,14 @@ export class GameUI {
             panel.addChild(value);
         });
         
+        // 引用
+        const quote = new Label(panelWidth / 2, statY + 160, '"九死一生，功德圆满"', {
+            fontSize: 14,
+            color: '#888',
+            align: 'center'
+        });
+        panel.addChild(quote);
+        
         // 再次挑战按钮
         const retryBtn = new Button(
             30,
@@ -879,8 +903,8 @@ export class GameUI {
             '再次挑战',
             {
                 fontSize: 16,
-                bgColor: 'rgba(39, 174, 96, 0.9)',
-                borderColor: '#2ecc71',
+                bgColor: 'rgba(155, 89, 182, 0.9)',
+                borderColor: '#8e44ad',
                 onClick: () => this.restartGame()
             }
         );
@@ -903,7 +927,7 @@ export class GameUI {
         panel.addChild(backBtn);
     }
     
-    // ========== 失败界面 ==========
+    // ========== 秘境失败界面 ==========
     showDefeatMenu(stats) {
         this.currentScreen = 'defeat';
         this.ui.clearLayer('overlay');
@@ -911,8 +935,8 @@ export class GameUI {
         
         const cx = this.width / 2;
         const cy = this.height / 2;
-        const panelWidth = Math.min(320, this.width - 40);
-        const panelHeight = 320;
+        const panelWidth = Math.min(340, this.width - 40);
+        const panelHeight = 380;
         
         // 面板
         const panel = new Panel(
@@ -921,20 +945,29 @@ export class GameUI {
             panelWidth,
             panelHeight,
             {
-                bgColor: 'rgba(30, 15, 15, 0.95)',
+                bgColor: 'rgba(25, 10, 15, 0.95)',
                 borderColor: '#8b0000',
-                title: '— 试炼失败 —',
+                title: '— 血色秘境 · 陨落 —',
                 titleColor: '#e74c3c',
                 titleFontSize: 24
             }
         );
         this.ui.add(panel, 'overlay');
         
+        // 大标题
+        const bigTitle = new Label(panelWidth / 2, 55, '渡劫失败', {
+            fontSize: 26,
+            color: '#c0392b',
+            align: 'center'
+        });
+        panel.addChild(bigTitle);
+        
         // 统计信息
-        const statY = 70;
+        const statY = 95;
         const statItems = [
             { label: '坚持到:', value: `第 ${stats.wave} 波`, unit: '' },
             { label: '击杀妖兽:', value: stats.kills, unit: '只' },
+            { label: '生存时间:', value: stats.time, unit: '' },
             { label: '获得金币:', value: Math.floor(stats.gold * 0.5), unit: '💰 (保留50%)', color: '#f1c40f' }
         ];
         
@@ -955,7 +988,7 @@ export class GameUI {
         });
         
         // 引用
-        const quote = new Label(panelWidth / 2, statY + 120, '"修为尚浅，来日再战"', {
+        const quote = new Label(panelWidth / 2, statY + 155, '"修为尚浅，来日再战"', {
             fontSize: 14,
             color: '#888',
             align: 'center'
@@ -993,6 +1026,223 @@ export class GameUI {
             }
         );
         panel.addChild(backBtn);
+    }
+    
+    // ========== 关卡模式通关界面 ==========
+    showStageVictoryMenu(stats) {
+        this.currentScreen = 'stage_victory';
+        this.ui.clearLayer('overlay');
+        this.destroyJoystick();
+        
+        const cx = this.width / 2;
+        const cy = this.height / 2;
+        const panelWidth = Math.min(320, this.width - 40);
+        const panelHeight = 380;
+        
+        // 面板
+        const panel = new Panel(
+            cx - panelWidth / 2,
+            cy - panelHeight / 2,
+            panelWidth,
+            panelHeight,
+            {
+                bgColor: 'rgba(15, 25, 40, 0.95)',
+                borderColor: '#3498db',
+                title: '— 关卡通关 —',
+                titleColor: '#f1c40f',
+                titleFontSize: 24
+            }
+        );
+        this.ui.add(panel, 'overlay');
+        
+        // 关卡名称
+        const stageName = new Label(panelWidth / 2, 55, stats.stageName, {
+            fontSize: 20,
+            color: '#3498db',
+            align: 'center'
+        });
+        panel.addChild(stageName);
+        
+        // 统计信息
+        const statY = 95;
+        const statItems = [
+            { label: '生存时间:', value: stats.time, unit: '', color: '#fff' },
+            { label: '击杀妖兽:', value: stats.kills, unit: '只' },
+            { label: '获得金币:', value: stats.gold, unit: '💰', color: '#f1c40f' },
+            { label: '评价:', value: stats.stars, unit: '', color: '#f1c40f' }
+        ];
+        
+        statItems.forEach((item, i) => {
+            const label = new Label(30, statY + i * 35, item.label, {
+                fontSize: 14,
+                color: '#aaa',
+                align: 'left'
+            });
+            panel.addChild(label);
+            
+            const value = new Label(panelWidth - 30, statY + i * 35, `${item.value} ${item.unit}`, {
+                fontSize: 16,
+                color: item.color || '#fff',
+                align: 'right'
+            });
+            panel.addChild(value);
+        });
+        
+        // 引用
+        const quote = new Label(panelWidth / 2, statY + 155, '"道行精进，继续前行"', {
+            fontSize: 14,
+            color: '#888',
+            align: 'center'
+        });
+        panel.addChild(quote);
+        
+        // 继续挑战按钮
+        const nextBtn = new Button(
+            30,
+            panelHeight - 100,
+            panelWidth - 60,
+            40,
+            '下一关卡',
+            {
+                fontSize: 16,
+                bgColor: 'rgba(39, 174, 96, 0.9)',
+                borderColor: '#2ecc71',
+                onClick: () => this.startNextStage()
+            }
+        );
+        panel.addChild(nextBtn);
+        
+        // 返回按钮
+        const backBtn = new Button(
+            30,
+            panelHeight - 50,
+            panelWidth - 60,
+            35,
+            '返回山门',
+            {
+                fontSize: 14,
+                bgColor: 'rgba(80, 80, 80, 0.8)',
+                borderColor: '#666',
+                onClick: () => this.backToMain()
+            }
+        );
+        panel.addChild(backBtn);
+    }
+    
+    // ========== 关卡模式失败界面 ==========
+    showStageDefeatMenu(stats) {
+        this.currentScreen = 'stage_defeat';
+        this.ui.clearLayer('overlay');
+        this.destroyJoystick();
+        
+        const cx = this.width / 2;
+        const cy = this.height / 2;
+        const panelWidth = Math.min(320, this.width - 40);
+        const panelHeight = 350;
+        
+        // 面板
+        const panel = new Panel(
+            cx - panelWidth / 2,
+            cy - panelHeight / 2,
+            panelWidth,
+            panelHeight,
+            {
+                bgColor: 'rgba(30, 20, 15, 0.95)',
+                borderColor: '#e67e22',
+                title: '— 渡劫失败 —',
+                titleColor: '#e74c3c',
+                titleFontSize: 24
+            }
+        );
+        this.ui.add(panel, 'overlay');
+        
+        // 关卡名称
+        const stageName = new Label(panelWidth / 2, 55, stats.stageName, {
+            fontSize: 18,
+            color: '#e67e22',
+            align: 'center'
+        });
+        panel.addChild(stageName);
+        
+        // 统计信息
+        const statY = 90;
+        const statItems = [
+            { label: '生存时间:', value: stats.time, unit: '' },
+            { label: '击杀妖兽:', value: stats.kills, unit: '只' },
+            { label: '获得金币:', value: stats.gold, unit: '💰 (保留20%)', color: '#f1c40f' }
+        ];
+        
+        statItems.forEach((item, i) => {
+            const label = new Label(30, statY + i * 35, item.label, {
+                fontSize: 14,
+                color: '#aaa',
+                align: 'left'
+            });
+            panel.addChild(label);
+            
+            const value = new Label(panelWidth - 30, statY + i * 35, `${item.value} ${item.unit}`, {
+                fontSize: 16,
+                color: item.color || '#fff',
+                align: 'right'
+            });
+            panel.addChild(value);
+        });
+        
+        // 引用
+        const quote = new Label(panelWidth / 2, statY + 125, '"天劫难渡，来日方长"', {
+            fontSize: 14,
+            color: '#888',
+            align: 'center'
+        });
+        panel.addChild(quote);
+        
+        // 再次挑战按钮
+        const retryBtn = new Button(
+            30,
+            panelHeight - 100,
+            panelWidth - 60,
+            40,
+            '再次挑战',
+            {
+                fontSize: 16,
+                bgColor: 'rgba(230, 126, 34, 0.9)',
+                borderColor: '#f39c12',
+                onClick: () => this.restartStage()
+            }
+        );
+        panel.addChild(retryBtn);
+        
+        // 返回按钮
+        const backBtn = new Button(
+            30,
+            panelHeight - 50,
+            panelWidth - 60,
+            35,
+            '返回山门',
+            {
+                fontSize: 14,
+                bgColor: 'rgba(80, 80, 80, 0.8)',
+                borderColor: '#666',
+                onClick: () => this.backToMain()
+            }
+        );
+        panel.addChild(backBtn);
+    }
+    
+    // 开始下一关
+    startNextStage() {
+        this.ui.clearAll();
+        const nextStageIdx = Math.min((this.stageIdx || 0) + 1, 5);
+        this.stageIdx = nextStageIdx;
+        this.engine.start(this.selectedRole, 'stage', nextStageIdx);
+        this.createPlayingScreen();
+    }
+    
+    // 重新挑战当前关卡
+    restartStage() {
+        this.ui.clearAll();
+        this.engine.start(this.selectedRole, 'stage', this.stageIdx || 0);
+        this.createPlayingScreen();
     }
     
     // 重新开始游戏
