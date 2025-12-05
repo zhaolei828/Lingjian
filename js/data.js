@@ -828,12 +828,45 @@ export const SVG_LIB = {
     </svg>`
 };
 
+// 角色基础属性定义
+// hp: 生命值, dmg: 基础伤害, cd: 攻击间隔(秒), speed: 移动速度
+// area: 攻击范围, range: 攻击距离, bulletSpeed: 子弹速度, count: 初始攻击数量
 export const ROLES = [
-    { id: 'sword', name: '天剑宗', hp: 100, dmg: 10, cd: 0.5, speed: 160, desc: '以身化剑，唯快不破', svg: 'player_sword' },
-    { id: 'mage', name: '玄元道', hp: 80,  dmg: 25, cd: 1.0, speed: 140, desc: '通御五行，爆发轰炸', svg: 'player_mage' },
-    { id: 'body', name: '荒古门', hp: 200, dmg: 15, cd: 0.8, speed: 150, desc: '肉身成圣，力破万法', svg: 'player_body' },
-    { id: 'ghost', name: '幽冥涧', hp: 120, dmg: 15, cd: 1.2, speed: 150, desc: '生死无界，役使亡灵', svg: 'player_ghost' },
-    { id: 'formation', name: '天机阁', hp: 90, dmg: 18, cd: 0.6, speed: 145, desc: '算尽天机，画地为牢', svg: 'player_formation' }
+    { 
+        id: 'sword', name: '天剑宗', 
+        hp: 100, dmg: 12, cd: 0.4, speed: 180,
+        area: 120, range: 400, bulletSpeed: 600, count: 1,
+        desc: '以身化剑，唯快不破', svg: 'player_sword',
+        element: 'sword'
+    },
+    { 
+        id: 'mage', name: '玄元道', 
+        hp: 80, dmg: 30, cd: 1.2, speed: 130,
+        area: 180, range: 350, bulletSpeed: 400, count: 1,
+        desc: '通御五行，爆发轰炸', svg: 'player_mage',
+        element: 'fire'
+    },
+    { 
+        id: 'body', name: '荒古门', 
+        hp: 250, dmg: 20, cd: 0.8, speed: 140,
+        area: 200, range: 150, bulletSpeed: 0, count: 1,
+        desc: '肉身成圣，力破万法', svg: 'player_body',
+        element: 'earth'
+    },
+    { 
+        id: 'ghost', name: '幽冥涧', 
+        hp: 100, dmg: 15, cd: 1.5, speed: 150,
+        area: 100, range: 500, bulletSpeed: 250, count: 1,
+        desc: '生死无界，役使亡灵', svg: 'player_ghost',
+        element: 'ghost'
+    },
+    { 
+        id: 'formation', name: '天机阁', 
+        hp: 90, dmg: 22, cd: 0.7, speed: 145,
+        area: 120, range: 450, bulletSpeed: 350, count: 1,
+        desc: '算尽天机，画地为牢', svg: 'player_formation',
+        element: 'formation'
+    }
 ];
 
 export const ARTIFACTS = [
@@ -870,9 +903,9 @@ export const SKILLS = {
         { id:'spd', name:'轻身术', desc:'移动速度 +20', icon:'🦶', effect:s=>s.speed=(s.speed||150)+20 }
     ],
     sword: [
-        { id:'sword_mult', name:'万剑归宗', desc:'飞剑数量 +1', icon:'⚔️', effect:s=>s.count++ },
-        { id:'sword_spd', name:'御剑术', desc:'攻速 +20%', icon:'🌪️', effect:s=>s.cd*=0.8 },
-        { id:'sword_pierce', name:'青莲剑歌', desc:'飞剑穿透 +1', icon:'🗡️', effect:s=>s.pierce=(s.pierce||0)+1 }
+        { id:'sword_mult', name:'万剑归宗', desc:'飞剑数量 +1', icon:'⚔', effect:s=>s.count++ },
+        { id:'sword_spd', name:'御剑术', desc:'攻速 +20%', icon:'🌪', effect:s=>s.cd*=0.8 },
+        { id:'sword_pierce', name:'青莲剑歌', desc:'飞剑穿透 +1', icon:'🗡', effect:s=>s.pierce=(s.pierce||0)+1 }
     ],
     mage: [
         { id:'mage_boom', name:'红莲业火', desc:'爆炸范围 +50%', icon:'💥', effect:s=>s.area=(s.area||100)*1.5 },
@@ -880,7 +913,7 @@ export const SKILLS = {
         { id:'mage_thunder', name:'九天神雷', desc:'普通攻击 20% 几率触发落雷', icon:'⚡', effect:s=>s.thunderProb=(s.thunderProb||0)+0.2 }
     ],
     body: [
-        { id:'body_range', name:'法天象地', desc:'震荡范围 +30%', icon:'⛰️', effect:s=>s.area=(s.area||150)*1.3 },
+        { id:'body_range', name:'法天象地', desc:'震荡范围 +30%', icon:'⛰', effect:s=>s.area=(s.area||150)*1.3 },
         { id:'body_dmg', name:'金刚不坏', desc:'震荡伤害 +40%', icon:'💪', effect:s=>s.dmg*=1.4 },
         { id:'body_kb', name:'力拔山兮', desc:'击退效果大幅增强', icon:'👊', effect:s=>s.knockback=(s.knockback||1.0)*1.5 }
     ],
@@ -890,8 +923,8 @@ export const SKILLS = {
         { id:'ghost_mult', name:'百鬼夜行', desc:'召唤数量 +1', icon:'💀', effect:s=>s.count++ }
     ],
     formation: [
-        { id:'form_size', name:'天罗地网', desc:'阵法范围 +30%', icon:'🕸️', effect:s=>s.area=(s.area||1.0)*1.3 },
-        { id:'form_pierce', name:'生门死门', desc:'阵法伤害频次增加', icon:'☯️', effect:s=>s.pierce=(s.pierce||99)+2 },
+        { id:'form_size', name:'天罗地网', desc:'阵法范围 +30%', icon:'🕸', effect:s=>s.area=(s.area||1.0)*1.3 },
+        { id:'form_pierce', name:'生门死门', desc:'阵法伤害频次增加', icon:'☯', effect:s=>s.pierce=(s.pierce||99)+2 },
         { id:'form_stun', name:'画地为牢', desc:'阵法附带强力减速', icon:'🛑', effect:s=>s.stun=true }
     ]
 };
@@ -956,7 +989,7 @@ export const ARENA_BOSSES = {
     }
 };
 
-// 道具卡配置
+// 道具卡配置 (emoji不带变体选择符FE0F)
 export const ITEM_CARDS = [
     // 攻击类
     { id: 'leijie_zhu', name: '雷劫珠', icon: '⚡', desc: '天雷连轰3次', effect: 'thunder_strike', value: 150, rarity: 'epic', dropRate: 0.05 },
@@ -967,13 +1000,13 @@ export const ITEM_CARDS = [
     { id: 'hundun_ling', name: '混沌铃', icon: '🔔', desc: '敌人互攻5秒', effect: 'chaos', value: 5, rarity: 'legendary', dropRate: 0.02 },
     // 陷阱类
     { id: 'jingji_zhong', name: '荆棘种', icon: '🌿', desc: '地面荆棘伤害', effect: 'thorn_trap', value: 10, rarity: 'common', dropRate: 0.15 },
-    { id: 'baoyan_shi', name: '爆炎石', icon: '💎', desc: '定时炸弹', effect: 'time_bomb', value: 300, rarity: 'rare', dropRate: 0.08 },
+    { id: 'baoyan_shi', name: '爆炎石', icon: '💣', desc: '定时炸弹', effect: 'time_bomb', value: 300, rarity: 'rare', dropRate: 0.08 },
     // 位移类
     { id: 'suodi_fu', name: '缩地符', icon: '🌀', desc: '瞬移逃命', effect: 'teleport', value: 1, rarity: 'rare', dropRate: 0.08 },
     { id: 'fenshen_fu', name: '分身符', icon: '👥', desc: '分身吸引仇恨', effect: 'decoy', value: 5, rarity: 'epic', dropRate: 0.05 },
     // 增益类
     { id: 'jifeng_fu', name: '疾风符', icon: '💨', desc: '移速x2持续10秒', effect: 'speed_boost', value: 10, rarity: 'common', dropRate: 0.15 },
-    { id: 'jinshen_fu', name: '金身符', icon: '🛡️', desc: '无敌3秒', effect: 'invincible', value: 3, rarity: 'rare', dropRate: 0.08 },
+    { id: 'jinshen_fu', name: '金身符', icon: '🛡', desc: '无敌3秒', effect: 'invincible', value: 3, rarity: 'rare', dropRate: 0.08 },
     { id: 'kuangbao_dan', name: '狂暴丹', icon: '💊', desc: '攻击x2持续10秒', effect: 'damage_boost', value: 10, rarity: 'rare', dropRate: 0.08 },
     // 回复类
     { id: 'huiqi_dan', name: '回气丹', icon: '💚', desc: '回复40%血量', effect: 'heal', value: 0.4, rarity: 'common', dropRate: 0.15 },

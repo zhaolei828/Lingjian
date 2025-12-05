@@ -13,29 +13,40 @@ export class Player extends Entity {
         const role = ROLES.find(r => r.id === roleId) || ROLES[0];
         this.role = role;
         
+        // 基础属性 - 从角色数据读取
         this.hp = role.hp; 
         this.maxHp = role.hp; 
         this.speed = role.speed;
         
         this.exp=0; this.maxExp=10; this.lvl=1;
+        
+        // 战斗属性 - 从角色数据读取
         this.stats = { 
-            dmg: role.dmg, 
-            area: 150, 
-            count: 1, 
-            cd: role.cd, 
-            spd: 500, 
-            element: 'sword', 
-            pierce: 0,
-            thunderProb: 0,
-            knockback: 1.0,
-            bulletSpeed: 500,
-            bulletLife: 2.0,
-            stun: false
+            dmg: role.dmg,                          // 基础伤害
+            area: role.area || 150,                 // 攻击范围
+            range: role.range || 400,               // 攻击距离
+            count: role.count || 1,                 // 攻击数量
+            cd: role.cd,                            // 攻击间隔
+            spd: role.bulletSpeed || 500,           // 子弹速度
+            element: role.element || 'sword',       // 元素类型
+            pierce: 0,                              // 穿透
+            thunderProb: 0,                         // 雷电触发几率
+            knockback: 1.0,                         // 击退
+            bulletSpeed: role.bulletSpeed || 500,   // 子弹速度
+            bulletLife: 2.0,                        // 子弹生存时间
+            stun: false                             // 眩晕
         }; 
         
-        if (roleId === 'mage') this.stats.element = 'fire';
-        if (roleId === 'ghost') { this.stats.element = 'ghost'; this.stats.bulletSpeed = 300; this.stats.bulletLife = 3.0; }
-        if (roleId === 'formation') { this.stats.element = 'formation'; this.stats.pierce = 99; this.stats.area = 1.0; this.stats.spd = 300; }
+        // 角色特殊属性调整
+        if (roleId === 'ghost') { 
+            this.stats.bulletLife = 4.0;  // 幽冥涧召唤物存在更久
+        }
+        if (roleId === 'formation') { 
+            this.stats.pierce = 99;       // 天机阁阵法无限穿透
+        }
+        if (roleId === 'body') {
+            this.stats.knockback = 1.8;   // 荒古门击退更强
+        }
         
         this.cdTimer=0; this.facing=1; this.lvlUpFx=0;
         this.dashCd = 0; this.dashMaxCd = 2.0; this.dashTime = 0;
@@ -78,6 +89,16 @@ export class Player extends Entity {
             
             this.x += this.vx*dt; this.y += this.vy*dt;
             if(dx) this.facing = dx > 0 ? 1 : -1;
+            
+            // 地图边界检测 - 限制在岛屿范围内（半径580）
+            const MAP_RADIUS = 580;
+            const distFromCenter = Math.hypot(this.x, this.y);
+            if (distFromCenter > MAP_RADIUS) {
+                // 将玩家推回边界内
+                const angle = Math.atan2(this.y, this.x);
+                this.x = Math.cos(angle) * MAP_RADIUS;
+                this.y = Math.sin(angle) * MAP_RADIUS;
+            }
             
             // Footprints
             this.footprintTimer -= dt;
@@ -1083,6 +1104,9 @@ export class Artifact extends Entity {
         this.maxCd = this.data.cd;
         this.angle = 0;
         
+        // 保存玩家引用，供各方法使用
+        this.player = null;
+        
         // 诛仙剑阵专用
         this.swordAngles = [0, Math.PI/2, Math.PI, Math.PI*1.5];
         this.swordTargets = [null, null, null, null];
@@ -1102,6 +1126,7 @@ export class Artifact extends Entity {
     update(dt, player) {
         this.x = player.x;
         this.y = player.y;
+        this.player = player; // 保存引用
         
         // 应用被动效果（只执行一次）
         if (!this.passiveApplied) {
@@ -1195,8 +1220,9 @@ export class Artifact extends Entity {
                 }
                 
                 if (nearest) {
-                    // 剑气攻击
-                    nearest.takeDamage(5, 0, 0, 'sword');
+                    // 剑气攻击 - 伤害为玩家伤害的 30%
+                    const dmg = Math.floor((player.stats?.dmg || 10) * 0.3);
+                    nearest.takeDamage(dmg, 0, 0, 'sword');
                     window.Game.particles.push(new Particle(nearest.x, nearest.y, '#00bcd4', 0.3, 4));
                     this.swordCooldowns[i] = 0.5; // 攻击间隔
                 }
@@ -1207,6 +1233,8 @@ export class Artifact extends Entity {
     // ========== 乾蓝冰焰 - 前方烧伤，后方冻结 ==========
     updateMirror(dt, player) {
         this.angle += dt * 2; 
+        const baseDmg = player.stats?.dmg || 10;
+        
         for (let e of window.Game.enemies) {
             const d = this.dist(e);
             if (d < 150) { 
@@ -1216,11 +1244,12 @@ export class Artifact extends Entity {
                 while (diff < -Math.PI) diff += Math.PI*2;
                 
                 if (Math.abs(diff) < Math.PI/2) {
-                    // 前方 - 火焰灼烧
+                    // 前方 - 火焰灼烧（伤害为玩家伤害的 50%）
                     if (!e.burnTick) e.burnTick = 0;
                     e.burnTick -= dt;
                     if (e.burnTick <= 0) {
-                        e.takeDamage(10, 0, 0, 'fire');
+                        const fireDmg = Math.floor(baseDmg * 0.5);
+                        e.takeDamage(fireDmg, 0, 0, 'fire');
                         window.Game.particles.push(new Particle(e.x, e.y, '#e74c3c', 0.3, 2));
                         e.burnTick = 0.2;
                     }
@@ -1263,20 +1292,22 @@ export class Artifact extends Entity {
     // ========== 风火轮 - 移动留下火焰轨迹 ==========
     updateFenghuoLun(dt, player) {
         this.fireTrailTimer -= dt;
+        const baseDmg = player.stats?.dmg || 10;
         
         // 清理过期火焰
         this.fireTrails = this.fireTrails.filter(t => t.life > 0);
         this.fireTrails.forEach(t => {
             t.life -= dt;
-            // 火焰伤害
+            // 火焰伤害（伤害为玩家伤害的 20%）
             t.dmgTimer -= dt;
             if (t.dmgTimer <= 0) {
                 t.dmgTimer = 0.3;
+                const trailDmg = Math.floor(baseDmg * 0.2);
                 for (const e of window.Game.enemies) {
                     if (e.dead) continue;
                     const d = Math.hypot(e.x - t.x, e.y - t.y);
                     if (d < 30) {
-                        e.takeDamage(3, 0, 0, 'fire');
+                        e.takeDamage(trailDmg, 0, 0, 'fire');
                     }
                 }
             }
@@ -1314,25 +1345,29 @@ export class Artifact extends Entity {
     
     // ========== 主动触发效果 ==========
     trigger(player) {
+        const baseDmg = player.stats?.dmg || 10;
+        
         switch (this.id) {
             case 'fantian':
-                // 虚天鼎 - 震晕全场
+                // 虚天鼎 - 震晕全场（伤害为玩家伤害的 200%）
                 window.Game.screenShake(2.0);
+                const dingDmg = Math.floor(baseDmg * 2);
                 window.Game.enemies.forEach(e => {
-                    e.takeDamage(50, 0, 0, 'earth', 2.0);
+                    e.takeDamage(dingDmg, 0, 0, 'earth', 2.0);
                     e.slowTimer = 3.0; 
                 });
                 window.Game.texts.push(new FloatText(player.x, player.y - 100, "虚天鼎!", "#f1c40f", true));
                 break;
                 
             case 'gourd':
-                // 玄天斩灵 - 斩杀精英
-                const elites = window.Game.enemies.filter(e => e.isElite);
+                // 玄天斩灵 - 斩杀精英（伤害为玩家伤害的 1500%）
+                const elites = window.Game.enemies.filter(e => e.isElite || e.isBoss);
                 const target = elites.length > 0 ? elites[0] : null;
                 if (target) {
                     window.Game.texts.push(new FloatText(player.x, player.y - 80, "玄天斩灵!", "#fff", true));
                     window.Game.particles.push(new Beam(player.x, player.y, target.x, target.y));
-                    target.takeDamage(500, 0, 0, 'sword'); 
+                    const gourdDmg = Math.floor(baseDmg * 15);
+                    target.takeDamage(gourdDmg, 0, 0, 'sword'); 
                 } else {
                     this.cd = 1.0; // 没有目标时缩短CD
                 }

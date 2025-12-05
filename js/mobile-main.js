@@ -487,8 +487,8 @@ function initMobileStageSelection() {
     if (!container) return;
     container.innerHTML = '';
     
-    // 关卡图标和描述
-    const stageIcons = ['🌲', '💀', '🔥', '❄️', '⚔️', '✨'];
+    // 关卡图标和描述 (去掉变体选择符FE0F)
+    const stageIcons = ['🌲', '💀', '🔥', '❄', '⚔', '✨'];
     const stageDescs = ['妖兽出没', '亡灵栖息', '烈焰灼烧', '极寒之地', '古战遗址', '仙人遗府'];
     
     STAGES.forEach((stage, i) => {
@@ -497,7 +497,7 @@ function initMobileStageSelection() {
         card.dataset.stage = i;
         
         card.innerHTML = `
-            <div class="m-stage-icon">${stageIcons[i] || '🗺️'}</div>
+            <div class="m-stage-icon">${stageIcons[i] || '?'}</div>
             <div class="m-stage-name">${stage.name}</div>
             <div class="m-stage-desc">${stageDescs[i] || ''}</div>
         `;

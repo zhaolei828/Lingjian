@@ -174,7 +174,7 @@ export class GameUI {
         // 关卡模式按钮
         const stageTabBtn = new Button(
             15, tabY, tabWidth, 35,
-            '🗺️ 关卡模式',
+            '🗺 关卡模式',
             {
                 fontSize: 14,
                 bgColor: this.selectedMode === GAME_MODES.STAGE ? 'rgba(52, 152, 219, 0.8)' : 'rgba(60, 60, 60, 0.6)',
@@ -188,7 +188,7 @@ export class GameUI {
         // 秘境模式按钮
         const arenaTabBtn = new Button(
             panelWidth / 2 + 5, tabY, tabWidth, 35,
-            '⚔️ 血色秘境',
+            '⚔ 血色秘境',
             {
                 fontSize: 14,
                 bgColor: this.selectedMode === GAME_MODES.ARENA ? 'rgba(192, 57, 43, 0.8)' : 'rgba(60, 60, 60, 0.6)',
@@ -205,10 +205,10 @@ export class GameUI {
         if (this.selectedMode === GAME_MODES.ARENA) {
             // 秘境模式说明
             const descItems = [
-                '📜 十波妖潮，层层递进',
-                '🕷️ 第五波：小BOSS 赤玉蛛王',
-                '🦂 第十波：大BOSS 炎煞蝎皇',
-                '💎 击败怪物获取道具卡牌'
+                '· 十波妖潮，层层递进',
+                '· 第五波：小BOSS 赤玉蛛王',
+                '· 第十波：大BOSS 炎煞蝎皇',
+                '· 击败怪物获取道具卡牌'
             ];
             descItems.forEach((text, i) => {
                 const label = new Label(20, contentY + i * 22, text, {
@@ -219,8 +219,8 @@ export class GameUI {
                 panel.addChild(label);
             });
         } else {
-            // 关卡模式 - 3x2 网格卡片布局
-            const stageIcons = ['🌲', '💀', '🔥', '❄️', '⚔️', '✨'];
+            // 关卡模式 - 3x2 网格卡片布局 (去掉变体选择符FE0F)
+            const stageIcons = ['🌲', '💀', '🔥', '❄', '⚔', '✨'];
             const stageColors = [
                 { normal: '#2e7d32', selected: '#4caf50' },
                 { normal: '#5d4037', selected: '#8d6e63' },
@@ -262,7 +262,7 @@ export class GameUI {
                 panel.addChild(stageCard);
                 
                 // 关卡图标
-                const iconLabel = new Label(cardX + cardWidth / 2, cardY + 22, stageIcons[i] || '🗺️', {
+                const iconLabel = new Label(cardX + cardWidth / 2, cardY + 22, stageIcons[i] || '?', {
                     fontSize: 24,
                     color: '#fff',
                     align: 'center'
@@ -331,7 +331,7 @@ export class GameUI {
         });
         
         // ========== 进入按钮 ==========
-        const enterText = this.selectedMode === GAME_MODES.ARENA ? '⚔️ 进入秘境 ⚔️' : '🗺️ 开始冒险 🗺️';
+        const enterText = this.selectedMode === GAME_MODES.ARENA ? '⚔ 进入秘境 ⚔' : '🗺 开始冒险 🗺';
         const enterColor = this.selectedMode === GAME_MODES.ARENA ? 'rgba(139, 0, 0, 0.9)' : 'rgba(41, 128, 185, 0.9)';
         const enterBorder = this.selectedMode === GAME_MODES.ARENA ? '#ff6b6b' : '#5dade2';
         
@@ -628,7 +628,7 @@ export class GameUI {
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#fff';
-                ctx.fillText(card.icon || '🃏', x + slotSize / 2, y + slotSize / 2);
+                ctx.fillText(card.icon || '?', x + slotSize / 2, y + slotSize / 2);
                 
                 // 数量
                 if (card.count > 1) {
@@ -728,7 +728,7 @@ export class GameUI {
                 cardWidth,
                 cardHeight,
                 {
-                    icon: cardData.icon || '⚔️',
+                    icon: cardData.icon || '+',
                     title: cardData.name,
                     description: cardData.desc,
                     onClick: () => {
@@ -766,7 +766,7 @@ export class GameUI {
         this.ui.add(bg, 'overlay');
         
         // 标题
-        const title = new Label(cx, 40, '⚔️ 波次通过 · 选择功法 ⚔️', {
+        const title = new Label(cx, 40, '— 波次通过 · 选择功法 —', {
             fontSize: 24,
             color: '#f1c40f',
             align: 'center',
@@ -787,7 +787,7 @@ export class GameUI {
                 cardWidth,
                 cardHeight,
                 {
-                    icon: skill.icon || '✨',
+                    icon: skill.icon || '*',
                     title: skill.name,
                     description: skill.desc,
                     bgColor: 'rgba(40, 20, 50, 0.95)',
@@ -828,7 +828,7 @@ export class GameUI {
             {
                 bgColor: 'rgba(20, 30, 20, 0.95)',
                 borderColor: '#27ae60',
-                title: '✨ 血色秘境 · 通关 ✨',
+                title: '— 血色秘境 · 通关 —',
                 titleColor: '#f1c40f',
                 titleFontSize: 24
             }
@@ -913,7 +913,7 @@ export class GameUI {
             {
                 bgColor: 'rgba(30, 15, 15, 0.95)',
                 borderColor: '#8b0000',
-                title: '💀 试炼失败 💀',
+                title: '— 试炼失败 —',
                 titleColor: '#e74c3c',
                 titleFontSize: 24
             }

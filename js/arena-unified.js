@@ -240,29 +240,46 @@ export class UnifiedArenaEngine {
         // 暂停游戏
         this.state = 'LEVELUP';
         
-        // 随机选择3个升级选项
-        const upgrades = [
-            { name: '攻击强化', desc: '伤害+20%', icon: '⚔️', effect: { dmgMult: 1.2 } },
-            { name: '生命强化', desc: '血量+30%', icon: '❤️', effect: { hpMult: 1.3 } },
-            { name: '速度强化', desc: '移速+15%', icon: '👟', effect: { speedMult: 1.15 } },
-            { name: '攻速强化', desc: '攻击间隔-15%', icon: '⚡', effect: { cdMult: 0.85 } },
-            { name: '穿透强化', desc: '穿透+1', icon: '🎯', effect: { pierce: 1 } },
-            { name: '范围强化', desc: '攻击范围+20%', icon: '🔮', effect: { areaMult: 1.2 } }
-        ];
+        // 获取角色专属技能和通用技能
+        const roleId = this.player?.role?.id || 'sword';
+        const roleSkills = SKILLS[roleId] || [];
+        const commonSkills = SKILLS.common || [];
         
-        const shuffled = [...upgrades].sort(() => Math.random() - 0.5);
-        const choices = shuffled.slice(0, 3);
+        // 合并技能池：角色专属 + 通用
+        const skillPool = [...roleSkills, ...commonSkills];
+        
+        // 随机选择3个技能
+        const shuffled = [...skillPool].sort(() => Math.random() - 0.5);
+        const choices = shuffled.slice(0, 3).map(skill => ({
+            name: skill.name,
+            desc: skill.desc,
+            icon: skill.icon,
+            skillData: skill  // 保存原始技能数据，用于应用效果
+        }));
         
         if (this.ui) {
             this.ui.showLevelUpMenu(choices, (upgrade) => {
-                this.applyUpgrade(upgrade);
+                this.applySkillUpgrade(upgrade);
                 this.state = 'PLAY';
             });
         } else {
             // 无 UI 时自动选择第一个
-            this.applyUpgrade(choices[0]);
+            this.applySkillUpgrade(choices[0]);
             this.state = 'PLAY';
         }
+    }
+    
+    // 应用技能升级效果
+    applySkillUpgrade(upgrade) {
+        if (!this.player || !upgrade || !upgrade.skillData) return;
+        
+        const skill = upgrade.skillData;
+        if (skill.effect && typeof skill.effect === 'function') {
+            // 执行技能效果函数，传入玩家 stats
+            skill.effect(this.player.stats);
+        }
+        
+        this.texts.push(new FloatText(this.player.x, this.player.y - 50, `+ ${upgrade.name}`, '#f1c40f'));
     }
     
     // 应用升级效果
@@ -280,7 +297,7 @@ export class UnifiedArenaEngine {
         if (e.pierce) this.player.stats.pierce += e.pierce;
         if (e.areaMult) this.player.stats.area *= e.areaMult;
         
-        this.texts.push(new FloatText(this.player.x, this.player.y - 50, `✨ ${upgrade.name}`, '#f1c40f'));
+        this.texts.push(new FloatText(this.player.x, this.player.y - 50, `+ ${upgrade.name}`, '#f1c40f'));
     }
     
     // 加载资源
@@ -360,7 +377,7 @@ export class UnifiedArenaEngine {
             
             // 显示法宝信息
             const artifactName = this.artifact?.data?.name || '神秘法宝';
-            this.texts.push(new FloatText(0, -100, `🔮 ${artifactName}`, '#9b59b6'));
+            this.texts.push(new FloatText(0, -100, `[法宝] ${artifactName}`, '#9b59b6'));
             
             // 延迟开始第一波
             setTimeout(() => this.startNextWave(), 2500);
@@ -401,7 +418,7 @@ export class UnifiedArenaEngine {
             
             // 显示法宝信息
             const artifactName = this.artifact?.data?.name || '神秘法宝';
-            this.texts.push(new FloatText(0, -100, `🔮 ${artifactName}`, '#9b59b6'));
+            this.texts.push(new FloatText(0, -100, `[法宝] ${artifactName}`, '#9b59b6'));
         }
     }
     
@@ -2328,7 +2345,7 @@ export class UnifiedArenaEngine {
         this.itemCards.addCard(selectedCard);
         
         // 显示获得提示
-        this.texts.push(new FloatText(x, y - 50, `获得 ${selectedCard.icon || '🃏'} ${selectedCard.name}`, '#f1c40f'));
+        this.texts.push(new FloatText(x, y - 50, `获得 [${selectedCard.name}]`, '#f1c40f'));
     }
     
     // 检查波次完成
@@ -2400,7 +2417,7 @@ export class UnifiedArenaEngine {
             }
         }
         
-        this.texts.push(new FloatText(this.player.x, this.player.y - 50, `✨ ${skill.name}`, '#9b59b6'));
+        this.texts.push(new FloatText(this.player.x, this.player.y - 50, `+ ${skill.name}`, '#9b59b6'));
         this.updateUI();
     }
     
