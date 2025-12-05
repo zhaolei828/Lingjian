@@ -1,6 +1,13 @@
 // ========== 微信/抖音小游戏入口 ==========
 // 灵剑 · 血色秘境
 
+const BUILD_VERSION = '__BUILD_VERSION__';
+const BUILD_TIME = '__BUILD_TIME__';
+console.log('==========================================');
+console.log(`[灵剑] 版本: ${BUILD_VERSION}`);
+console.log(`[构建时间] ${BUILD_TIME}`);
+console.log('==========================================');
+
 // 首先加载适配层（必须最先）
 import './js/libs/weapp-adapter.js';
 

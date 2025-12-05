@@ -1110,10 +1110,11 @@ export class ItemCardManager {
     
     // 检查触摸点击是否在道具卡槽上（供 Canvas UI 使用）
     handleTouch(x, y, width, height) {
-        const slotSize = 40;
-        const spacing = 5;
-        const startX = width - (slotSize + spacing) * 6 - 10;
-        const startY = height - slotSize - 80;
+        const slotSize = 44;
+        const spacing = 8;
+        const totalWidth = slotSize * 6 + spacing * 5;
+        const startX = (width - totalWidth) / 2;  // 居中
+        const startY = height - slotSize - 15;    // 底部
         
         for (let i = 0; i < 6; i++) {
             const slotX = startX + (slotSize + spacing) * i;

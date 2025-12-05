@@ -124,8 +124,7 @@ export class Player extends Entity {
     }
     findTarget() {
         // 【优化】使用空间哈希快速查找最近敌人
-        const target = collisionManager.findNearestEnemy(this.x, this.y, 600);
-        return target;
+        return collisionManager.findNearestEnemy(this.x, this.y, 600);
     }
     fire(t) {
         if (this.role.id === 'body') {
@@ -484,17 +483,24 @@ export class Enemy extends Entity {
         
         if(type === 'water') this.slowTimer = 2.0; 
 
-        if(this.hp<=0) {
-            this.dead=true; window.Game.score++; 
+        if(this.hp<=0 && !this.dead) {
+            this.dead=true; 
+            window.Game.score++; 
             window.Game.updateUI();
             if(type==='fire') window.Game.screenShake(0.5);
             
-            if(this.isElite) {
-                window.Game.chests.push(new Chest(this.x, this.y));
-                window.Game.screenShake(2.0);
-                window.Game.texts.push(new FloatText(this.x, this.y-50, "精英击杀!", "#f1c40f", true));
+            // 统一死亡处理：优先调用 onEnemyKilled，否则使用默认行为
+            if (window.Game.onEnemyKilled) {
+                window.Game.onEnemyKilled(this);
             } else {
-                window.Game.orbs.push(new Orb(this.x,this.y,this.exp)); 
+                // 默认行为：掉落经验球
+                if(this.isElite) {
+                    window.Game.chests.push(new Chest(this.x, this.y));
+                    window.Game.screenShake(2.0);
+                    window.Game.texts.push(new FloatText(this.x, this.y-50, "精英击杀!", "#f1c40f", true));
+                } else {
+                    window.Game.orbs.push(new Orb(this.x,this.y,this.exp)); 
+                }
             }
         }
     }
@@ -628,14 +634,24 @@ export class Enemy extends Entity {
 // ========== 秘境专属敌人类 ==========
 export class ArenaEnemy extends Enemy {
     constructor(type, x, y, levelMult, playerLevel) {
+        super(type, x, y, 1);
+        this.reset(type, x, y, levelMult, playerLevel);
+    }
+    
+    /**
+     * 重置状态（供对象池复用）
+     */
+    reset(type, x, y, levelMult, playerLevel) {
         const mobData = ARENA_MOBS[type] || ARENA_BOSSES[type];
         const baseHp = mobData?.hp || 50;
         const baseDmg = mobData?.dmg || 10;
         const baseSpeed = mobData?.speed || 80;
         const level = Math.max(1, Math.floor(playerLevel * levelMult));
         
-        super(type, x, y, level);
-        
+        this.type = type;
+        this.x = x;
+        this.y = y;
+        this.dead = false;
         this.hp = baseHp * (1 + level * 0.2);
         this.maxHp = this.hp;
         this.dmg = baseDmg * (1 + level * 0.1);
@@ -645,6 +661,10 @@ export class ArenaEnemy extends Enemy {
         this.bossSize = mobData?.size || 1.0;
         this.name = mobData?.name || type;
         this.scale = this.isBoss ? this.bossSize : 1.0;
+        this.pushX = 0;
+        this.pushY = 0;
+        this.hitFlashTimer = 0;
+        this.slowTimer = 0;
         
         if (this.isBoss) {
             this.hp *= 10;
@@ -653,7 +673,8 @@ export class ArenaEnemy extends Enemy {
         }
     }
     
-    takeDamage(v, kx, ky, type, knockback) {
+    // 复用父类 takeDamage，只重写死亡处理
+    takeDamage(v, kx, ky, type, knockbackMult = 1.0) {
         if (this.dead) return;
         
         const dmg = v || 0;
@@ -662,26 +683,56 @@ export class ArenaEnemy extends Enemy {
         this.hp -= dmg;
         this.hitFlashTimer = 0.1;
         
-        // 击退
-        const force = (this.isBoss ? 5 : 10) * (knockback || 1);
+        // 击退（BOSS 弱化）
+        let force = 120;
+        if (type === 'earth') force = 300;
+        force *= knockbackMult;
+        if (this.isBoss) force *= 0.1;
+        
         this.pushX = (kx || 0) * force;
         this.pushY = (ky || 0) * force;
         
-        // 伤害数字
-        window.Game.texts.push(new FloatText(this.x, this.y - 30, Math.floor(dmg), '#ff5252'));
+        // 元素减速
+        if (type === 'water') this.slowTimer = 2.0;
         
-        // 粒子效果
-        for (let i = 0; i < 3; i++) {
+        // 伤害颜色
+        let c = '#ff5252';
+        let crit = false;
+        if (type === 'fire') { c = '#ff5722'; crit = true; }
+        else if (type === 'thunder') { c = '#ffeb3b'; crit = true; }
+        else if (type === 'earth') { c = '#e67e22'; crit = true; }
+        else if (type === 'water') c = '#3498db';
+        else if (type === 'ghost') c = '#9c27b0';
+        
+        // 伤害数字
+        if (window.Game) {
             if (window.Game.pool) {
-                window.Game.particles.push(window.Game.pool.get('particle', Particle, this.x, this.y, '#ff5252', 0.3, 4));
+                window.Game.texts.push(window.Game.pool.get('floattext', FloatText, this.x, this.y - 30, Math.floor(dmg), c, crit));
             } else {
-                window.Game.particles.push(new Particle(this.x, this.y, '#ff5252', 0.3, 4));
+                window.Game.texts.push(new FloatText(this.x, this.y - 30, Math.floor(dmg), c, crit));
             }
         }
         
-        // 死亡处理 - 先设置 dead 标志，防止重复处理
+        // 粒子效果
+        if (window.Game) {
+            const particleCount = crit ? 5 : 3;
+            for (let i = 0; i < particleCount; i++) {
+                if (window.Game.pool) {
+                    window.Game.particles.push(window.Game.pool.get('particle', Particle, this.x, this.y, c, 0.3, 4));
+                } else {
+                    window.Game.particles.push(new Particle(this.x, this.y, c, 0.3, 4));
+                }
+            }
+        }
+        
+        // 暴击顿帧
+        if (crit && window.Game) {
+            window.Game.hitStop(0.05);
+        }
+        
+        // 死亡处理 - 统一调用 onEnemyKilled（秘境掉金币，关卡掉经验）
         if (this.hp <= 0 && !this.dead) {
-            this.dead = true;  // 立即标记死亡
+            this.dead = true;
             if (window.Game && window.Game.onEnemyKilled) {
                 window.Game.onEnemyKilled(this);
             }
@@ -930,20 +981,17 @@ export class Bullet extends Entity {
             if(Math.random()>0.5) window.Game.particles.push(new Particle(this.x,this.y,'#00bcd4',0.3, 3));
         }
 
-        // 【优化】使用空间哈希只检测附近敌人
-        // 秘境模式下跳过此碰撞检测（由 arena-unified.js 处理）
-        if (!this.skipCollision) {
-            const nearbyEnemies = collisionManager.findEnemiesInRange(this.x, this.y, 80);
-            for(let e of nearbyEnemies) {
-                if(this.dist(e)<35 && !this.hitList.includes(e)) {
-                    this.hit(e);
-                    this.hitList.push(e);
-                    if(this.pierce > 0) {
-                        this.pierce--;
-                    } else {
-                        this.dead = true;
-                        break;
-                    }
+        // 【统一】使用空间哈希检测附近敌人（秘境/关卡模式共用）
+        const nearbyEnemies = collisionManager.findEnemiesInRange(this.x, this.y, 80);
+        for(let e of nearbyEnemies) {
+            if(this.dist(e) < 35 && !this.hitList.includes(e)) {
+                this.hit(e);
+                this.hitList.push(e);
+                if(this.pierce > 0) {
+                    this.pierce--;
+                } else {
+                    this.dead = true;
+                    break;
                 }
             }
         }
@@ -1981,11 +2029,25 @@ export class Chest extends Entity {
 
 export class FloatText extends Entity {
     constructor(x,y,t,c, crit=false) { 
-        super(x,y); this.txt=t; this.c=c; this.life=0.8; this.crit=crit;
-        this.vy = -100; 
-        this.scale = 0.5;
-        if(crit) { this.vy = -200; this.life = 1.2; }
+        super(x,y);
+        this.reset(x, y, t, c, crit);
     }
+    
+    /**
+     * 重置状态（供对象池复用）
+     */
+    reset(x, y, t, c, crit=false) {
+        this.x = x;
+        this.y = y;
+        this.txt = t;
+        this.c = c;
+        this.crit = crit;
+        this.life = crit ? 1.2 : 0.8;
+        this.vy = crit ? -200 : -100;
+        this.scale = 0.5;
+        this.dead = false;
+    }
+    
     update(dt) { 
         this.y += this.vy * dt; 
         this.vy += 500 * dt; // Gravity
@@ -2095,3 +2157,4 @@ export class StaticObject extends Entity {
         }
     }
 }
+

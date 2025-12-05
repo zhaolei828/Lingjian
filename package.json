@@ -25,6 +25,7 @@
   "description": "",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-replace": "^6.0.3",
     "rollup": "^4.53.3",
     "rollup-plugin-copy": "^3.5.0"
   }

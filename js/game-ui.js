@@ -87,26 +87,33 @@ export class GameUI {
         Platform.onTouchStart((e) => {
             if (this.currentScreen !== 'playing') return;
             if (!this.engine || !this.engine.itemCards) return;
+            if (this.engine.gameMode !== 'arena') return; // 仅秘境模式
             
-            const touch = e.touches[0] || e.changedTouches[0];
-            if (!touch) return;
-            
-            // 获取屏幕坐标转换为逻辑坐标
-            let x, y;
-            if (Platform.isWeb && this.canvas.getBoundingClientRect) {
-                const rect = this.canvas.getBoundingClientRect();
-                const scaleX = this.width / rect.width;
-                const scaleY = this.height / rect.height;
-                x = (touch.clientX - rect.left) * scaleX;
-                y = (touch.clientY - rect.top) * scaleY;
-            } else {
-                // 小游戏环境直接使用 clientX/clientY
-                x = touch.clientX;
-                y = touch.clientY;
+            // 检查所有触摸点（支持移动时使用道具）
+            const touches = e.touches || [];
+            for (let i = 0; i < touches.length; i++) {
+                const touch = touches[i];
+                if (!touch) continue;
+                
+                // 获取屏幕坐标转换为逻辑坐标
+                let x, y;
+                if (Platform.isWeb && this.canvas.getBoundingClientRect) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const scaleX = this.width / rect.width;
+                    const scaleY = this.height / rect.height;
+                    x = (touch.clientX - rect.left) * scaleX;
+                    y = (touch.clientY - rect.top) * scaleY;
+                } else {
+                    // 小游戏环境直接使用 clientX/clientY
+                    x = touch.clientX;
+                    y = touch.clientY;
+                }
+                
+                // 检查是否点击了道具卡槽
+                if (this.engine.itemCards.handleTouch(x, y, this.width, this.height)) {
+                    break; // 已处理，退出循环
+                }
             }
-            
-            // 检查是否点击了道具卡槽
-            this.engine.itemCards.handleTouch(x, y, this.width, this.height);
         });
     }
     
@@ -556,8 +563,10 @@ export class GameUI {
         ctx.font = 'bold 16px Arial';
         ctx.fillText(d.gold, this.width - 60, 28);
         
-        // ========== 道具卡槽（屏幕右下角） ==========
-        this.drawItemSlots(ctx);
+        // ========== 道具卡槽（仅秘境模式） ==========
+        if (this.engine && this.engine.gameMode === 'arena') {
+            this.drawItemSlots(ctx);
+        }
         
         // ========== BOSS 血条 ==========
         if (this.bossHud.visible) {
@@ -596,15 +605,16 @@ export class GameUI {
         }
     }
     
-    // 绘制道具卡槽
+    // 绘制道具卡槽（屏幕底部居中）
     drawItemSlots(ctx) {
         if (!this.engine || !this.engine.itemCards) return;
         
         const slots = this.engine.itemCards.slots;
-        const slotSize = 40;
-        const spacing = 5;
-        const startX = this.width - (slotSize + spacing) * 6 - 10;
-        const startY = this.height - slotSize - 80;
+        const slotSize = 44;
+        const spacing = 8;
+        const totalWidth = slotSize * 6 + spacing * 5;
+        const startX = (this.width - totalWidth) / 2;  // 居中
+        const startY = this.height - slotSize - 15;    // 底部
         
         for (let i = 0; i < 6; i++) {
             const x = startX + (slotSize + spacing) * i;

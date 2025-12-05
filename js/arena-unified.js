@@ -4,7 +4,7 @@
 
 import { Platform } from './platform.js';
 import { STAGES, ARENA_CONFIG, ARENA_MOBS, ARENA_BOSSES, ARTIFACTS, SKILLS, ROLES, SVG_LIB, ITEM_CARDS } from './data.js';
-import { Player, Enemy, ArenaEnemy, FloatText, Particle, Artifact, StaticObject, Chest, Footprint, Bullet } from './entities.js';
+import { Player, Enemy, ArenaEnemy, FloatText, Particle, Artifact, StaticObject, Chest, Footprint, Bullet, Orb } from './entities.js';
 import { Assets, loadAssets } from './assets.js';
 import { generateBloodArenaPattern, generateStagePattern } from './map.js';
 import { Coin } from './coin.js';
@@ -148,6 +148,11 @@ export class UnifiedArenaEngine {
         this.bgPattern = null;
         this.shake = 0;
         
+        // 预渲染缓存（保持完整视觉效果，只渲染一次）
+        this.cachedSkyCanvas = null;      // 天空+血月
+        this.cachedEdgeMistCanvas = null; // 边缘迷雾（静态部分）
+        this.cachedBulletGlow = null;     // 子弹光晕贴图
+        
         // 冻结效果
         this.freezeTimer = 0;
         this.hitStopCooldown = 0;
@@ -237,6 +242,14 @@ export class UnifiedArenaEngine {
     
     // 显示升级菜单（供全局 showUpgradeMenu 调用）
     showLevelUpMenu() {
+        console.log('[Engine] showLevelUpMenu 被调用! 当前波次:', this.currentWave, '模式:', this.gameMode);
+        
+        // 秘境模式不使用经验升级
+        if (this.gameMode === GAME_MODES.ARENA) {
+            console.log('[Engine] 秘境模式，忽略经验升级菜单');
+            return;
+        }
+        
         // 暂停游戏
         this.state = 'LEVELUP';
         
@@ -279,7 +292,7 @@ export class UnifiedArenaEngine {
             skill.effect(this.player.stats);
         }
         
-        this.texts.push(new FloatText(this.player.x, this.player.y - 50, `+ ${upgrade.name}`, '#f1c40f'));
+        this.texts.push(this.pool.get('floattext', FloatText, this.player.x, this.player.y - 50, `+ ${upgrade.name}`, '#f1c40f'));
     }
     
     // 应用升级效果
@@ -297,7 +310,7 @@ export class UnifiedArenaEngine {
         if (e.pierce) this.player.stats.pierce += e.pierce;
         if (e.areaMult) this.player.stats.area *= e.areaMult;
         
-        this.texts.push(new FloatText(this.player.x, this.player.y - 50, `+ ${upgrade.name}`, '#f1c40f'));
+        this.texts.push(this.pool.get('floattext', FloatText, this.player.x, this.player.y - 50, `+ ${upgrade.name}`, '#f1c40f'));
     }
     
     // 加载资源
@@ -377,7 +390,7 @@ export class UnifiedArenaEngine {
             
             // 显示法宝信息
             const artifactName = this.artifact?.data?.name || '神秘法宝';
-            this.texts.push(new FloatText(0, -100, `[法宝] ${artifactName}`, '#9b59b6'));
+            this.texts.push(this.pool.get('floattext', FloatText, 0, -100, `[法宝] ${artifactName}`, '#9b59b6'));
             
             // 延迟开始第一波
             setTimeout(() => this.startNextWave(), 2500);
@@ -418,7 +431,7 @@ export class UnifiedArenaEngine {
             
             // 显示法宝信息
             const artifactName = this.artifact?.data?.name || '神秘法宝';
-            this.texts.push(new FloatText(0, -100, `[法宝] ${artifactName}`, '#9b59b6'));
+            this.texts.push(this.pool.get('floattext', FloatText, 0, -100, `[法宝] ${artifactName}`, '#9b59b6'));
         }
     }
     
@@ -813,14 +826,14 @@ export class UnifiedArenaEngine {
         const r = Math.random();
         if(r < 0.3) {
             this.player.hp = this.player.maxHp;
-            this.texts.push(new FloatText(x, y, '气血全满!', '#2ecc71'));
+            this.texts.push(this.pool.get('floattext', FloatText, x, y, '气血全满!', '#2ecc71'));
         } else if (r < 0.6) {
             this.enemies.forEach(e => { if(!e.isElite) e.takeDamage(9999, 0, 0, 'sword'); });
             this.screenShake(2.0);
-            this.texts.push(new FloatText(x, y, '万剑归一!', '#e74c3c'));
+            this.texts.push(this.pool.get('floattext', FloatText, x, y, '万剑归一!', '#e74c3c'));
         } else {
             this.player.gainExp(this.player.maxExp - this.player.exp);
-            this.texts.push(new FloatText(x, y, '顿悟飞升!', '#f1c40f'));
+            this.texts.push(this.pool.get('floattext', FloatText, x, y, '顿悟飞升!', '#f1c40f'));
         }
     }
     
@@ -847,58 +860,37 @@ export class UnifiedArenaEngine {
             this.camera.y = this.player.y - this.height / 2;
         }
         
-        // 更新敌人
-        this.enemies = this.enemies.filter(e => {
-            if (e.dead) return false;
+        // 更新敌人（使用对象池回收）
+        const aliveEnemies = [];
+        for (const e of this.enemies) {
+            if (e.dead) {
+                this.pool.recycle('arenaenemy', e);
+                continue;
+            }
             e.update(dt, this.player);
-            return true;
-        });
+            aliveEnemies.push(e);
+        }
+        this.enemies = aliveEnemies;
         
-        // 更新子弹（秘境模式专用碰撞检测）
-        this.bullets = this.bullets.filter(b => {
-            if (b.dead) return false;
-            
-            // 标记为秘境模式，跳过 entities.js 中的碰撞检测
-            b.skipCollision = true;
-            b.update(dt);
-            b.skipCollision = false;
-            
-            // 秘境模式碰撞检测
-            for (const enemy of this.enemies) {
-                if (enemy.dead || b.dead) continue;
-                
-                // 检查是否已经命中过这个敌人（防止重复伤害）
-                if (b.hitList && b.hitList.includes(enemy)) continue;
-                
-                const dx = b.x - enemy.x;
-                const dy = b.y - enemy.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const hitRadius = enemy.isBoss ? 40 : 25;
-                
-                if (dist < hitRadius) {
-                    // 确保伤害值有效
-                    const dmgValue = b.dmg || 10;
-                    if (!isNaN(dmgValue) && dmgValue > 0) {
-                        enemy.takeDamage(dmgValue, dx / dist, dy / dist, b.type, b.knockback || 1.0);
-                        
-                        // 记录已命中的敌人
-                        if (!b.hitList) b.hitList = [];
-                        b.hitList.push(enemy);
-                    }
-                    
-                    // 处理穿透
-                    if (b.pierce > 0) {
-                        b.pierce--;
-                    } else {
-                        b.dead = true;
-                    }
-                }
+        // 更新子弹（统一使用 entities.js 中的碰撞检测）- 使用对象池回收
+        const aliveBullets = [];
+        for (const b of this.bullets) {
+            if (b.dead) {
+                this.pool.recycle('bullet', b);
+                continue;
             }
             
-            return !b.dead;
-        });
+            // 统一碰撞检测：由 Bullet.update -> Bullet.hit -> Enemy.takeDamage 处理
+            b.update(dt);
+            
+            if (!b.dead) {
+                aliveBullets.push(b);
+            } else {
+                this.pool.recycle('bullet', b);
+            }
+        }
+        this.bullets = aliveBullets;
         
-        // 更新金币
         // 更新金币（使用对象池回收）
         const aliveCoins = [];
         for (const c of this.coins) {
@@ -914,6 +906,8 @@ export class UnifiedArenaEngine {
                 const dy = c.y - this.player.y;
                 if (Math.sqrt(dx * dx + dy * dy) < 30) {
                     this.totalGold += c.value;
+                    // 拾取时触发飞行效果
+                    this.flyGoldToCounter(c.x, c.y);
                     c.dead = true;
                     this.pool.recycle('coin', c);
                     this.updateUI();
@@ -937,11 +931,17 @@ export class UnifiedArenaEngine {
         }
         this.particles = aliveParticles;
         
-        // 更新文字
-        this.texts = this.texts.filter(t => {
+        // 更新文字（使用对象池回收）
+        const aliveTexts = [];
+        for (const t of this.texts) {
             t.update(dt);
-            return t.life > 0;
-        });
+            if (t.life > 0) {
+                aliveTexts.push(t);
+            } else {
+                this.pool.recycle('floattext', t);
+            }
+        }
+        this.texts = aliveTexts;
         
         // 玩家-敌人碰撞（持续接触伤害，绕过无敌帧）
         if (this.player && !this.player.dead && !this.player.invincible) {
@@ -971,7 +971,7 @@ export class UnifiedArenaEngine {
                             enemy.lastReflectTime = this.playTime;
                             const reflectDamage = (enemy.dmg || 10) * this.player.damageReflect;
                             enemy.hp -= reflectDamage;
-                            this.texts.push(new FloatText(enemy.x, enemy.y, "-" + Math.floor(reflectDamage), '#3498db'));
+                            this.texts.push(this.pool.get('floattext', FloatText, enemy.x, enemy.y, "-" + Math.floor(reflectDamage), '#3498db'));
                             if (enemy.hp <= 0 && !enemy.dead) {
                                 this.onEnemyKilled(enemy);
                             }
@@ -1179,7 +1179,7 @@ export class UnifiedArenaEngine {
         };
         
         this.pendingAOEs.push(aoe);
-        this.texts.push(new FloatText(aoe.x, aoe.y - 50, '⚠️ 危险区域！', '#ff5252'));
+        this.texts.push(this.pool.get('floattext', FloatText, aoe.x, aoe.y - 50, '⚠️ 危险区域！', '#ff5252'));
     }
     
     // Boss 召唤
@@ -1194,7 +1194,7 @@ export class UnifiedArenaEngine {
             const y = boss.y + Math.sin(angle) * dist;
             
             const mobType = mobTypes[Math.floor(Math.random() * mobTypes.length)];
-            const enemy = new ArenaEnemy(mobType, x, y, 0.5, this.player.lvl);
+            const enemy = this.pool.get('arenaenemy', ArenaEnemy, mobType, x, y, 0.5, this.player.lvl);
             this.enemies.push(enemy);
             
             for (let j = 0; j < 10; j++) {
@@ -1202,7 +1202,7 @@ export class UnifiedArenaEngine {
             }
         }
         
-        this.texts.push(new FloatText(boss.x, boss.y - 50, '召唤!', '#ff5252'));
+        this.texts.push(this.pool.get('floattext', FloatText, boss.x, boss.y - 50, '召唤!', '#ff5252'));
     }
     
     // 生成能量球
@@ -1235,7 +1235,7 @@ export class UnifiedArenaEngine {
             pulse: 0
         });
         
-        this.texts.push(new FloatText(x, y - 30, '💫 能量球!', orbData.color));
+        this.texts.push(this.pool.get('floattext', FloatText, x, y - 30, '💫 能量球!', orbData.color));
     }
     
     // 更新能量球
@@ -1251,7 +1251,7 @@ export class UnifiedArenaEngine {
                 if (dist < aoe.radius && this.player && !this.player.invincible) {
                     this.player.hp -= aoe.damage;
                     this.shake = 1;
-                    this.texts.push(new FloatText(this.player.x, this.player.y - 30, Math.floor(aoe.damage), '#ff0000'));
+                    this.texts.push(this.pool.get('floattext', FloatText, this.player.x, this.player.y - 30, Math.floor(aoe.damage), '#ff0000'));
                 }
                 
                 for (let j = 0; j < 30; j++) {
@@ -1306,7 +1306,7 @@ export class UnifiedArenaEngine {
         switch(orb.type) {
             case 'heal':
                 this.player.hp = Math.min(this.player.maxHp, this.player.hp + orb.value);
-                this.texts.push(new FloatText(this.player.x, this.player.y - 30, '+' + orb.value + ' HP', '#4caf50'));
+                this.texts.push(this.pool.get('floattext', FloatText, this.player.x, this.player.y - 30, '+' + orb.value + ' HP', '#4caf50'));
                 break;
             case 'damage':
                 this.player.damageBoost = (this.player.damageBoost || 1) * orb.value;
@@ -1315,7 +1315,7 @@ export class UnifiedArenaEngine {
                         this.player.damageBoost = Math.max(1, (this.player.damageBoost || 1) / orb.value);
                     }
                 }, orb.duration * 1000);
-                this.texts.push(new FloatText(this.player.x, this.player.y - 30, '攻击提升!', '#f44336'));
+                this.texts.push(this.pool.get('floattext', FloatText, this.player.x, this.player.y - 30, '攻击提升!', '#f44336'));
                 break;
             case 'speed':
                 this.player.speedBoost = (this.player.speedBoost || 1) * orb.value;
@@ -1324,12 +1324,12 @@ export class UnifiedArenaEngine {
                         this.player.speedBoost = Math.max(1, (this.player.speedBoost || 1) / orb.value);
                     }
                 }, orb.duration * 1000);
-                this.texts.push(new FloatText(this.player.x, this.player.y - 30, '速度提升!', '#2196f3'));
+                this.texts.push(this.pool.get('floattext', FloatText, this.player.x, this.player.y - 30, '速度提升!', '#2196f3'));
                 break;
             case 'skill_reset':
                 if (this.artifact) {
                     this.artifact.cd = 0;
-                    this.texts.push(new FloatText(this.player.x, this.player.y - 30, '法宝CD重置!', '#9c27b0'));
+                    this.texts.push(this.pool.get('floattext', FloatText, this.player.x, this.player.y - 30, '法宝CD重置!', '#9c27b0'));
                 }
                 break;
         }
@@ -1386,7 +1386,7 @@ export class UnifiedArenaEngine {
         this.drawFlyingCoins(ctx);
     }
     
-    // 秘境模式场景绘制（俯视图）
+    // 秘境模式场景绘制（俯视图）- 含视锥剔除优化
     drawArenaScene(ctx) {
         ctx.save();
         
@@ -1401,16 +1401,31 @@ export class UnifiedArenaEngine {
         // 相机
         ctx.translate(-this.camera.x, -this.camera.y);
         
+        // 视锥范围（只绘制可见区域内的对象）
+        const viewLeft = this.camera.x - 100;
+        const viewRight = this.camera.x + this.width + 100;
+        const viewTop = this.camera.y - 100;
+        const viewBottom = this.camera.y + this.height + 100;
+        
+        // 快速检查函数
+        const inView = (x, y, margin = 50) => 
+            x > viewLeft - margin && x < viewRight + margin && 
+            y > viewTop - margin && y < viewBottom + margin;
+        
         // 背景
         this.drawArenaBackground(ctx);
         
-        // 金币
-        this.coins.forEach(c => c.draw(ctx, this.assets));
+        // 金币（视锥剔除）
+        for (const c of this.coins) {
+            if (inView(c.x, c.y)) c.draw(ctx, this.assets);
+        }
         
-        // 敌人
-        this.enemies.forEach(e => e.draw(ctx, this.assets));
+        // 敌人（视锥剔除）
+        for (const e of this.enemies) {
+            if (inView(e.x, e.y, 100)) e.draw(ctx, this.assets);
+        }
         
-        // 子弹
+        // 子弹（视锥剔除已内置在 drawBullets）
         this.drawBullets(ctx);
         
         // 道具卡特殊实体
@@ -1421,8 +1436,10 @@ export class UnifiedArenaEngine {
             this.player.draw(ctx, this.assets);
         }
         
-        // 召唤物
-        this.minions.forEach(m => m.draw(ctx));
+        // 召唤物（视锥剔除）
+        for (const m of this.minions) {
+            if (inView(m.x, m.y)) m.draw(ctx);
+        }
         
         // 法宝
         if (this.artifact) {
@@ -1435,11 +1452,15 @@ export class UnifiedArenaEngine {
         // 能量球
         this.drawPowerOrbs(ctx);
         
-        // 粒子
-        this.particles.forEach(p => p.draw(ctx));
+        // 粒子（视锥剔除）
+        for (const p of this.particles) {
+            if (inView(p.x, p.y, 30)) p.draw(ctx);
+        }
         
-        // 文字
-        this.texts.forEach(t => t.draw(ctx));
+        // 文字（视锥剔除）
+        for (const t of this.texts) {
+            if (inView(t.x, t.y, 100)) t.draw(ctx);
+        }
         
         ctx.restore();
     }
@@ -1743,56 +1764,463 @@ export class UnifiedArenaEngine {
         }
     }
     
-    // 秘境模式背景（血色风格）
+    // 秘境模式背景（血色风格）- 多层次视差效果
     drawArenaBackground(ctx) {
-        // 天空渐变
-        const skyGrad = ctx.createLinearGradient(0, -600, 0, 200);
-        skyGrad.addColorStop(0, '#0a0000');
-        skyGrad.addColorStop(0.5, '#1a0505');
-        skyGrad.addColorStop(1, '#2a0a0a');
-        ctx.fillStyle = skyGrad;
-        ctx.fillRect(this.camera.x - 100, this.camera.y - 100, this.width + 200, this.height + 200);
-        
-        // 血月
-        const moonX = this.camera.x + this.width * 0.8;
-        const moonY = this.camera.y + 100;
-        
-        // 月亮光晕
-        const moonGlow = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 150);
-        moonGlow.addColorStop(0, 'rgba(139, 0, 0, 0.3)');
-        moonGlow.addColorStop(0.5, 'rgba(139, 0, 0, 0.1)');
-        moonGlow.addColorStop(1, 'rgba(139, 0, 0, 0)');
-        ctx.fillStyle = moonGlow;
-        ctx.beginPath();
-        ctx.arc(moonX, moonY, 150, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 月亮
-        ctx.fillStyle = '#8b0000';
-        ctx.beginPath();
-        ctx.arc(moonX, moonY, 50, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 月亮高光
-        ctx.fillStyle = '#c0392b';
-        ctx.beginPath();
-        ctx.arc(moonX - 15, moonY - 15, 35, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 地面纹理 - 基于相机位置动态绘制，确保覆盖整个可视区域
-        if (this.bgPattern) {
-            ctx.fillStyle = this.bgPattern;
-            // 计算需要绘制的范围：相机可视区域 + 边距
-            const padding = 200;
-            const bgX = this.camera.x - padding;
-            const bgY = this.camera.y - padding;
-            const bgW = this.width + padding * 2;
-            const bgH = this.height + padding * 2;
-            ctx.fillRect(bgX, bgY, bgW, bgH);
+        // ========== 1. 预渲染天空+血月+远景（只执行一次）==========
+        if (!this.cachedSkyCanvas) {
+            this.cachedSkyCanvas = document.createElement('canvas');
+            this.cachedSkyCanvas.width = this.width + 800;
+            this.cachedSkyCanvas.height = this.height + 800;
+            const skyCtx = this.cachedSkyCanvas.getContext('2d');
+            const w = this.cachedSkyCanvas.width;
+            const h = this.cachedSkyCanvas.height;
+            
+            // 天空渐变 - 更丰富的颜色层次
+            const skyGrad = skyCtx.createLinearGradient(0, 0, 0, h);
+            skyGrad.addColorStop(0, '#050000');
+            skyGrad.addColorStop(0.2, '#0a0000');
+            skyGrad.addColorStop(0.5, '#1a0505');
+            skyGrad.addColorStop(0.8, '#2a0808');
+            skyGrad.addColorStop(1, '#1a0505');
+            skyCtx.fillStyle = skyGrad;
+            skyCtx.fillRect(0, 0, w, h);
+            
+            // 远景山脉剪影（3层）
+            this.drawDistantMountains(skyCtx, w, h);
+            
+            // 血月
+            const moonX = w * 0.75;
+            const moonY = h * 0.15;
+            
+            // 月亮外层光晕
+            const outerGlow = skyCtx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 200);
+            outerGlow.addColorStop(0, 'rgba(180, 0, 0, 0.2)');
+            outerGlow.addColorStop(0.5, 'rgba(139, 0, 0, 0.1)');
+            outerGlow.addColorStop(1, 'rgba(100, 0, 0, 0)');
+            skyCtx.fillStyle = outerGlow;
+            skyCtx.beginPath();
+            skyCtx.arc(moonX, moonY, 200, 0, Math.PI * 2);
+            skyCtx.fill();
+            
+            // 月亮内层光晕
+            const innerGlow = skyCtx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 80);
+            innerGlow.addColorStop(0, 'rgba(200, 50, 50, 0.5)');
+            innerGlow.addColorStop(1, 'rgba(139, 0, 0, 0)');
+            skyCtx.fillStyle = innerGlow;
+            skyCtx.beginPath();
+            skyCtx.arc(moonX, moonY, 80, 0, Math.PI * 2);
+            skyCtx.fill();
+            
+            // 月亮本体
+            skyCtx.fillStyle = '#8b0000';
+            skyCtx.beginPath();
+            skyCtx.arc(moonX, moonY, 55, 0, Math.PI * 2);
+            skyCtx.fill();
+            
+            // 月亮高光
+            const moonHighlight = skyCtx.createRadialGradient(moonX - 15, moonY - 15, 0, moonX - 15, moonY - 15, 40);
+            moonHighlight.addColorStop(0, '#e74c3c');
+            moonHighlight.addColorStop(0.5, '#c0392b');
+            moonHighlight.addColorStop(1, '#8b0000');
+            skyCtx.fillStyle = moonHighlight;
+            skyCtx.beginPath();
+            skyCtx.arc(moonX - 10, moonY - 10, 40, 0, Math.PI * 2);
+            skyCtx.fill();
+            
+            // 远景枯树剪影
+            this.drawDistantTrees(skyCtx, w, h);
+            
+            // 远景废墟塔楼
+            this.drawDistantRuins(skyCtx, w, h);
         }
         
-        // 竞技场边缘
-        this.drawArenaEdge(ctx);
+        // ========== 2. 预渲染中景装饰（只执行一次）==========
+        if (!this.cachedMidgroundCanvas) {
+            this.cachedMidgroundCanvas = document.createElement('canvas');
+            this.cachedMidgroundCanvas.width = 1600;
+            this.cachedMidgroundCanvas.height = 1600;
+            const midCtx = this.cachedMidgroundCanvas.getContext('2d');
+            const cx = 800, cy = 800;
+            
+            // 中景石柱（围绕竞技场）
+            this.drawMidgroundPillars(midCtx, cx, cy);
+            
+            // 中景骸骨装饰
+            this.drawMidgroundBones(midCtx, cx, cy);
+            
+            // 血色符文
+            this.drawMidgroundRunes(midCtx, cx, cy);
+        }
+        
+        // ========== 2. 预渲染边缘迷雾（只执行一次）==========
+        if (!this.cachedEdgeMistCanvas) {
+            const mistSize = 1400; // 足够大以覆盖整个竞技场
+            this.cachedEdgeMistCanvas = document.createElement('canvas');
+            this.cachedEdgeMistCanvas.width = mistSize;
+            this.cachedEdgeMistCanvas.height = mistSize;
+            const mistCtx = this.cachedEdgeMistCanvas.getContext('2d');
+            
+            // 中心偏移
+            const cx = mistSize / 2;
+            const cy = mistSize / 2;
+            
+            // 绘制 60 个迷雾渐变球（完整视觉效果！）
+            const path = this.arenaEdgePath || [];
+            const mistCount = 60;
+            
+            for (let i = 0; i < mistCount; i++) {
+                const angle = (i / mistCount) * Math.PI * 2;
+                const baseR = 580;
+                
+                // 使用路径点或默认圆形
+                let x, y;
+                if (path.length > 0) {
+                    const idx = Math.floor((i / mistCount) * path.length);
+                    const point = path[idx];
+                    x = cx + point.x;
+                    y = cy + point.y;
+                } else {
+                    x = cx + Math.cos(angle) * baseR;
+                    y = cy + Math.sin(angle) * baseR;
+                }
+                
+                // 渐变迷雾球
+                const gradient = mistCtx.createRadialGradient(x, y, 0, x, y, 80);
+                gradient.addColorStop(0, 'rgba(139, 0, 0, 0.4)');
+                gradient.addColorStop(1, 'rgba(139, 0, 0, 0)');
+                mistCtx.fillStyle = gradient;
+                mistCtx.beginPath();
+                mistCtx.arc(x, y, 80, 0, Math.PI * 2);
+                mistCtx.fill();
+            }
+        }
+        
+        // ========== 绘制（多层视差）==========
+        // 注意：此时相机变换 ctx.translate(-camera.x, -camera.y) 已应用
+        // 所以绘制在 (camera.x, camera.y) 会显示在屏幕左上角
+        
+        const camX = this.camera.x;
+        const camY = this.camera.y;
+        const sw = this.cachedSkyCanvas.width;
+        const sh = this.cachedSkyCanvas.height;
+        
+        // 1. 远景天空+血月+山脉（视差 0.1 - 几乎固定在屏幕上）
+        const parallaxFar = 0.9; // 0.9 = 只移动 10%
+        ctx.drawImage(this.cachedSkyCanvas, 
+            camX * parallaxFar - sw/2 + this.width/2, 
+            camY * parallaxFar - sh/2 + this.height/2);
+        
+        // 2. 中景装饰（视差 0.6）
+        if (this.cachedMidgroundCanvas) {
+            const parallaxMid = 0.6;
+            const mw = this.cachedMidgroundCanvas.width;
+            const mh = this.cachedMidgroundCanvas.height;
+            ctx.globalAlpha = 0.7;
+            ctx.drawImage(this.cachedMidgroundCanvas, 
+                camX * parallaxMid - mw/2 + this.width/2,
+                camY * parallaxMid - mh/2 + this.height/2);
+            ctx.globalAlpha = 1;
+        }
+        
+        // 3. 地面纹理（只在竞技场圆形范围内绘制）- 半透明显示远景
+        if (this.bgPattern) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(0, 0, 600, 0, Math.PI * 2); // 竞技场半径
+            ctx.clip();
+            
+            ctx.globalAlpha = 0.7; // 降低透明度，可以看到远景
+            ctx.fillStyle = this.bgPattern;
+            ctx.fillRect(-700, -700, 1400, 1400);
+            ctx.globalAlpha = 1;
+            ctx.restore();
+        }
+        
+        // 4. 边缘迷雾（带动画脉动效果）- 降低透明度
+        ctx.save();
+        ctx.globalAlpha = 0.5; // 降低透明度，让远景更可见
+        const pulseScale = 1 + Math.sin(this.playTime * 2) * 0.03;
+        ctx.translate(0, 0);
+        ctx.scale(pulseScale, pulseScale);
+        ctx.translate(-this.cachedEdgeMistCanvas.width / 2 * (pulseScale - 1) / pulseScale, 
+                      -this.cachedEdgeMistCanvas.height / 2 * (pulseScale - 1) / pulseScale);
+        ctx.drawImage(this.cachedEdgeMistCanvas, -this.cachedEdgeMistCanvas.width / 2, -this.cachedEdgeMistCanvas.height / 2);
+        ctx.globalAlpha = 1;
+        ctx.restore();
+        
+        // 5. 边界线
+        ctx.strokeStyle = '#5c0000';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([20, 10]);
+        ctx.beginPath();
+        this.createArenaEdgePath(ctx);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // 6. 飘浮血色粒子（大气效果）- 跟随竞技场
+        this.drawAtmosphericParticles(ctx);
+    }
+    
+    // 绘制远景山脉剪影
+    drawDistantMountains(ctx, w, h) {
+        // 第一层山脉（最远，最暗）
+        ctx.fillStyle = '#0f0303';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.6);
+        for (let x = 0; x <= w; x += 30) {
+            const y = h * 0.6 - Math.sin(x * 0.005) * 60 - Math.sin(x * 0.015) * 30 - Math.random() * 10;
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 第二层山脉（中远）
+        ctx.fillStyle = '#150505';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.65);
+        for (let x = 0; x <= w; x += 25) {
+            const y = h * 0.65 - Math.sin(x * 0.008 + 1) * 50 - Math.sin(x * 0.02) * 25;
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 第三层山脉（最近的远景）
+        ctx.fillStyle = '#1a0606';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.7);
+        for (let x = 0; x <= w; x += 20) {
+            const y = h * 0.7 - Math.sin(x * 0.01 + 2) * 40 - Math.sin(x * 0.025) * 20;
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fill();
+    }
+    
+    // 绘制远景枯树剪影
+    drawDistantTrees(ctx, w, h) {
+        ctx.fillStyle = '#0a0202';
+        const treePositions = [
+            { x: w * 0.1, y: h * 0.55, scale: 0.8 },
+            { x: w * 0.25, y: h * 0.6, scale: 0.6 },
+            { x: w * 0.4, y: h * 0.58, scale: 0.7 },
+            { x: w * 0.6, y: h * 0.62, scale: 0.5 },
+            { x: w * 0.85, y: h * 0.56, scale: 0.9 },
+            { x: w * 0.95, y: h * 0.6, scale: 0.65 },
+        ];
+        
+        for (const tree of treePositions) {
+            this.drawDeadTree(ctx, tree.x, tree.y, tree.scale * 80);
+        }
+    }
+    
+    // 绘制单棵枯树
+    drawDeadTree(ctx, x, y, height) {
+        ctx.save();
+        ctx.translate(x, y);
+        
+        // 树干
+        ctx.beginPath();
+        ctx.moveTo(-height * 0.08, 0);
+        ctx.lineTo(-height * 0.03, -height * 0.6);
+        ctx.lineTo(height * 0.03, -height * 0.6);
+        ctx.lineTo(height * 0.08, 0);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 枯枝（左）
+        ctx.beginPath();
+        ctx.moveTo(-height * 0.02, -height * 0.4);
+        ctx.lineTo(-height * 0.25, -height * 0.7);
+        ctx.lineTo(-height * 0.35, -height * 0.65);
+        ctx.stroke();
+        
+        // 枯枝（右）
+        ctx.beginPath();
+        ctx.moveTo(height * 0.02, -height * 0.5);
+        ctx.lineTo(height * 0.2, -height * 0.8);
+        ctx.lineTo(height * 0.3, -height * 0.75);
+        ctx.stroke();
+        
+        // 顶部枯枝
+        ctx.beginPath();
+        ctx.moveTo(0, -height * 0.6);
+        ctx.lineTo(-height * 0.1, -height * 0.9);
+        ctx.moveTo(0, -height * 0.6);
+        ctx.lineTo(height * 0.08, -height * 0.85);
+        ctx.stroke();
+        
+        ctx.restore();
+    }
+    
+    // 绘制远景废墟塔楼
+    drawDistantRuins(ctx, w, h) {
+        ctx.fillStyle = '#0d0303';
+        
+        // 左侧废墟塔
+        const lx = w * 0.15, ly = h * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(lx - 20, ly);
+        ctx.lineTo(lx - 15, ly - 100);
+        ctx.lineTo(lx - 10, ly - 95);
+        ctx.lineTo(lx - 8, ly - 120);
+        ctx.lineTo(lx + 8, ly - 115);
+        ctx.lineTo(lx + 10, ly - 90);
+        ctx.lineTo(lx + 15, ly - 95);
+        ctx.lineTo(lx + 20, ly);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 右侧废墟
+        const rx = w * 0.88, ry = h * 0.52;
+        ctx.beginPath();
+        ctx.moveTo(rx - 30, ry);
+        ctx.lineTo(rx - 25, ry - 80);
+        ctx.lineTo(rx - 15, ry - 85);
+        ctx.lineTo(rx, ry - 130);
+        ctx.lineTo(rx + 15, ry - 80);
+        ctx.lineTo(rx + 25, ry - 75);
+        ctx.lineTo(rx + 30, ry);
+        ctx.closePath();
+        ctx.fill();
+    }
+    
+    // 绘制中景石柱
+    drawMidgroundPillars(ctx, cx, cy) {
+        const pillarAngles = [0, Math.PI/3, Math.PI*2/3, Math.PI, Math.PI*4/3, Math.PI*5/3];
+        const pillarDist = 650;
+        
+        for (const angle of pillarAngles) {
+            const px = cx + Math.cos(angle) * pillarDist;
+            const py = cy + Math.sin(angle) * pillarDist;
+            
+            // 石柱
+            ctx.fillStyle = '#2a1010';
+            ctx.beginPath();
+            ctx.moveTo(px - 15, py + 50);
+            ctx.lineTo(px - 12, py - 80);
+            ctx.lineTo(px + 12, py - 80);
+            ctx.lineTo(px + 15, py + 50);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 柱顶装饰
+            ctx.fillStyle = '#3a1515';
+            ctx.beginPath();
+            ctx.ellipse(px, py - 80, 18, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 裂纹效果
+            ctx.strokeStyle = '#1a0808';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(px - 5, py - 60);
+            ctx.lineTo(px - 8, py - 20);
+            ctx.lineTo(px - 3, py + 20);
+            ctx.stroke();
+        }
+    }
+    
+    // 绘制中景骸骨装饰
+    drawMidgroundBones(ctx, cx, cy) {
+        ctx.fillStyle = '#3d2020';
+        const bonePositions = [
+            { x: cx - 500, y: cy - 300, rot: 0.3 },
+            { x: cx + 450, y: cy - 350, rot: -0.5 },
+            { x: cx - 400, y: cy + 400, rot: 0.8 },
+            { x: cx + 500, y: cy + 300, rot: -0.2 },
+        ];
+        
+        for (const bone of bonePositions) {
+            ctx.save();
+            ctx.translate(bone.x, bone.y);
+            ctx.rotate(bone.rot);
+            
+            // 头骨
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 25, 20, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼眶
+            ctx.fillStyle = '#1a0808';
+            ctx.beginPath();
+            ctx.ellipse(-8, -3, 6, 8, 0, 0, Math.PI * 2);
+            ctx.ellipse(8, -3, 6, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+    }
+    
+    // 绘制中景血色符文
+    drawMidgroundRunes(ctx, cx, cy) {
+        ctx.strokeStyle = '#5c1515';
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.5;
+        
+        const runePositions = [
+            { x: cx - 550, y: cy },
+            { x: cx + 550, y: cy },
+            { x: cx, y: cy - 550 },
+            { x: cx, y: cy + 550 },
+        ];
+        
+        for (const rune of runePositions) {
+            ctx.save();
+            ctx.translate(rune.x, rune.y);
+            
+            // 符文圆环
+            ctx.beginPath();
+            ctx.arc(0, 0, 40, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 内部符文线条
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2;
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(angle) * 30, Math.sin(angle) * 30);
+            }
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        ctx.globalAlpha = 1;
+    }
+    
+    // 绘制大气血色粒子
+    drawAtmosphericParticles(ctx) {
+        if (!this.atmosphericParticles) {
+            // 初始化大气粒子
+            this.atmosphericParticles = [];
+            for (let i = 0; i < 30; i++) {
+                this.atmosphericParticles.push({
+                    x: (Math.random() - 0.5) * 1400,
+                    y: (Math.random() - 0.5) * 1400,
+                    size: 2 + Math.random() * 4,
+                    speed: 10 + Math.random() * 20,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+        
+        ctx.fillStyle = 'rgba(139, 0, 0, 0.3)';
+        for (const p of this.atmosphericParticles) {
+            // 缓慢漂浮
+            const floatY = Math.sin(this.playTime * 0.5 + p.phase) * 30;
+            const floatX = Math.cos(this.playTime * 0.3 + p.phase) * 20;
+            
+            ctx.beginPath();
+            ctx.arc(p.x + floatX, p.y + floatY, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
     
     // 绘制远景岛屿（关卡模式）
@@ -2085,7 +2513,7 @@ export class UnifiedArenaEngine {
         ctx.closePath();
     }
     
-    // 绘制竞技场边缘
+    // 绘制竞技场边缘（完整视觉效果 - 保留用于动态效果）
     drawArenaEdge(ctx) {
         // 边缘迷雾（使用不规则路径上的点）
         ctx.save();
@@ -2120,8 +2548,27 @@ export class UnifiedArenaEngine {
         ctx.setLineDash([]);
     }
     
-    // 绘制子弹
+    // 绘制子弹（预渲染光晕贴图，保持完整视觉效果）
     drawBullets(ctx) {
+        // 预渲染子弹光晕贴图（只执行一次）
+        if (!this.cachedBulletGlow) {
+            const glowSize = 50;
+            this.cachedBulletGlow = document.createElement('canvas');
+            this.cachedBulletGlow.width = glowSize;
+            this.cachedBulletGlow.height = glowSize;
+            const glowCtx = this.cachedBulletGlow.getContext('2d');
+            
+            // 渐变光晕
+            const glow = glowCtx.createRadialGradient(glowSize/2, glowSize/2, 0, glowSize/2, glowSize/2, glowSize/2);
+            glow.addColorStop(0, 'rgba(192, 57, 43, 0.8)');
+            glow.addColorStop(0.5, 'rgba(192, 57, 43, 0.3)');
+            glow.addColorStop(1, 'rgba(192, 57, 43, 0)');
+            glowCtx.fillStyle = glow;
+            glowCtx.beginPath();
+            glowCtx.arc(glowSize/2, glowSize/2, glowSize/2, 0, Math.PI * 2);
+            glowCtx.fill();
+        }
+        
         this.bullets.forEach(b => {
             ctx.save();
             ctx.translate(b.x, b.y);
@@ -2130,14 +2577,8 @@ export class UnifiedArenaEngine {
             const angle = Math.atan2(b.vy || 0, b.vx || 1);
             ctx.rotate(angle);
             
-            // 光晕
-            const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
-            glow.addColorStop(0, 'rgba(192, 57, 43, 0.8)');
-            glow.addColorStop(1, 'rgba(192, 57, 43, 0)');
-            ctx.fillStyle = glow;
-            ctx.beginPath();
-            ctx.arc(0, 0, 20, 0, Math.PI * 2);
-            ctx.fill();
+            // 光晕（使用预渲染贴图）
+            ctx.drawImage(this.cachedBulletGlow, -25, -25);
             
             // 核心
             ctx.fillStyle = b.color || '#ff5252';
@@ -2238,7 +2679,16 @@ export class UnifiedArenaEngine {
         const count = waveConfig.count;
         const mobs = waveConfig.mobs;
         const levelMult = waveConfig.levelMult;
-        const playerLevel = this.player ? this.player.level : 1;
+        const playerLevel = this.player ? this.player.lvl : 1;  // 注意：Player 用的是 lvl 不是 level
+        
+        console.log(`[Wave] 生成第 ${this.currentWave} 波, 数量: ${count}, 玩家等级: ${playerLevel}`);
+        
+        // 显示波次提示
+        if (waveConfig.isBoss) {
+            this.showWaveTitle(`第 ${this.currentWave} 波`, waveConfig.bossName || 'BOSS');
+        } else {
+            this.showWaveTitle(`第 ${this.currentWave} 波`, `妖兽 x ${count}`);
+        }
         
         for (let i = 0; i < count; i++) {
             const mobType = mobs[Math.floor(Math.random() * mobs.length)];
@@ -2248,7 +2698,7 @@ export class UnifiedArenaEngine {
             const x = Math.cos(angle) * distance;
             const y = Math.sin(angle) * distance;
             
-            const enemy = new ArenaEnemy(mobType, x, y, levelMult, playerLevel);
+            const enemy = this.pool.get('arenaenemy', ArenaEnemy, mobType, x, y, levelMult, playerLevel);
             this.enemies.push(enemy);
             
             if (enemy.isBoss) {
@@ -2259,43 +2709,58 @@ export class UnifiedArenaEngine {
             }
         }
         
+        console.log(`[Wave] 敌人数组长度: ${this.enemies.length}`);
         this.updateUI();
     }
     
-    // 敌人被击杀
+    // 敌人被击杀（秘境/关卡模式共用）
     onEnemyKilled(enemy) {
         enemy.dead = true;
         this.totalKills++;
         
-        // 掉落金币
-        const goldDrop = enemy.goldDrop || [1, 2];
-        const goldCount = goldDrop[0] + Math.floor(Math.random() * (goldDrop[1] - goldDrop[0] + 1));
-        for (let i = 0; i < goldCount; i++) {
-            const coin = this.pool.get('coin', Coin,
-                enemy.x + (Math.random() - 0.5) * 30,
-                enemy.y + (Math.random() - 0.5) * 30,
-                enemy.isBoss ? 10 : 1
-            );
-            this.coins.push(coin);
+        // ========== 根据游戏模式决定掉落 ==========
+        if (this.gameMode === GAME_MODES.ARENA) {
+            // 秘境模式：掉落金币
+            const goldDrop = enemy.goldDrop || [1, 2];
+            const goldCount = goldDrop[0] + Math.floor(Math.random() * (goldDrop[1] - goldDrop[0] + 1));
             
-            // 金币飞行效果
-            this.flyGoldToCounter(enemy.x, enemy.y);
-        }
-        
-        // 掉落道具卡（概率）
-        if (Math.random() < 0.15 || enemy.isBoss) {
-            const cardCount = enemy.isBoss ? (ARENA_BOSSES[enemy.type]?.cardDrop || 1) : 1;
-            for (let i = 0; i < cardCount; i++) {
-                this.dropItemCard(enemy.x, enemy.y);
+            for (let i = 0; i < goldCount; i++) {
+                const coin = this.pool.get('coin', Coin,
+                    enemy.x + (Math.random() - 0.5) * 30,
+                    enemy.y + (Math.random() - 0.5) * 30,
+                    enemy.isBoss ? 10 : 1
+                );
+                this.coins.push(coin);
+                // 飞行效果在拾取时触发，不在掉落时
+            }
+            
+            // 掉落道具卡（秘境专属）
+            if (Math.random() < 0.15 || enemy.isBoss) {
+                const cardCount = enemy.isBoss ? (ARENA_BOSSES[enemy.type]?.cardDrop || 1) : 1;
+                for (let i = 0; i < cardCount; i++) {
+                    this.dropItemCard(enemy.x, enemy.y);
+                }
+            }
+        } else {
+            // 关卡模式：掉落经验球
+            const exp = enemy.exp || 10;
+            this.orbs.push(new Orb(enemy.x, enemy.y, exp));
+            
+            // 精英掉宝箱
+            if (enemy.isElite) {
+                this.chests.push(new Chest(enemy.x, enemy.y));
+                this.shake = 2;
+                this.texts.push(this.pool.get('floattext', FloatText, enemy.x, enemy.y - 50, "精英击杀!", "#f1c40f", true));
             }
         }
         
-        // 死亡粒子
+        // 死亡粒子（通用）
+        const particleColor = this.gameMode === GAME_MODES.ARENA ? '#8b0000' : '#555';
         for (let i = 0; i < 10; i++) {
-            this.particles.push(this.pool.get('particle', Particle, enemy.x, enemy.y, '#8b0000', 0.5, 6));
+            this.particles.push(this.pool.get('particle', Particle, enemy.x, enemy.y, particleColor, 0.5, 6));
         }
         
-        // BOSS 击杀
+        // BOSS 击杀（秘境专属）
         if (enemy.isBoss) {
             this.shake = 2;
             this.currentBoss = null;
@@ -2316,8 +2781,8 @@ export class UnifiedArenaEngine {
             }
         }
         
-        // 经验
-        if (this.player) {
+        // 经验（仅关卡模式）
+        if (this.gameMode !== GAME_MODES.ARENA && this.player) {
             this.player.gainExp(enemy.isBoss ? 50 : 10);
         }
         
@@ -2345,12 +2810,15 @@ export class UnifiedArenaEngine {
         this.itemCards.addCard(selectedCard);
         
         // 显示获得提示
-        this.texts.push(new FloatText(x, y - 50, `获得 [${selectedCard.name}]`, '#f1c40f'));
+        this.texts.push(this.pool.get('floattext', FloatText, x, y - 50, `获得 [${selectedCard.name}]`, '#f1c40f'));
     }
     
     // 检查波次完成
     checkWaveComplete() {
         if (this.waveCleared) return;
+        
+        // 还没开始第一波时不检测
+        if (this.currentWave === 0) return;
         
         const aliveEnemies = this.enemies.filter(e => !e.dead);
         
@@ -2359,65 +2827,80 @@ export class UnifiedArenaEngine {
             this.ui.updateBossHP(this.currentBoss.hp);
         }
         
-        if (aliveEnemies.length === 0) {
+        if (aliveEnemies.length === 0 && this.enemies.length > 0) {
+            console.log(`[Wave] 波次 ${this.currentWave} 完成! 总敌人: ${this.enemies.length}`);
             this.waveCleared = true;
             
-            // 显示技能选择
-            if (this.currentWave < ARENA_CONFIG.totalWaves) {
-                this.showSkillChoice();
-            } else {
-                // 最后一波
+            // 清空已死亡敌人
+            this.enemies = [];
+            
+            // 判断是否结束或继续
+            if (this.currentWave >= ARENA_CONFIG.totalWaves) {
+                // 最后一波，胜利
                 setTimeout(() => this.gameOver(true), 2000);
+            } else if (this.currentWave === 1) {
+                // 第一波清完：不显示技能选择，直接开始下一波
+                this.texts.push(this.pool.get('floattext', FloatText, 0, -50, '准备迎接下一波!', '#3498db'));
+                setTimeout(() => this.startNextWave(), 1500);
+            } else {
+                // 第2波及之后：显示技能选择
+                this.showSkillChoice();
             }
         }
         
         this.updateUI();
     }
     
-    // 显示技能选择
+    // 显示技能选择（秘境模式波次结束专用）
     showSkillChoice() {
+        console.log('[Engine] showSkillChoice 被调用! 当前波次:', this.currentWave);
         this.state = 'SKILL';
         
-        // 随机3个技能
-        const shuffled = [...SKILLS].sort(() => Math.random() - 0.5);
-        const choices = shuffled.slice(0, 3);
+        // 获取角色专属技能和通用技能
+        const roleId = this.player?.role?.id || 'sword';
+        const roleSkills = SKILLS[roleId] || [];
+        const commonSkills = SKILLS.common || [];
+        
+        // 合并技能池：角色专属 + 通用
+        const skillPool = [...roleSkills, ...commonSkills];
+        
+        // 随机3个技能（注意：不要修改原数组）
+        const shuffled = [...skillPool].sort(() => Math.random() - 0.5);
+        const choices = shuffled.slice(0, 3).map(skill => ({
+            name: skill.name,
+            desc: skill.desc,
+            icon: skill.icon,
+            skillData: skill  // 保存原始技能数据
+        }));
         
         if (this.ui) {
-            this.ui.showSkillMenu(choices, (skill) => {
-                this.applySkill(skill);
+            // 使用统一的 showLevelUpMenu（UI已实现此方法）
+            this.ui.showLevelUpMenu(choices, (selected) => {
+                this.applyArenaSkill(selected);
                 this.state = 'PLAY';
                 setTimeout(() => this.startNextWave(), 1000);
             });
         } else {
             // 无 UI 时自动选择第一个
-            this.applySkill(choices[0]);
+            if (choices.length > 0) {
+                this.applyArenaSkill(choices[0]);
+            }
             this.state = 'PLAY';
             setTimeout(() => this.startNextWave(), 1000);
         }
     }
     
-    // 应用技能
-    applySkill(skill) {
-        if (!this.player || !skill) return;
+    // 应用秘境技能（波次奖励）
+    applyArenaSkill(selected) {
+        if (!this.player || !selected || !selected.skillData) return;
         
-        // 根据技能效果应用
-        if (skill.effect) {
-            if (skill.effect.dmgMult) {
-                this.player.dmg *= skill.effect.dmgMult;
-            }
-            if (skill.effect.hpMult) {
-                this.player.maxHp *= skill.effect.hpMult;
-                this.player.hp = this.player.maxHp;
-            }
-            if (skill.effect.speedMult) {
-                this.player.speed *= skill.effect.speedMult;
-            }
-            if (skill.effect.cdMult) {
-                this.player.attackCd *= skill.effect.cdMult;
-            }
+        const skill = selected.skillData;
+        // 技能 effect 是一个函数，传入 player.stats
+        if (typeof skill.effect === 'function') {
+            skill.effect(this.player.stats);
         }
         
-        this.texts.push(new FloatText(this.player.x, this.player.y - 50, `+ ${skill.name}`, '#9b59b6'));
+        this.texts.push(this.pool.get('floattext', FloatText, this.player.x, this.player.y - 50, `+ ${selected.name}`, '#9b59b6'));
         this.updateUI();
     }
     
